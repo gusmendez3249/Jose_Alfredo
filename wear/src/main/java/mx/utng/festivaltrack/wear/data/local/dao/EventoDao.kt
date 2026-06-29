@@ -12,6 +12,9 @@ interface EventoDao {
     @Query("SELECT * FROM eventos WHERE fechaHora >= :ahora ORDER BY fechaHora ASC LIMIT 10")
     fun observeProximos(ahora: String): Flow<List<EventoEntity>>
 
+    @Query("SELECT * FROM eventos WHERE id = :id LIMIT 1")
+    suspend fun getEventoById(id: String): EventoEntity?
+
     @Upsert
     suspend fun upsertAll(eventos: List<EventoEntity>)
 

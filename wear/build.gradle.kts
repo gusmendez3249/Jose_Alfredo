@@ -60,6 +60,9 @@ dependencies {
 
     // Wearable Data Layer (comunicación con el teléfono via BLE)
     implementation("com.google.android.gms:play-services-wearable:18.2.0")
+    
+    // Google Play Services Location (para obtener GPS)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // WorkManager (sync periódico en background)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -70,4 +73,8 @@ dependencies {
     // ViewModel + Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    
+    // Retrofit + Gson para API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

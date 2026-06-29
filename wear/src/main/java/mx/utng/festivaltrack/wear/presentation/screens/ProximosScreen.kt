@@ -18,15 +18,17 @@ import mx.utng.festivaltrack.wear.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.wear.R
 import mx.utng.jose_alfredo.presentation.theme.*
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
+
 @Composable
 fun ProximosScreen(
     onEventoClick: (String) -> Unit,
-    eventos: List<EventoEntity> = listOf(
-        EventoEntity(id="1", nombre="Concierto Inaugural", fechaHora="2026-10-15T20:00:00Z", ubicacion="Parroquia de Nuestra Señora", escenario="Atrio Principal", bannerUrl=null, estado="PROGRAMADO", artistaId=null, artistaNombre="Sinfónica Nacional"),
-        EventoEntity(id="2", nombre="Homenaje a José Alfredo", fechaHora="2026-10-15T21:45:00Z", ubicacion="Casa Museo José Alfredo", escenario="Patio Central", bannerUrl=null, estado="PROGRAMADO", artistaId=null, artistaNombre="Mariachi Vargas"),
-        EventoEntity(id="3", nombre="Exhibición Histórica", fechaHora="2026-10-15T23:15:00Z", ubicacion="Museo de la Independencia", escenario="Sala 1", bannerUrl=null, estado="PROGRAMADO", artistaId=null, artistaNombre="Compañía de Teatro")
-    )
+    viewModel: ProximosViewModel = viewModel()
 ) {
+    val eventos by viewModel.eventos.collectAsState()
     Scaffold(timeText = { TimeText() }) {
         ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
             item {

@@ -14,5 +14,7 @@ data class EventoEntity(
     val estado: String,
     val artistaId: String?,
     val artistaNombre: String?,
+    val latitud: Double? = null,
+    val longitud: Double? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )

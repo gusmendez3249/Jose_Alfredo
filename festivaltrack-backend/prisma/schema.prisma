@@ -207,6 +207,8 @@ model Evento {
   estado          EstadoEvento @default(BORRADOR)
   administradorId String
   artistaId       String?
+  latitud         Float?
+  longitud        Float?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
