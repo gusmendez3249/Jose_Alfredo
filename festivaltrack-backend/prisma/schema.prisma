@@ -1,0 +1,338 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────
+
+enum Rol {
+  USUARIO
+  ADMINISTRADOR
+}
+
+enum CategoriaTicket {
+  VIP
+  GENERAL
+  ESTUDIANTE
+}
+
+enum EstadoTicket {
+  ACTIVO
+  USADO
+  CANCELADO
+  EXPIRADO
+}
+
+enum MetodoPago {
+  TARJETA_CREDITO
+  TARJETA_DEBITO
+  TRANSFERENCIA
+  PAYPAL
+}
+
+enum EstadoPago {
+  PENDIENTE
+  COMPLETADO
+  FALLIDO
+  REEMBOLSADO
+}
+
+enum EstadoEvento {
+  BORRADOR
+  PUBLICADO
+  EN_CURSO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoCancion {
+  BORRADOR
+  PUBLICADA
+  ARCHIVADA
+}
+
+enum EstadoTransmision {
+  INACTIVA
+  EN_VIVO
+  PAUSADA
+  FINALIZADA
+}
+
+enum TipoNotificacion {
+  ALERTA_INICIO
+  RECORDATORIO
+  CAMBIO_ESCENARIO
+  TRANSMISION_INICIADA
+  BOLETO_CONFIRMADO
+  SISTEMA
+}
+
+enum CategoriaGaleria {
+  GOLDEN_ERA
+  LEGACY
+  PRESENTACIONES
+  BACKSTAGE
+  GENERAL
+}
+
+// ─── ACTORES ─────────────────────────────────────────
+
+model Usuario {
+  id            String   @id @default(cuid())
+  nombre        String
+  correo        String   @unique
+  contrasena    String
+  rol           Rol      @default(USUARIO)
+  fechaRegistro DateTime @default(now())
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  boletos        Boleto[]
+  notificaciones Notificacion[]
+  transmisiones  UsuarioTransmision[]
+
+  @@map("usuarios")
+}
+
+model Administrador {
+  id        String   @id @default(cuid())
+  usuarioId String   @unique
+  nivel     Int      @default(1)
+  permisos  String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  canciones      Cancion[]
+  galerias       Galeria[]
+  eventos        Evento[]
+  notificaciones Notificacion[]
+
+  @@map("administradores")
+}
+
+// ─── CONTENIDO ────────────────────────────────────────
+
+model Artista {
+  id        String   @id @default(cuid())
+  nombre    String
+  imagenUrl String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  biografia Biografia?
+  eventos   Evento[]
+
+  @@map("artistas")
+}
+
+model Biografia {
+  id          String   @id @default(cuid())
+  artistaId   String   @unique
+  descripcion String   @db.Text
+  citaCelebre String?
+  hitos       Json     @default("[]")
+  discografia Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  artista Artista @relation(fields: [artistaId], references: [id])
+
+  @@map("biografias")
+}
+
+model Cancion {
+  id              String        @id @default(cuid())
+  titulo          String
+  artista         String
+  duracion        Int
+  archivoUrl      String
+  genero          String?
+  estado          EstadoCancion @default(BORRADOR)
+  administradorId String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  administrador Administrador       @relation(fields: [administradorId], references: [id])
+  transmisiones CancionTransmision[]
+
+  @@map("canciones")
+}
+
+model Galeria {
+  id              String           @id @default(cuid())
+  nombre          String
+  categoria       CategoriaGaleria @default(GENERAL)
+  administradorId String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  administrador Administrador @relation(fields: [administradorId], references: [id])
+  imagenes      Imagen[]
+
+  @@map("galerias")
+}
+
+model Imagen {
+  id        String   @id @default(cuid())
+  galeriaId String
+  url       String
+  titulo    String?
+  etiquetas String[]
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  galeria Galeria @relation(fields: [galeriaId], references: [id], onDelete: Cascade)
+
+  @@map("imagenes")
+}
+
+// ─── TRANSACCIONAL ───────────────────────────────────
+
+model Evento {
+  id              String       @id @default(cuid())
+  nombre          String
+  fechaHora       DateTime
+  ubicacion       String
+  escenario       String?
+  descripcion     String?      @db.Text
+  capacidad       Int
+  bannerUrl       String?
+  estado          EstadoEvento @default(BORRADOR)
+  administradorId String
+  artistaId       String?
+  latitud         Float?
+  longitud        Float?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  administrador  Administrador  @relation(fields: [administradorId], references: [id])
+  artista        Artista?       @relation(fields: [artistaId], references: [id])
+  boletos        Boleto[]
+  transmision    Transmision?
+  notificaciones Notificacion[]
+
+  @@map("eventos")
+}
+
+model Boleto {
+  id          String          @id @default(cuid())
+  eventoId    String
+  usuarioId   String
+  categoria   CategoriaTicket @default(GENERAL)
+  precio      Float
+  fechaCompra DateTime        @default(now())
+  codigoQR    String          @unique @default(cuid())
+  estado      EstadoTicket    @default(ACTIVO)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  evento  Evento  @relation(fields: [eventoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  pago    Pago?
+
+  @@map("boletos")
+}
+
+model Pago {
+  id         String     @id @default(cuid())
+  boletoId   String     @unique
+  monto      Float
+  metodo     MetodoPago
+  estado     EstadoPago @default(PENDIENTE)
+  fecha      DateTime   @default(now())
+  referencia String?
+  recibo     String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  boleto Boleto @relation(fields: [boletoId], references: [id], onDelete: Cascade)
+
+  @@map("pagos")
+}
+
+// ─── STREAMING ───────────────────────────────────────
+
+model Transmision {
+  id           String            @id @default(cuid())
+  eventoId     String            @unique
+  titulo       String
+  streamUrl    String?
+  espectadores Int               @default(0)
+  estado       EstadoTransmision @default(INACTIVA)
+  chatActivo   Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  evento         Evento               @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  canciones      CancionTransmision[]
+  usuarios       UsuarioTransmision[]
+  notificaciones Notificacion[]
+
+  @@map("transmisiones")
+}
+
+model CancionTransmision {
+  cancionId     String
+  transmisionId String
+  orden         Int    @default(0)
+
+  cancion    Cancion     @relation(fields: [cancionId], references: [id])
+  transmision Transmision @relation(fields: [transmisionId], references: [id], onDelete: Cascade)
+
+  @@id([cancionId, transmisionId])
+  @@map("canciones_transmisiones")
+}
+
+model UsuarioTransmision {
+  usuarioId     String
+  transmisionId String
+  unidoEn       DateTime @default(now())
+
+  usuario     Usuario     @relation(fields: [usuarioId], references: [id])
+  transmision Transmision @relation(fields: [transmisionId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, transmisionId])
+  @@map("usuarios_transmisiones")
+}
+
+// ─── NOTIFICACIONES ──────────────────────────────────
+
+model Notificacion {
+  id              String           @id @default(cuid())
+  tipo            TipoNotificacion
+  mensaje         String
+  fechaHora       DateTime         @default(now())
+  leida           Boolean          @default(false)
+  usuarioId       String?
+  administradorId String?
+  eventoId        String?
+  transmisionId   String?
+  createdAt       DateTime         @default(now())
+
+  usuario       Usuario?       @relation(fields: [usuarioId], references: [id])
+  administrador Administrador? @relation(fields: [administradorId], references: [id])
+  evento        Evento?        @relation(fields: [eventoId], references: [id])
+  transmision   Transmision?   @relation(fields: [transmisionId], references: [id])
+
+  @@map("notificaciones")
+}
+
+// ─── SYNC ────────────────────────────────────────────
+
+model SyncMeta {
+  id          String   @id @default(cuid())
+  dispositivo String
+  entidad     String
+  lastSyncAt  DateTime @default(now())
+  etag        String?
+
+  @@unique([dispositivo, entidad])
+  @@map("sync_meta")
+}
