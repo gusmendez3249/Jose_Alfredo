@@ -33,9 +33,9 @@ npm install
 Por seguridad, la contraseña de la base de datos nunca se sube a GitHub. Cada desarrollador debe configurar su archivo `.env` localmente.
 
 1. Dentro de la carpeta `festivaltrack-backend`, crea un archivo llamado `.env`.
-2. Pega la variable `DATABASE_URL` que te proporcionó el administrador (el link de Neon). Debería verse así:
+2. Pega la variable `DATABASE_URL` que te proporcionó el administrador. Debería verse así:
    ```env
-   DATABASE_URL="postgresql://[USUARIO]:[CONTRASEÑA]@ep-nombredelhost.us-east-2.aws.neon.tech/neondb?sslmode=require"
+   DATABASE_URL="postgresql://usuario:password@tu-host-neon.tech/tu-db?sslmode=require"
    ```
 
 ### C. Inicializar Prisma (Base de Datos)
