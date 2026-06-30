@@ -1,87 +1,47 @@
-# 🎸 FestivalTrack - Proyecto Integral
+# FestivalTrack - Proyecto Final Wear OS
 
-¡Bienvenidos al repositorio oficial de FestivalTrack!
-Este proyecto es un sistema completo compuesto por un servidor backend robusto (NestJS) y una aplicación para relojes inteligentes (Wear OS) diseñada para guiar a los usuarios en los eventos del festival.
+## 📝 Datos del Proyecto
+* **Nombre del proyecto:** FestivalTrack
+* **Nombre de los estudiantes estudiante:**
+Chavero Martínez Noé
+Cruz Méndez Juan Gustavo Ángel
+Salinas Salinas Omar
+* **Grupo:** GIDS6092
 
-A continuación, encontrarás todas las instrucciones necesarias para que cualquier miembro del equipo pueda levantar el proyecto localmente sin problemas.
+## 🎯 Objetivo
+Desarrollar una aplicación funcional para relojes inteligentes (Wear OS) y un backend en la nube que permita a los asistentes de un festival consultar la agenda de eventos, ver los detalles de cada presentación, y utilizar un sistema de navegación por GPS integrado para guiarlos a los diferentes escenarios en tiempo real. 
 
----
+El proyecto demuestra el dominio de control de versiones, la implementación de buenas prácticas de desarrollo móvil y la integración de hardware (sensores GPS).
 
-## 🏗️ Arquitectura del Proyecto
+## ✨ Descripción de las funcionalidades
+* **Sincronización en la Nube:** La aplicación obtiene la lista de eventos desde un backend alojado en Neon (PostgreSQL + NestJS) ya sea mediante red Wi-Fi directa o Bluetooth usando el DataLayer de Wear OS.
+* **Filtros Dinámicos de Tiempo:** El sistema de eventos cuenta con cronómetros inteligentes en vivo que restan la hora de los servidores con la hora local, ocultando eventos pasados y mostrando el tiempo restante (días, horas, minutos) para los eventos futuros.
+* **Panel de Alertas Dinámico:** Pantalla específica para notificar al usuario sobre eventos próximos a comenzar, calculando el tiempo restante en tiempo real.
+* **Integración de Sensores (GPS):** Se utiliza `FusedLocationProviderClient` de los Google Play Services para obtener la ubicación exacta del usuario en el reloj inteligente.
+* **Navegación y Mapa Interactivo:** Renderizado de mapas mediante OSMDroid, trazando rutas peatonales inteligentes desde la ubicación del usuario hasta el escenario del evento seleccionado. Se implementaron controles de zoom nativos para Wear OS y soporte para gestos táctiles.
 
-El repositorio está dividido en carpetas principales:
-- `/festivaltrack-backend`: Contiene todo el código del servidor backend, base de datos y la API REST.
-- `/wear`: Contiene el código fuente de la aplicación para relojes Wear OS (Kotlin/Jetpack Compose).
-- `/shared`: Código compartido entre módulos.
+## 🛠️ Tecnologías utilizadas
+* **Frontend (Wear OS):** Kotlin, Jetpack Compose for Wear OS, MVVM Architecture, Room Database (Offline-First).
+* **Backend:** Node.js, NestJS, Prisma ORM, PostgreSQL (Neon).
+* **Mapas y Geolocalización:** OSMDroid, OSRM Routing API, Google Play Location Services.
+* **Control de Versiones:** Git y GitHub.
 
----
+## 🚀 Instrucciones para ejecutar el proyecto
 
-## 🚀 1. Levantar el Backend (NestJS + Prisma + Neon)
+### Prerrequisitos
+- Android Studio Ladybug (o superior).
+- Un emulador Wear OS (API 33+) o un reloj inteligente físico conectado por ADB.
+- Conexión a internet para sincronizar los eventos y cargar el mapa.
 
-El backend es el cerebro que alimenta los eventos del reloj. Usa Node.js y se conecta a una base de datos PostgreSQL en Neon.
+### Pasos
+1. Clonar el repositorio desde GitHub.
+2. Abrir el proyecto en **Android Studio**.
+3. Esperar a que Gradle termine de sincronizar las dependencias.
+4. En la barra superior, seleccionar el módulo **`wear`**.
+5. Dar clic en el botón de **Run (Play)** y seleccionar el emulador o dispositivo físico.
+6. Otorgar los permisos de ubicación cuando la app lo solicite.
+7. La aplicación cargará automáticamente los eventos disponibles y permitirá la navegación GPS al dar clic en el botón de "Ver Mapa".
 
-### A. Instalación
-Asegúrate de tener instalado [Node.js](https://nodejs.org/) (versión 18 o superior).
-Abre una terminal, entra a la carpeta del backend y descarga las dependencias:
+## 📸 Capturas de pantalla de la aplicación
+*(Las capturas se encuentran detalladas en la carpeta `evidencias` del repositorio)*
 
-```bash
-cd festivaltrack-backend
-npm install
-```
-
-### B. Configuración de Base de Datos (.env)
-Por seguridad, la contraseña de la base de datos nunca se sube a GitHub. Cada desarrollador debe configurar su archivo `.env` localmente.
-
-1. Dentro de la carpeta `festivaltrack-backend`, crea un archivo llamado `.env`.
-2. Pega la variable `DATABASE_URL` que te proporcionó el administrador. Debería verse así:
-   ```env
-   DATABASE_URL="postgresql://usuario:password@tu-host-neon.tech/tu-db?sslmode=require"
-   ```
-
-### C. Inicializar Prisma (Base de Datos)
-Con tu `.env` listo, necesitas sincronizar Prisma para que lea la estructura de la base de datos y genere el código cliente.
-
-```bash
-# Estando dentro de la carpeta festivaltrack-backend
-npx prisma generate
-```
-
-> **⚠️ REGLA DE ORO PARA MIGRACIONES:**
-> **Nunca** uses `npx prisma db push`. Si alguien hace un cambio en el esquema (añadir una tabla o campo en `schema.prisma`), siempre debes usar el sistema de migraciones para no borrar los datos de producción:
-> ```bash
-> npx prisma migrate dev --name descripcion_de_tu_cambio
-> ```
-
-### D. Ejecutar el Servidor
-Para encender el servidor y empezar a programar:
-
-```bash
-npm run start:dev
-```
-Si todo sale bien, verás que el servidor arranca (usualmente en el puerto `3000` o `3001`).
-
----
-
-## ⌚ 2. Levantar la Aplicación de Reloj (Wear OS)
-
-La app del reloj se encarga de mostrar la ruta GPS y sincronizar los eventos guardados por el backend.
-
-### Pasos para probar:
-1. Abre este proyecto (`Jose_Alfredo`) directamente desde **Android Studio**.
-2. Sincroniza Gradle (`Sync Project with Gradle Files`).
-3. En la barra superior, asegúrate de seleccionar el módulo **`wear`**.
-4. Conecta tu reloj físico por Wi-Fi/Bluetooth o crea un emulador de Wear OS en el *Device Manager*.
-5. Dale al botón de **Play (Run)**.
-
-### Características Actuales (Wear OS):
-- **Ubicación GPS Real:** La aplicación solicita permisos y utiliza los servicios de Google Play (FusedLocationProviderClient) para darte tu ubicación exacta en el mapa.
-- **Ruta Peatonal Inteligente:** El mapa traza la ruta hacia el evento y previene pantallazos grises limitando el zoom de OSMDroid a `19.0`.
-- **Filtro de Horario Universal:** Utiliza UTC (`Instant.now()`) para garantizar que la alerta de "Próximos Eventos" solo muestre eventos futuros basándose en la fecha real.
-
----
-
-## 🤝 Flujo de Trabajo (Git)
-Cuando vayas a trabajar en una nueva característica:
-1. Asegúrate de estar en tu rama (`git checkout ramaNoe` o crea una nueva).
-2. Sube tus cambios con commits descriptivos.
-3. Haz push a GitHub y crea un **Pull Request** para fusionar con `main`.
