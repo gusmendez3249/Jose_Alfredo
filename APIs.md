@@ -44,3 +44,7 @@ Provee las imágenes visuales (el dibujo de las calles, parques y bloques) que c
 ### Formato Json que arroja
 <img width="1866" height="487" alt="image" src="https://github.com/user-attachments/assets/54634f92-0b1b-4beb-a790-0f2d42091c39" />
 
+###  Forma en como se acomoda la ubicación
+<img width="400" height="407" alt="image" src="https://github.com/user-attachments/assets/347c91cc-7368-4174-9bba-c322669e5b3f" />
+
+
