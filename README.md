@@ -44,4 +44,14 @@ El proyecto demuestra el dominio de control de versiones, la implementación de 
 
 ## 📸 Capturas de pantalla de la aplicación
 *(Las capturas se encuentran detalladas en la carpeta `evidencias` del repositorio)*
+* **Pantalla Principal:**
+  ![Pantalla Principal](Evidencias/pantalla_principal.png)
+* **Próximos Eventos:**
+  ![Próximos Eventos](Evidencias/proximos_eventos.png)
+* **Pantalla de Alerta / Temporizador:**
+  ![Alerta](Evidencias/alerta.png)
+* **Navegación GPS y Mapa:**
+  ![Mapa](Evidencias/mapa.jpeg)
+* **Ubicación GPS Exacta:**
+  ![Ubicación](Evidencias/ubicacion.png)
 
