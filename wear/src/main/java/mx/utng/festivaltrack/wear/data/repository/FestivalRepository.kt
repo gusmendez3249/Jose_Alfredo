@@ -37,7 +37,8 @@ class FestivalRepository(
                 // 2. Convertir a entidades de Room
                 val localEntities = remoteEventos.map { it.toEntity() }
                 
-                // 3. Guardar en Room
+                // 3. Limpiar base de datos local y guardar los nuevos de la nube
+                eventoDao.deleteAll()
                 eventoDao.upsertAll(localEntities)
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -54,6 +54,49 @@ import mx.utng.festivaltrack.wear.R
 
 @Composable
 fun AlertaScreen(eventoId: String, onVerMapa: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var evento by remember { mutableStateOf<EventoEntity?>(null) }
+    var tiempoFaltante by remember { mutableStateOf("Calculando...") }
+
+    // Cargar el evento desde la base de datos
+    LaunchedEffect(eventoId) {
+        val dao = FestivalDatabase.getInstance(context).eventoDao()
+        evento = dao.getEventoById(eventoId)
+    }
+
+    // Cronómetro en vivo
+    LaunchedEffect(evento) {
+        if (evento == null) return@LaunchedEffect
+        while (true) {
+            val currentInstant = java.time.Instant.now()
+            val eventoInstant = try {
+                java.time.Instant.parse(evento!!.fechaHora)
+            } catch (e: Exception) {
+                try {
+                    java.time.LocalDateTime.parse(evento!!.fechaHora.replace("Z", "")).atZone(java.time.ZoneId.systemDefault()).toInstant()
+                } catch (e2: Exception) {
+                    currentInstant
+                }
+            }
+            
+            val duration = java.time.Duration.between(currentInstant, eventoInstant)
+            tiempoFaltante = if (duration.isNegative || duration.isZero) {
+                "¡AHORA EN CURSO!"
+            } else {
+                val dias = duration.toDays()
+                val horas = duration.toHours() % 24
+                val minutos = duration.toMinutes() % 60
+                
+                when {
+                    dias > 0 -> "Faltan $dias días y $horas hr"
+                    horas > 0 -> "Faltan $horas hr $minutos min"
+                    else -> "Faltan $minutos min"
+                }
+            }
+            kotlinx.coroutines.delay(10000) // Actualizar cada 10 segundos para mayor precisión
+        }
+    }
+
     Scaffold(timeText = { TimeText() }) {
         Column(
             modifier = Modifier
@@ -71,20 +114,27 @@ fun AlertaScreen(eventoId: String, onVerMapa: () -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "¡El evento está por comenzar!",
+                text = if (tiempoFaltante.contains("AHORA") || tiempoFaltante.contains("min") && !tiempoFaltante.contains("hr")) "¡El evento está por comenzar!" else "Próximo Evento",
                 color = FestivalTextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Serenata al Maestro",
+                text = evento?.nombre ?: "Cargando evento...",
+                color = FestivalGold,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = tiempoFaltante,
                 color = FestivalTextSecondary,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
             Chip(
                 onClick = onVerMapa,
                 label = { Text("VER MAPA", fontWeight = FontWeight.Bold) },
@@ -180,163 +230,195 @@ fun NavEscenarioScreen(eventoId: String, onLlegarAhora: () -> Unit) {
 @Composable
 fun MapaAccesoScreen(eventoId: String, onBack: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+
+    // ESTADOS PARA DATOS
+    // Inicializamos con el Jardín Principal para evitar que el mapa se quede esperando si el GPS del emulador falla
+    var userLocation by remember { mutableStateOf(GeoPoint(21.156828, -100.934444)) }
+    var routeGeoPoints by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
     var routeInfo by remember { mutableStateOf<String?>(null) }
-    var evento by remember { mutableStateOf<EventoEntity?>(null) }
+    var destinationPoint by remember { mutableStateOf(GeoPoint(21.156111, -100.932500)) }
     
-    // Jardín Principal de Dolores Hidalgo como punto de inicio por defecto si falla el GPS
-    var startPoint by remember { mutableStateOf(GeoPoint(21.156828, -100.934444)) }
-    var locationFetched by remember { mutableStateOf(false) }
+    // Referencia al mapa para los botones de zoom de Compose
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
 
+    // 1. Configuración obligatoria de OSMDroid
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().apply {
+            load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+            userAgentValue = context.packageName
+        }
+    }
+
+    // 2. Obtener Destino desde la BD
+    LaunchedEffect(eventoId) {
+        val dao = FestivalDatabase.getInstance(context).eventoDao()
+        val evento = dao.getEventoById(eventoId)
+        if (evento?.latitud != null && evento?.longitud != null) {
+            destinationPoint = GeoPoint(evento.latitud!!, evento.longitud!!)
+        }
+    }
+
+    // 3. Obtener GPS (Actualiza userLocation si tiene éxito)
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                    if (location != null) {
-                        startPoint = GeoPoint(location.latitude, location.longitude)
+                val token = com.google.android.gms.tasks.CancellationTokenSource().token
+                fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, token)
+                    .addOnSuccessListener { loc ->
+                        if (loc != null) userLocation = GeoPoint(loc.latitude, loc.longitude)
                     }
-                    locationFetched = true
-                }
-            } catch (e: SecurityException) {
-                locationFetched = true
-            }
-        } else {
-            locationFetched = true // Continue with default location
+            } catch (e: SecurityException) { /* Ignorar, usa el default */ }
         }
     }
 
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    startPoint = GeoPoint(location.latitude, location.longitude)
+            val token = com.google.android.gms.tasks.CancellationTokenSource().token
+            fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, token)
+                .addOnSuccessListener { loc ->
+                    if (loc != null) userLocation = GeoPoint(loc.latitude, loc.longitude)
                 }
-                locationFetched = true
-            }
         } else {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    LaunchedEffect(eventoId) {
-        val dao = FestivalDatabase.getInstance(context).eventoDao()
-        evento = dao.getEventoById(eventoId)
-    }
-
-    Configuration.getInstance().apply {
-        load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-        userAgentValue = "FestivalTrack/1.0"
-        osmdroidBasePath = context.cacheDir
-        osmdroidTileCache = java.io.File(context.cacheDir, "osmdroid")
-    }
-    
-    val destinationPoint = if (evento?.latitud != null && evento?.longitud != null) {
-        GeoPoint(evento!!.latitud!!, evento!!.longitud!!)
-    } else {
-        GeoPoint(21.156111, -100.932500)
-    }
-
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFE5E3DF))) {
-        if (!locationFetched) {
-            Text(
-                text = "Buscando GPS...",
-                modifier = Modifier.align(Alignment.Center),
-                color = Color.Black,
-                fontSize = 12.sp
-            )
-        } else {
-            AndroidView(
-                factory = { ctx ->
-                    val mapView = MapView(ctx).apply {
-                        layoutParams = android.widget.FrameLayout.LayoutParams(
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
-                        setTileSource(TileSourceFactory.MAPNIK)
-                        setMultiTouchControls(true)
-                        maxZoomLevel = 19.0 // IMPORTANT: Fix for grey tiles on zoom > 19
-                        zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
-                        controller.setZoom(16.0)
-                        controller.setCenter(startPoint)
+    // 4. Calcular Ruta observando tanto el origen como el destino
+    LaunchedEffect(userLocation, destinationPoint) {
+        kotlinx.coroutines.delay(1000) // 1 seg de gracia para que carguen los tiles del mapa
+        withContext(Dispatchers.IO) {
+            try {
+                // overview=full obliga a OSRM a mandar todos los puntos exactos de las calles (mejor calibración visual)
+                val urlStr = "https://router.project-osrm.org/route/v1/foot/${userLocation.longitude},${userLocation.latitude};${destinationPoint.longitude},${destinationPoint.latitude}?geometries=geojson&overview=full"
+                val connection = java.net.URL(urlStr).openConnection() as java.net.HttpURLConnection
+                connection.setRequestProperty("User-Agent", "FestivalTrack WearOS App/1.0")
+                if (connection.responseCode == 200) {
+                    val json = JSONObject(connection.inputStream.bufferedReader().readText())
+                    val routes = json.getJSONArray("routes")
+                    if (routes.length() > 0) {
+                        val route = routes.getJSONObject(0)
+                        val distance = route.getDouble("distance")
+                        
+                        // NOTA: El servidor gratuito de OSRM (demo) siempre devuelve tiempos de "vehículo"
+                        // incluso si le pides "foot". Así que calculamos el tiempo real a pie usando
+                        // la distancia exacta y una velocidad promedio humana de 5 km/h (83.3 metros por minuto).
+                        val durMins = Math.ceil(distance / 83.3).toInt()
+                        
+                        val distStr = if (distance > 1000) String.format("%.1f km", distance / 1000) else "${distance.toInt()} m"
+                        val durStr = if (durMins < 1) "< 1 min" else "$durMins min"
+                        
+                        val coords = route.getJSONObject("geometry").getJSONArray("coordinates")
+                        val points = mutableListOf<GeoPoint>()
+                        for (i in 0 until coords.length()) {
+                            val c = coords.getJSONArray(i)
+                            points.add(GeoPoint(c.getDouble(1), c.getDouble(0)))
+                        }
+                        
+                        withContext(Dispatchers.Main) {
+                            routeInfo = "$durStr • $distStr a pie"
+                            routeGeoPoints = points
+                        }
                     }
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
 
-                    coroutineScope.launch(Dispatchers.IO) {
-                        try {
-                            val urlStr = "https://router.project-osrm.org/route/v1/foot/${startPoint.longitude},${startPoint.latitude};${destinationPoint.longitude},${destinationPoint.latitude}?geometries=geojson"
-                            val connection = java.net.URL(urlStr).openConnection() as java.net.HttpURLConnection
-                            connection.setRequestProperty("User-Agent", "FestivalTrack WearOS App/1.0")
-                            if (connection.responseCode == 200) {
-                                val json = JSONObject(connection.inputStream.bufferedReader().readText())
-                                val routes = json.getJSONArray("routes")
-                                if (routes.length() > 0) {
-                                    val route = routes.getJSONObject(0)
-                                    val distance = route.getDouble("distance")
-                                    val duration = route.getDouble("duration")
-                                    
-                                    val distStr = if (distance > 1000) String.format("%.1f km", distance / 1000) else "${distance.toInt()} m"
-                                    val durStr = "${(duration / 60).toInt()} min"
-                                    
-                                    val coords = route.getJSONObject("geometry").getJSONArray("coordinates")
-                                    val geoPoints = ArrayList<GeoPoint>()
-                                    for (i in 0 until coords.length()) {
-                                        val c = coords.getJSONArray(i)
-                                        geoPoints.add(GeoPoint(c.getDouble(1), c.getDouble(0)))
-                                    }
-                                    
-                                    withContext(Dispatchers.Main) {
-                                        routeInfo = "$durStr • $distStr a pie"
-                                        
-                                        val polyline = Polyline(mapView)
-                                        polyline.setPoints(geoPoints)
-                                        polyline.outlinePaint.color = android.graphics.Color.parseColor("#C9A030")
-                                        polyline.outlinePaint.strokeWidth = 15f
-                                        mapView.overlays.add(polyline)
+    // INTERFAZ
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                // Custom FrameLayout para evitar que el reloj intercepte los gestos (Swipe to Dismiss)
+                val frameLayout = object : android.widget.FrameLayout(ctx) {
+                    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+                        // Le dice a la pantalla (SwipeDismissableNavHost) que NO robe los toques
+                        // Así puedes arrastrar el mapa libremente
+                        parent.requestDisallowInterceptTouchEvent(true)
+                        return super.dispatchTouchEvent(ev)
+                    }
+                }.apply {
+                    layoutParams = android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
+                
+                val mapView = MapView(ctx).apply {
+                    // ESTO ES VITAL EN WEAR OS PARA QUE NO SE CORTE A LA MITAD LA PANTALLA
+                    setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
+                    
+                    setTileSource(TileSourceFactory.MAPNIK)
+                    setMultiTouchControls(true)
+                    zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
+                    
+                    // Nivel de zoom seguro
+                    maxZoomLevel = 17.5
+                    controller.setZoom(16.0)
+                    controller.setCenter(GeoPoint(21.156828, -100.934444)) // Dolores Hidalgo
+                }
+                
+                // Agregamos el mapa al contenedor
+                frameLayout.addView(mapView, android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                ))
+                
+                mapViewRef = mapView // Guardamos referencia para los botones de zoom
+                frameLayout
+            },
+            update = { frameLayout ->
+                val mapView = frameLayout.getChildAt(0) as MapView
+                
+                // Si tenemos GPS pero la ruta no llega, centrar al usuario mientras espera
+                if (userLocation != null && routeGeoPoints.isEmpty()) {
+                    mapView.controller.animateTo(userLocation)
+                }
 
-                                        val destMarker = Marker(mapView)
-                                        destMarker.position = destinationPoint
-                                        destMarker.icon = ctx.getDrawable(R.drawable.ic_logo_festival)
-                                        destMarker.title = "Destino"
-                                        mapView.overlays.add(destMarker)
+                // Si la ruta ya llegó, pintamos TODO (solo una vez)
+                if (routeGeoPoints.isNotEmpty()) {
+                    mapView.overlays.clear()
 
-                                        val startMarker = Marker(mapView)
-                                        startMarker.position = startPoint
-                                        val walkIcon = ctx.getDrawable(android.R.drawable.ic_menu_directions)
-                                        if(walkIcon != null) {
-                                            walkIcon.setTint(android.graphics.Color.BLUE)
-                                            startMarker.icon = walkIcon
-                                        }
-                                        startMarker.title = "Tú"
-                                        mapView.overlays.add(startMarker)
+                    val polyline = Polyline(mapView)
+                    polyline.setPoints(routeGeoPoints)
+                    polyline.outlinePaint.color = android.graphics.Color.parseColor("#C9A030")
+                    polyline.outlinePaint.strokeWidth = 15f
+                    mapView.overlays.add(polyline)
 
-                                        // Apply expanded bounding box so it doesn't zoom too tightly
-                                        val boundingBox = BoundingBox.fromGeoPoints(geoPoints)
-                                        val expandedBox = BoundingBox(
-                                            boundingBox.latNorth + 0.002,
-                                            boundingBox.lonEast + 0.002,
-                                            boundingBox.latSouth - 0.002,
-                                            boundingBox.lonWest - 0.002
-                                        )
-                                        mapView.post {
-                                            mapView.zoomToBoundingBox(expandedBox, true, 80)
-                                        }
-
-                                        mapView.invalidate()
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) { e.printStackTrace() }
+                    val destMarker = Marker(mapView)
+                    destMarker.position = destinationPoint
+                    
+                    // Usamos un icono por defecto de Android para que no cubra el mapa con una imagen gigante
+                    val destIcon = context.getDrawable(android.R.drawable.ic_menu_myplaces)
+                    if (destIcon != null) {
+                        destIcon.setTint(android.graphics.Color.RED)
+                        destMarker.icon = destIcon
                     }
                     
-                    mapView
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+                    destMarker.title = "Destino"
+                    mapView.overlays.add(destMarker)
+
+                    val startMarker = Marker(mapView)
+                    startMarker.position = userLocation
+                    val walkIcon = context.getDrawable(android.R.drawable.ic_menu_directions)
+                    if (walkIcon != null) {
+                        walkIcon.setTint(android.graphics.Color.BLUE)
+                        startMarker.icon = walkIcon
+                    }
+                    startMarker.title = "Tú"
+                    mapView.overlays.add(startMarker)
+
+                    // Zoom fijo seguro y centro a la mitad del camino
+                    val midLat = (userLocation!!.latitude + destinationPoint.latitude) / 2
+                    val midLon = (userLocation!!.longitude + destinationPoint.longitude) / 2
+                    mapView.controller.setZoom(17.0)
+                    mapView.controller.animateTo(GeoPoint(midLat, midLon))
+
+                    mapView.invalidate()
+                }
+            }
+        )
 
         // Botón Volver
         Button(
@@ -345,20 +427,43 @@ fun MapaAccesoScreen(eventoId: String, onBack: () -> Unit) {
                 .align(Alignment.TopStart)
                 .padding(12.dp)
                 .size(32.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0x991C1C1E))
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0x99000000))
         ) {
             Icon(Icons.Filled.ArrowBack, "Volver", tint = Color.White, modifier = Modifier.size(16.dp))
         }
+
+        // Botones de Zoom (Pequeños a la derecha)
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Button(
+                onClick = { mapViewRef?.controller?.zoomIn() },
+                modifier = Modifier.size(28.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xCC000000))
+            ) {
+                Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+            Button(
+                onClick = { mapViewRef?.controller?.zoomOut() },
+                modifier = Modifier.size(28.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xCC000000))
+            ) {
+                Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        }
         
-        // Minimalist Distance Overlay
-        if (routeInfo != null && locationFetched) {
+        // Cartel de Distancia
+        if (routeInfo != null) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 12.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xCC1C1C1E))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .background(Color(0xCC000000))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = routeInfo!!,
