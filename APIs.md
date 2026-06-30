@@ -37,3 +37,10 @@ Provee las imágenes visuales (el dibujo de las calles, parques y bloques) que c
 - **Autenticación:** API pública. Se debe incluir un encabezado HTTP `User-Agent` único (`FestivalTrack/1.0`) para cumplir con las políticas de uso de OSM.
 - **Flujo de la información:**
   La librería `osmdroid` solicita automáticamente de manera asíncrona imágenes `.png` al servidor basándose en las coordenadas (X, Y) y el nivel de zoom de la cámara de la pantalla. Estas imágenes se renderizan de fondo en el lienzo debajo de la ruta calculada por OSRM.
+
+### Imagen de como funciona la API
+<img width="420" height="413" alt="image" src="https://github.com/user-attachments/assets/5b89bd74-014a-45c2-92b7-a6c53c4a07e0" />
+
+### Formato Json que arroja
+<img width="1866" height="487" alt="image" src="https://github.com/user-attachments/assets/54634f92-0b1b-4beb-a790-0f2d42091c39" />
+
