@@ -10,4 +10,7 @@ interface ArtistaDao {
 
     @Query("SELECT * FROM artistas WHERE id = :id")
     suspend fun findById(id: String): ArtistaEntity?
+
+    @Query("DELETE FROM artistas")
+    suspend fun deleteAll()
 }

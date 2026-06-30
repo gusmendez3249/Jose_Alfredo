@@ -39,6 +39,11 @@ class WearSyncService : WearableListenerService() {
     private suspend fun persistirPayload(payload: WearSyncPayload) {
         val db = FestivalDatabase.getInstance(applicationContext)
 
+        // Limpiamos la base de datos local antes de insertar para evitar duplicados
+        // o eventos fantasma que hayan cambiado de ID en el backend
+        db.artistaDao().deleteAll()
+        db.eventoDao().deleteAll()
+
         // Persistir artistas
         db.artistaDao().upsertAll(
             payload.artistas.map { dto ->

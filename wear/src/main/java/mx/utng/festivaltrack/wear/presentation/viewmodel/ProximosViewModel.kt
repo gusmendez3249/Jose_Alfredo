@@ -24,11 +24,26 @@ class ProximosViewModel(application: Application) : AndroidViewModel(application
         val database = FestivalDatabase.getInstance(application)
         repository = FestivalRepository(database.eventoDao())
         
-        // 1. Observar la base de datos Room (flujo en tiempo real)
+        // 1. Observar la base de datos Room y filtrar inteligentemente
         viewModelScope.launch {
-            val ahora = Instant.now().toString()
-            repository.getProximosEventosLocales(ahora).collectLatest { lista ->
-                _eventos.value = lista
+            // Pasamos un string vacío para que traiga todos y nosotros los filtramos con exactitud de zona horaria
+            repository.getProximosEventosLocales("").collectLatest { lista ->
+                val currentInstant = Instant.now()
+                val filtrados = lista.filter { evento ->
+                    val eventoInstant = try {
+                        Instant.parse(evento.fechaHora)
+                    } catch (e: Exception) {
+                        try {
+                            java.time.LocalDateTime.parse(evento.fechaHora.replace("Z", "")).atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        } catch (e2: Exception) {
+                            currentInstant
+                        }
+                    }
+                    // Mostrar si es en el futuro o si empezó hace menos de 1 hora
+                    java.time.Duration.between(eventoInstant, currentInstant).toHours() < 1
+                }.sortedBy { it.fechaHora }
+                
+                _eventos.value = filtrados.take(15)
             }
         }
 

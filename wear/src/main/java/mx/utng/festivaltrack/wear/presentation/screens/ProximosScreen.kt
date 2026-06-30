@@ -47,17 +47,50 @@ fun ProximosScreen(
                 }
             }
             itemsIndexed(eventos) { index, evento ->
-                val label = if (index == 0) "AHORA" else if (index == 1) "SIGUIENTE" else null
-                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    if (label != null) {
-                        Text(
-                            text = label,
-                            color = FestivalTextSecondary,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
-                            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
-                        )
+                val currentInstant = java.time.Instant.now()
+                
+                // Parseamos la fecha soportando UTC (la Z de Postgres/Prisma) y fechas locales
+                val eventoInstant = try {
+                    java.time.Instant.parse(evento.fechaHora)
+                } catch (e: Exception) {
+                    try {
+                        java.time.LocalDateTime.parse(evento.fechaHora.replace("Z", "")).atZone(java.time.ZoneId.systemDefault()).toInstant()
+                    } catch (e2: Exception) {
+                        currentInstant
                     }
+                }
+                
+                val duration = java.time.Duration.between(currentInstant, eventoInstant)
+                val label = if (duration.isNegative || duration.isZero) {
+                    "AHORA EN CURSO"
+                } else {
+                    val dias = duration.toDays()
+                    val horas = duration.toHours() % 24
+                    val minutos = duration.toMinutes() % 60
+                    
+                    when {
+                        dias > 0 -> "Faltan $dias días y $horas hr"
+                        horas > 0 -> "Faltan $horas hr $minutos min"
+                        else -> "Faltan $minutos min"
+                    }
+                }
+                
+                // Formateamos la hora extraída en la zona local para la UI (ej. 10:00)
+                val horaLocal = try {
+                    val localDateTime = java.time.LocalDateTime.ofInstant(eventoInstant, java.time.ZoneId.systemDefault())
+                    localDateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                } catch (e: Exception) {
+                    evento.fechaHora.take(16).takeLast(5) // fallback a lo que venía en el string
+                }
+                
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text(
+                        text = label,
+                        color = FestivalTextSecondary,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
+                    )
                     Card(
                         onClick = { onEventoClick(evento.id) },
                         backgroundPainter = CardDefaults.cardBackgroundPainter(
@@ -81,7 +114,7 @@ fun ProximosScreen(
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = evento.fechaHora.substring(11, 16),
+                                    text = horaLocal,
                                     color = FestivalGold,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
