@@ -9,9 +9,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import mx.utng.festivaltrack.shared.model.WearSyncPayload
-import mx.utng.festivaltrack.wear.data.local.FestivalDatabase
-import mx.utng.festivaltrack.wear.data.local.entity.ArtistaEntity
-import mx.utng.festivaltrack.wear.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
+import mx.utng.festivaltrack.shared.data.local.entity.ArtistaEntity
+import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.wear.domain.usecase.ScheduleAlertasUseCase
 
 class WearSyncService : WearableListenerService() {

@@ -4,7 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import mx.utng.festivaltrack.wear.data.local.FestivalDatabase
+import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
 import java.time.Instant
 
 class ScheduleAlertasUseCase(

@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.itemsIndexed
 import androidx.wear.compose.material.*
-import mx.utng.festivaltrack.wear.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.wear.R
 import mx.utng.jose_alfredo.presentation.theme.*
 
