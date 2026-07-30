@@ -48,7 +48,32 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("main") {
-                            MainScreen()
+                            MainScreen(
+                                onNavigateToCheckout = { total, count ->
+                                    navController.navigate("checkout/$total/$count")
+                                }
+                            )
+                        }
+                        composable("checkout/{total}/{count}") { backStackEntry ->
+                            val total = backStackEntry.arguments?.getString("total")?.toIntOrNull() ?: 0
+                            val count = backStackEntry.arguments?.getString("count")?.toIntOrNull() ?: 0
+                            mx.utng.festivaltrack.app.ui.screens.CheckoutScreen(
+                                totalPrice = total,
+                                totalTickets = count,
+                                onNavigateBack = { navController.popBackStack() },
+                                onPaymentSuccess = {
+                                    navController.navigate("success") {
+                                        popUpTo("main") { inclusive = false }
+                                    }
+                                }
+                            )
+                        }
+                        composable("success") {
+                            mx.utng.festivaltrack.app.ui.screens.TicketSuccessScreen(
+                                onNavigateHome = {
+                                    navController.popBackStack("main", inclusive = false)
+                                }
+                            )
                         }
                     }
                 }

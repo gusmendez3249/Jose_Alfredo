@@ -29,7 +29,9 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
+) {
     val navController = rememberNavController()
     val items = listOf(
         BottomNavItem.Home,
@@ -87,7 +89,9 @@ fun MainScreen() {
                     AudioScreen()
                 }
                 composable(BottomNavItem.Tickets.route) {
-                    TicketsScreen()
+                    TicketsScreen(
+                        onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
+                    )
                 }
             }
         }
