@@ -12,7 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mx.utng.festivaltrack.app.ui.screens.LoginScreen
 import mx.utng.festivaltrack.app.ui.screens.RegisterScreen
-import mx.utng.festivaltrack.app.ui.screens.WelcomeScreen
+import mx.utng.festivaltrack.app.ui.screens.MainScreen
 import mx.utng.festivaltrack.app.ui.theme.FestivalTrackTheme
 
 class MainActivity : ComponentActivity() {
@@ -30,14 +30,25 @@ class MainActivity : ComponentActivity() {
                         composable("login") {
                             LoginScreen(
                                 onNavigateToRegister = { navController.navigate("register") },
-                                onNavigateToDashboard = { /* TODO: Phase 2 */ }
+                                onNavigateToDashboard = { 
+                                    navController.navigate("main") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
                             )
                         }
                         composable("register") {
                             RegisterScreen(
                                 onNavigateToLogin = { navController.popBackStack() },
-                                onNavigateToDashboard = { /* TODO: Phase 2 */ }
+                                onNavigateToDashboard = { 
+                                    navController.navigate("main") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
                             )
+                        }
+                        composable("main") {
+                            MainScreen()
                         }
                     }
                 }
