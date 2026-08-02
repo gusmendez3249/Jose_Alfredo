@@ -9,6 +9,15 @@ interface FestivalApiService {
     @GET("eventos")
     suspend fun getEventos(): List<EventoDto>
 
+    @retrofit2.http.POST("eventos")
+    suspend fun createEvento(@retrofit2.http.Body evento: EventoCreateDto): EventoDto
+
+    @retrofit2.http.PUT("eventos/{id}")
+    suspend fun updateEvento(@retrofit2.http.Path("id") id: String, @retrofit2.http.Body evento: EventoCreateDto): EventoDto
+
+    @retrofit2.http.DELETE("eventos/{id}")
+    suspend fun deleteEvento(@retrofit2.http.Path("id") id: String)
+
     companion object {
         // 10.0.2.2 es el localhost de la máquina host desde el emulador de Android
         private const val BASE_URL = "http://10.0.2.2:3001/api/v1/"
@@ -56,4 +65,12 @@ data class EventoDto(
 data class ArtistaDto(
     val id: String,
     val nombre: String
+)
+
+data class EventoCreateDto(
+    val nombre: String,
+    val fechaHora: String,
+    val ubicacion: String,
+    val escenario: String?,
+    val estado: String
 )

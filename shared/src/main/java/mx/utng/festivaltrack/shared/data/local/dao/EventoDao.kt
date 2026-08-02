@@ -18,6 +18,12 @@ interface EventoDao {
     @Upsert
     suspend fun upsertAll(eventos: List<EventoEntity>)
 
+    @Upsert
+    suspend fun upsert(evento: EventoEntity)
+
+    @Delete
+    suspend fun delete(evento: EventoEntity)
+
     @Query("DELETE FROM eventos")
     suspend fun deleteAll()
 }

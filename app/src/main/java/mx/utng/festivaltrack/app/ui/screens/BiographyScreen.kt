@@ -1,5 +1,6 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,11 +10,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mx.utng.festivaltrack.app.R
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @Composable
@@ -26,13 +32,33 @@ fun BiographyScreen() {
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
     ) {
-        // Hero Image Placeholder
+        // Hero Image: Iconic Jose Alfredo Jimenez Portrait
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
-                .background(Color.DarkGray)
+                .height(340.dp)
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.jose_alfredo_portrait),
+                contentDescription = "José Alfredo Jiménez Portrait",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Dark gradient overlay matching PDF Fig 4
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.95f)
+                            )
+                        )
+                    )
+            )
+
             // Text overlays
             Column(
                 modifier = Modifier
@@ -42,14 +68,14 @@ fun BiographyScreen() {
                 Text(
                     text = "EL REY DE LA CANCIÓN",
                     color = PrimaryGold,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    letterSpacing = 1.5.sp
                 )
                 Text(
                     text = "Biografía",
                     color = PrimaryGold,
-                    fontSize = 36.sp,
+                    fontSize = 38.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -71,8 +97,8 @@ fun BiographyScreen() {
             // Description
             Text(
                 text = "José Alfredo Jiménez Sandoval fue un cantante y compositor mexicano de música ranchera, considerado por muchos como el mejor de la historia. Sus canciones se convirtieron en himnos del alma mexicana.",
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 13.sp,
                 lineHeight = 18.sp
             )
 
@@ -81,7 +107,7 @@ fun BiographyScreen() {
             Text(
                 text = "Hitos Históricos",
                 color = PrimaryGold,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
             )
             
@@ -115,7 +141,7 @@ fun BiographyScreen() {
                 Text(
                     text = "Discografía Destacada",
                     color = PrimaryGold,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -127,13 +153,23 @@ fun BiographyScreen() {
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Discography items (Horizontal Scroll or just Row for now)
+            // Discography items
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                DiscographyCard(title = "La Enorme Distancia", subtitle = "1950 • 12 Canciones", modifier = Modifier.weight(1f))
-                DiscographyCard(title = "El Camino de la Noche", subtitle = "1954 • 10 Canciones", modifier = Modifier.weight(1f))
+                DiscographyCard(
+                    title = "La Enorme Distancia",
+                    subtitle = "1950 • 12 Canciones",
+                    drawableId = R.drawable.ranchera_guitar,
+                    modifier = Modifier.weight(1f)
+                )
+                DiscographyCard(
+                    title = "El Camino de la Noche",
+                    subtitle = "1954 • 10 Canciones",
+                    drawableId = R.drawable.mariachi_gala_stage,
+                    modifier = Modifier.weight(1f)
+                )
             }
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -148,7 +184,6 @@ fun TimelineItem(year: String, title: String, description: String) {
             .fillMaxWidth()
             .padding(bottom = 16.dp)
     ) {
-        // Bullet
         Box(
             modifier = Modifier
                 .padding(top = 4.dp, end = 16.dp)
@@ -156,7 +191,6 @@ fun TimelineItem(year: String, title: String, description: String) {
                 .background(PrimaryGold, RoundedCornerShape(50))
         )
         
-        // Content card
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720)),
             shape = RoundedCornerShape(12.dp),
@@ -165,23 +199,30 @@ fun TimelineItem(year: String, title: String, description: String) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(year, color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(description, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp, lineHeight = 14.sp)
+                Text(description, color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, lineHeight = 15.sp)
             }
         }
     }
 }
 
 @Composable
-fun DiscographyCard(title: String, subtitle: String, modifier: Modifier = Modifier) {
+fun DiscographyCard(title: String, subtitle: String, drawableId: Int, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(Color.DarkGray, RoundedCornerShape(12.dp))
-        )
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            Image(
+                painter = painterResource(id = drawableId),
+                contentDescription = title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Text(subtitle, color = Color.Gray, fontSize = 10.sp)

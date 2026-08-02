@@ -15,10 +15,24 @@ import mx.utng.festivaltrack.app.ui.screens.RegisterScreen
 import mx.utng.festivaltrack.app.ui.screens.MainScreen
 import mx.utng.festivaltrack.app.ui.theme.FestivalTrackTheme
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        val appContainer = (application as FestivalTrackApplication).container
+
         setContent {
+            val eventosViewModel: EventosViewModel = viewModel(
+                factory = EventosViewModel.provideFactory(appContainer.festivalRepository)
+            )
+            val adminManageViewModel: AdminManageViewModel = viewModel(
+                factory = AdminManageViewModel.provideFactory(appContainer.festivalRepository)
+            )
+            
             FestivalTrackTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -29,9 +43,16 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "login") {
                         composable("login") {
                             LoginScreen(
-                                onNavigateToRegister = { navController.navigate("register") },
+                                onNavigateToRegister = {
+                                    navController.navigate("register")
+                                },
                                 onNavigateToDashboard = { 
                                     navController.navigate("main") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToAdmin = {
+                                    navController.navigate("admin_dashboard") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 }
@@ -48,7 +69,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("main") {
-                            MainScreen(
+                            mx.utng.festivaltrack.app.ui.screens.MainScreen(
+                                eventosViewModel = eventosViewModel,
                                 onNavigateToCheckout = { total, count ->
                                     navController.navigate("checkout/$total/$count")
                                 }
@@ -73,6 +95,27 @@ class MainActivity : ComponentActivity() {
                                 onNavigateHome = {
                                     navController.popBackStack("main", inclusive = false)
                                 }
+                            )
+                        }
+                        
+                        // Admin Routes
+                        composable("admin_dashboard") {
+                            mx.utng.festivaltrack.app.ui.screens.AdminMainScreen(
+                                adminManageViewModel = adminManageViewModel,
+                                onNavigateToCreateEvent = {
+                                    navController.navigate("admin_create_event")
+                                },
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo("admin_dashboard") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+                        composable("admin_create_event") {
+                            mx.utng.festivaltrack.app.ui.screens.AdminCreateEventScreen(
+                                viewModel = adminManageViewModel,
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                     }

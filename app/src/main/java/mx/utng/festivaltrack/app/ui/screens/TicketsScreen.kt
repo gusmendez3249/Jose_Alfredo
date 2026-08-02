@@ -24,9 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
+import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketsScreen(
+    eventosViewModel: EventosViewModel? = null,
     onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
 ) {
     var selectedDate by remember { mutableStateOf("21") }

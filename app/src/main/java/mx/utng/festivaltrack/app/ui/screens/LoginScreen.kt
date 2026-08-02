@@ -25,7 +25,8 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
-    onNavigateToDashboard: () -> Unit = {}
+    onNavigateToDashboard: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -105,7 +106,13 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onNavigateToDashboard,
+            onClick = {
+                if (email.trim().lowercase() == "admin@admin.com") {
+                    onNavigateToAdmin()
+                } else {
+                    onNavigateToDashboard()
+                }
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryGold,
                 contentColor = Color.Black

@@ -46,4 +46,50 @@ class FestivalRepository(
             }
         }
     }
+
+    suspend fun addEvento(eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
+        withContext(Dispatchers.IO) {
+            try {
+                // 1. Post to API
+                val remoteEvent = apiService.createEvento(eventoCreateDto)
+                // 2. Save locally
+                eventoDao.upsert(remoteEvent.toEntity())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Offline fallback logic could go here, but for now we require network
+                throw e
+            }
+        }
+    }
+
+    suspend fun updateEvento(id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
+        withContext(Dispatchers.IO) {
+            try {
+                // 1. Put to API
+                val remoteEvent = apiService.updateEvento(id, eventoCreateDto)
+                // 2. Update locally
+                eventoDao.upsert(remoteEvent.toEntity())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                throw e
+            }
+        }
+    }
+
+    suspend fun deleteEvento(id: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                // 1. Delete from API
+                apiService.deleteEvento(id)
+                // 2. Delete locally
+                val localEvent = eventoDao.getEventoById(id)
+                if (localEvent != null) {
+                    eventoDao.delete(localEvent)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                throw e
+            }
+        }
+    }
 }
