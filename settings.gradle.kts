@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Jose_Alfredo"
-include(":app", ":wear", ":shared")
+include(":app", ":wear", ":shared", ":tv")

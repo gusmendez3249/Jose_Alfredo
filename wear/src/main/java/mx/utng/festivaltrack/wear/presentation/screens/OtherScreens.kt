@@ -20,8 +20,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import androidx.compose.runtime.LaunchedEffect
-import mx.utng.festivaltrack.wear.data.local.FestivalDatabase
-import mx.utng.festivaltrack.wear.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
+import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf

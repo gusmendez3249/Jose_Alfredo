@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import mx.utng.festivaltrack.wear.data.local.FestivalDatabase
-import mx.utng.festivaltrack.wear.data.local.entity.EventoEntity
-import mx.utng.festivaltrack.wear.data.repository.FestivalRepository
+import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
+import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 import java.time.Instant
 
 class ProximosViewModel(application: Application) : AndroidViewModel(application) {

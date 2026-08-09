@@ -2,7 +2,7 @@
 
 ## 📝 Datos del Proyecto
 * **Nombre del proyecto:** FestivalTrack
-* **Nombre de los estudiantes estudiante:**
+* **Nombre de los estudiantes:**
 Chavero Martínez Noé
 Cruz Méndez Juan Gustavo Ángel
 Salinas Salinas Omar
@@ -44,6 +44,7 @@ El proyecto demuestra el dominio de control de versiones, la implementación de 
 
 ## 📸 Capturas de pantalla de la aplicación
 *(Las capturas se encuentran detalladas en la carpeta `evidencias` del repositorio)*
+
 * **Pantalla Principal:**
   ![Pantalla Principal](Evidencias/pantalla_principal.png)
 * **Próximos Eventos:**
@@ -54,4 +55,3 @@ El proyecto demuestra el dominio de control de versiones, la implementación de 
   ![Mapa](Evidencias/mapa.jpeg)
 * **Ubicación GPS Exacta:**
   ![Ubicación](Evidencias/ubicacion.png)
-

@@ -33,8 +33,26 @@ let EventosService = class EventosService {
             throw new common_1.NotFoundException('Evento no encontrado');
         return evento;
     }
-    create(dto, adminId) {
-        return this.prisma.evento.create({ data: { ...dto, administradorId: adminId } });
+    async create(dto, adminId) {
+        const ultimoEvento = await this.prisma.evento.findFirst({
+            where: { id: { startsWith: 'EVT-' } },
+            orderBy: { id: 'desc' },
+        });
+        let nuevoId = 'EVT-001';
+        if (ultimoEvento && ultimoEvento.id) {
+            const coincidencia = ultimoEvento.id.match(/^EVT-(\d+)$/);
+            if (coincidencia) {
+                const ultimoNumero = parseInt(coincidencia[1], 10);
+                nuevoId = `EVT-${String(ultimoNumero + 1).padStart(3, '0')}`;
+            }
+        }
+        return this.prisma.evento.create({
+            data: {
+                ...dto,
+                id: nuevoId,
+                administradorId: adminId
+            }
+        });
     }
     async update(id, dto) {
         await this.findOne(id);
