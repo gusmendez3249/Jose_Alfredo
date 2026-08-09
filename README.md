@@ -43,7 +43,7 @@ El proyecto demuestra el dominio de control de versiones, la implementación de 
 7. La aplicación cargará automáticamente los eventos disponibles y permitirá la navegación GPS al dar clic en el botón de "Ver Mapa".
 
 ## 📸 Capturas de pantalla de la aplicación
-*(Las capturas se encuentran detalladas en la carpeta `Evidencias` del repositorio)*
+*(Las capturas se encuentran detalladas en la carpeta `evidencias` del repositorio)*
 
 * **Pantalla Principal:**
   ![Pantalla Principal](Evidencias/pantalla_principal.png)

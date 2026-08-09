@@ -1,0 +1,97 @@
+:root {
+  /* Colors - Matched with Wear OS Theme */
+  --bg-color: #1C1C1E;
+  --surface-color: #2A2A2F;
+  --surface-color-hover: #35353A;
+  --primary-color: #C9A030; /* FestivalGold */
+  --secondary-color: #C9A030; 
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-on-primary: #000000;
+  
+  /* Glassmorphism / Panels */
+  --glass-bg: #2A2A2F;
+  --glass-border: rgba(201, 160, 48, 0.2);
+  --glass-blur: blur(0px); /* Less blur, more solid like wear */
+
+  /* Fonts */
+  --font-heading: 'Noto Serif', serif; /* Wear OS uses FontFamily.Serif */
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Utils */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-panel:hover {
+  transform: translateY(-4px);
+  background: var(--surface-color-hover);
+  border-color: var(--primary-color);
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.gradient-text {
+  color: var(--primary-color);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
