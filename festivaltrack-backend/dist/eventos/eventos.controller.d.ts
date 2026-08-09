@@ -26,6 +26,8 @@ export declare class EventosController {
         estado: import(".prisma/client").$Enums.EstadoEvento;
         artistaId: string | null;
         administradorId: string;
+        latitud: number | null;
+        longitud: number | null;
     })[]>;
     findOne(id: string): Promise<{
         artista: {
@@ -61,8 +63,10 @@ export declare class EventosController {
         estado: import(".prisma/client").$Enums.EstadoEvento;
         artistaId: string | null;
         administradorId: string;
+        latitud: number | null;
+        longitud: number | null;
     }>;
-    create(dto: CreateEventoDto, req: any): import(".prisma/client").Prisma.Prisma__EventoClient<{
+    create(dto: CreateEventoDto, req: any): Promise<{
         nombre: string;
         id: string;
         createdAt: Date;
@@ -76,7 +80,9 @@ export declare class EventosController {
         estado: import(".prisma/client").$Enums.EstadoEvento;
         artistaId: string | null;
         administradorId: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+        latitud: number | null;
+        longitud: number | null;
+    }>;
     update(id: string, dto: Partial<CreateEventoDto>): Promise<{
         nombre: string;
         id: string;
@@ -91,6 +97,8 @@ export declare class EventosController {
         estado: import(".prisma/client").$Enums.EstadoEvento;
         artistaId: string | null;
         administradorId: string;
+        latitud: number | null;
+        longitud: number | null;
     }>;
     remove(id: string): Promise<{
         nombre: string;
@@ -106,5 +114,7 @@ export declare class EventosController {
         estado: import(".prisma/client").$Enums.EstadoEvento;
         artistaId: string | null;
         administradorId: string;
+        latitud: number | null;
+        longitud: number | null;
     }>;
 }
