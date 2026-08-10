@@ -15,4 +15,12 @@ export declare class AuthService {
         rol: string;
     }>;
     private firmarToken;
+    tvSync(body: {
+        tvToken: string;
+        userId: string;
+    }): Promise<{
+        status: string;
+        message: string;
+        tvToken: string;
+    }>;
 }
