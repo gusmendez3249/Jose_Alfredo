@@ -76,6 +76,9 @@ let AuthService = class AuthService {
     firmarToken(id, correo, rol) {
         return { access_token: this.jwt.sign({ sub: id, correo, rol }), rol };
     }
+    async tvSync(body) {
+        return { status: 'SUCCESS', message: 'Smart TV vinculada correctamente', tvToken: body.tvToken };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

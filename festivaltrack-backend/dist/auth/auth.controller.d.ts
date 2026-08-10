@@ -12,4 +12,12 @@ export declare class AuthController {
         access_token: string;
         rol: string;
     }>;
+    tvSync(body: {
+        tvToken: string;
+        userId: string;
+    }): Promise<{
+        status: string;
+        message: string;
+        tvToken: string;
+    }>;
 }

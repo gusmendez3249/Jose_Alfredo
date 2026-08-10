@@ -30,4 +30,10 @@ export class AuthService {
   private firmarToken(id: string, correo: string, rol: string) {
     return { access_token: this.jwt.sign({ sub: id, correo, rol }), rol };
   }
+
+  async tvSync(body: { tvToken: string, userId: string }) {
+    // Aquí idealmente guardaríamos la relación en una tabla de sesiones TV o usaríamos WebSockets
+    // Por ahora, simulamos la vinculación exitosa.
+    return { status: 'SUCCESS', message: 'Smart TV vinculada correctamente', tvToken: body.tvToken };
+  }
 }

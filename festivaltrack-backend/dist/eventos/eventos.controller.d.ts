@@ -66,7 +66,7 @@ export declare class EventosController {
         latitud: number | null;
         longitud: number | null;
     }>;
-    create(dto: CreateEventoDto, req: any): import(".prisma/client").Prisma.Prisma__EventoClient<{
+    create(dto: CreateEventoDto, req: any): Promise<{
         nombre: string;
         id: string;
         createdAt: Date;
@@ -82,7 +82,7 @@ export declare class EventosController {
         administradorId: string;
         latitud: number | null;
         longitud: number | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     update(id: string, dto: Partial<CreateEventoDto>): Promise<{
         nombre: string;
         id: string;
