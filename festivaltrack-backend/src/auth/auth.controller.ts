@@ -9,4 +9,5 @@ export class AuthController {
 
   @Post('register') register(@Body() dto: RegisterDto) { return this.authService.register(dto); }
   @Post('login')    login(@Body() dto: LoginDto)       { return this.authService.login(dto); }
+  @Post('tv-sync')  tvSync(@Body() body: { tvToken: string, userId: string }) { return this.authService.tvSync(body); }
 }
