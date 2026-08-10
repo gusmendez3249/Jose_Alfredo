@@ -217,6 +217,7 @@ model Evento {
   boletos        Boleto[]
   transmision    Transmision?
   notificaciones Notificacion[]
+  chatStreams    ChatStream[]
 
   @@map("eventos")
 }
@@ -336,3 +337,20 @@ model SyncMeta {
   @@unique([dispositivo, entidad])
   @@map("sync_meta")
 }
+
+// ─── CHAT ──────────────────────────────────────────────
+
+model ChatStream {
+  id            String   @id @default(cuid())
+  eventoId      String
+  usuarioNombre String
+  mensaje       String   @db.Text
+  esAdmin       Boolean  @default(false)
+  fechaEnvio    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  evento        Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  @@map("chat_stream")
+}
+
