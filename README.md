@@ -46,12 +46,12 @@ El proyecto demuestra el dominio de control de versiones, la implementación de 
 *(Las capturas se encuentran detalladas en la carpeta `evidencias` del repositorio)*
 
 * **Pantalla Principal:**
-  ![Pantalla Principal](Evidencias/pantalla_principal.png)
+  ![Pantalla Principal](evidencias/pantalla_principal.png)
 * **Próximos Eventos:**
-  ![Próximos Eventos](Evidencias/proximos_eventos.png)
+  ![Próximos Eventos](evidencias/proximos_eventos.png)
 * **Pantalla de Alerta / Temporizador:**
-  ![Alerta](Evidencias/alerta.png)
+  ![Alerta](evidencias/alerta.png)
 * **Navegación GPS y Mapa:**
-  ![Mapa](Evidencias/mapa.jpeg)
+  ![Mapa](evidencias/mapa.jpeg)
 * **Ubicación GPS Exacta:**
-  ![Ubicación](Evidencias/ubicacion.png)
+  ![Ubicación](evidencias/ubicacion.png)
