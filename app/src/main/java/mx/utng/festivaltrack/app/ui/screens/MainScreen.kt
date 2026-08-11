@@ -29,6 +29,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
     object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
+    object Gallery : BottomNavItem("gallery", Icons.Default.Person, "Galería")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
 }
 
@@ -44,6 +45,7 @@ fun MainScreen(
         BottomNavItem.Map,
         BottomNavItem.Audio,
         BottomNavItem.Tickets,
+        BottomNavItem.Gallery,
         BottomNavItem.Profile
     )
 
@@ -106,6 +108,9 @@ fun MainScreen(
                         eventosViewModel = eventosViewModel,
                         onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
                     )
+                }
+                composable(BottomNavItem.Gallery.route) {
+                    GalleryScreen()
                 }
                 composable(BottomNavItem.Profile.route) {
                     mx.utng.festivaltrack.app.ui.screens.ProfileScreen(
