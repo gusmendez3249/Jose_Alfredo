@@ -19,20 +19,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
+import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
+    eventoId: String = "",
     totalPrice: Int = 4500, // Default for demo
     totalTickets: Int = 1,  // Default for demo
     onNavigateBack: () -> Unit = {},
-    onPaymentSuccess: () -> Unit = {}
+    onPaymentSuccess: () -> Unit = {},
+    viewModel: CheckoutViewModel = viewModel()
 ) {
     var cardNumber by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
     var cvv by remember { mutableStateOf("") }
     var cardHolder by remember { mutableStateOf("") }
+
+    val checkoutState by viewModel.checkoutState.collectAsState()
+
+    LaunchedEffect(checkoutState) {
+        if (checkoutState is CheckoutState.Success) {
+            viewModel.resetState()
+            onPaymentSuccess()
+        }
+    }
 
     val scrollState = rememberScrollState()
     val fieldColor = Color(0xFF1E2720)
@@ -55,8 +69,27 @@ fun CheckoutScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
+                    if (checkoutState is CheckoutState.Error) {
+                        Text(
+                            text = (checkoutState as CheckoutState.Error).message,
+                            color = Color.Red,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
                     Button(
-                        onClick = onPaymentSuccess,
+                        onClick = {
+                            viewModel.procesarPago(
+                                eventoId = if (eventoId.isNotBlank()) eventoId else "cm0d1e3j7000008jt4h7m2k0l", // Fallback ID if empty
+                                categoria = "VIP",
+                                cantidad = totalTickets,
+                                precioTotal = totalPrice,
+                                tarjetaNumero = cardNumber,
+                                tarjetaVencimiento = expiryDate,
+                                tarjetaCVV = cvv
+                            )
+                        },
+                        enabled = checkoutState !is CheckoutState.Processing,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PrimaryGold,
                             contentColor = Color.Black
@@ -66,10 +99,14 @@ fun CheckoutScreen(
                             .fillMaxWidth()
                             .height(56.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = "Pagar")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("PAGAR $$totalPrice MXN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        if (checkoutState is CheckoutState.Processing) {
+                            CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = "Pagar")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("PAGAR $$totalPrice MXN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
                         }
                     }
                 }

@@ -24,6 +24,17 @@ interface FestivalApiService {
     @retrofit2.http.DELETE("eventos/{id}")
     suspend fun deleteEvento(@retrofit2.http.Path("id") id: String)
 
+    @retrofit2.http.POST("boletos/comprar")
+    suspend fun comprarBoleto(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Body request: CompraBoletoDto
+    ): BoletoDto
+
+    @retrofit2.http.GET("boletos/mis-boletos")
+    suspend fun getMisBoletos(
+        @retrofit2.http.Header("Authorization") token: String
+    ): List<BoletoDto>
+
     companion object {
         // 10.0.2.2 es el localhost de la máquina host desde el emulador de Android
         private const val BASE_URL = "http://10.0.2.2:3001/api/v1/"
@@ -103,4 +114,23 @@ data class UsuarioDto(
     val nombre: String,
     val correo: String,
     val rol: String
+)
+
+data class CompraBoletoDto(
+    val eventoId: String,
+    val categoria: String,
+    val cantidad: Int,
+    val precioTotal: Int,
+    val metodoPago: String
+)
+
+data class BoletoDto(
+    val id: String,
+    val eventoId: String,
+    val usuarioId: String,
+    val categoria: String,
+    val precio: Double,
+    val codigoQR: String,
+    val estado: String,
+    val evento: EventoDto?
 )

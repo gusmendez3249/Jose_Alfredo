@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,7 +28,8 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Biography : BottomNavItem("biography", Icons.Default.Book, "Biografía")
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
     object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
-    object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Boletos")
+    object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
+    object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
 }
 
 @Composable
@@ -41,7 +43,8 @@ fun MainScreen(
         BottomNavItem.Biography,
         BottomNavItem.Map,
         BottomNavItem.Audio,
-        BottomNavItem.Tickets
+        BottomNavItem.Tickets,
+        BottomNavItem.Profile
     )
 
     Scaffold(
@@ -99,6 +102,11 @@ fun MainScreen(
                     TicketsScreen(
                         eventosViewModel = eventosViewModel,
                         onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
+                    )
+                }
+                composable(BottomNavItem.Profile.route) {
+                    mx.utng.festivaltrack.app.ui.screens.ProfileScreen(
+                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) }
                     )
                 }
             }
