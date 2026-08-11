@@ -105,6 +105,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCreateEvent = {
                                     navController.navigate("admin_create_event")
                                 },
+                                onNavigateToLivePanel = {
+                                    navController.navigate("admin_live_stream")
+                                },
                                 onLogout = {
                                     navController.navigate("login") {
                                         popUpTo("admin_dashboard") { inclusive = true }
@@ -115,6 +118,11 @@ class MainActivity : ComponentActivity() {
                         composable("admin_create_event") {
                             mx.utng.festivaltrack.app.ui.screens.AdminCreateEventScreen(
                                 viewModel = adminManageViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("admin_live_stream") {
+                            mx.utng.festivaltrack.app.ui.screens.AdminLiveStreamScreen(
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

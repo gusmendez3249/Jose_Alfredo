@@ -20,6 +20,7 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 fun AdminMainScreen(
     adminManageViewModel: mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel,
     onNavigateToCreateEvent: () -> Unit = {},
+    onNavigateToLivePanel: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -87,7 +88,9 @@ fun AdminMainScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (selectedTab) {
-                0 -> AdminDashboardScreen()
+                0 -> AdminDashboardScreen(
+                    onNavigateToLivePanel = onNavigateToLivePanel
+                )
                 1 -> AdminUploadScreen()
                 2 -> AdminManageScreen(
                     viewModel = adminManageViewModel,

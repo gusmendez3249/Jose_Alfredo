@@ -44,24 +44,24 @@ fun ProgramaCompletoScreen(
                 }
             }
             itemsIndexed(eventos) { index, evento ->
-                val currentInstant = java.time.Instant.now()
-                
-                val eventoInstant = try {
-                    java.time.Instant.parse(evento.fechaHora)
-                } catch (e: Exception) {
-                    try {
-                        java.time.LocalDateTime.parse(evento.fechaHora.replace("Z", "")).atZone(java.time.ZoneId.systemDefault()).toInstant()
-                    } catch (e2: Exception) {
+                val horaLocal = remember(evento.fechaHora) {
+                    val currentInstant = java.time.Instant.now()
+                    val eventoInstant = try {
+                        if (evento.fechaHora.endsWith("Z")) {
+                            java.time.Instant.parse(evento.fechaHora)
+                        } else {
+                            java.time.LocalDateTime.parse(evento.fechaHora).atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        }
+                    } catch (e: Exception) {
                         currentInstant
                     }
-                }
-                
-                // Formateamos la hora extraída en la zona local para la UI (ej. 10:00)
-                val horaLocal = try {
-                    val localDateTime = java.time.LocalDateTime.ofInstant(eventoInstant, java.time.ZoneId.systemDefault())
-                    localDateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd HH:mm"))
-                } catch (e: Exception) {
-                    evento.fechaHora.take(16) // fallback
+                    
+                    try {
+                        val localDateTime = java.time.LocalDateTime.ofInstant(eventoInstant, java.time.ZoneId.systemDefault())
+                        localDateTime.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd HH:mm"))
+                    } catch (e: Exception) {
+                        evento.fechaHora.take(16) // fallback
+                    }
                 }
                 
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {

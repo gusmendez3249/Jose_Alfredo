@@ -29,7 +29,9 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminDashboardScreen() {
+fun AdminDashboardScreen(
+    onNavigateToLivePanel: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
     
     Column(
@@ -165,7 +167,12 @@ fun AdminDashboardScreen() {
         Spacer(modifier = Modifier.height(16.dp))
         ManagementCard(title = "Galería de Eventos", desc = "Añade fotos del último concierto y organiza los álbumes por fecha y artista.", btn = "EDITAR GALERÍA")
         Spacer(modifier = Modifier.height(16.dp))
-        ManagementCard(title = "Control de Stream", desc = "Configura las claves de transmisión y monitorea la salud del stream en tiempo real.", btn = "IR AL PANEL LIVE")
+        ManagementCard(
+            title = "Control de Stream", 
+            desc = "Configura las claves de transmisión y monitorea la salud del stream en tiempo real.", 
+            btn = "IR AL PANEL LIVE",
+            onClick = onNavigateToLivePanel
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -220,7 +227,7 @@ fun MetricBox(icon: ImageVector, count: String, label: String, modifier: Modifie
 }
 
 @Composable
-fun ManagementCard(title: String, desc: String, btn: String) {
+fun ManagementCard(title: String, desc: String, btn: String, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,7 +242,7 @@ fun ManagementCard(title: String, desc: String, btn: String) {
             Text(desc, color = Color.LightGray, fontSize = 12.sp, lineHeight = 16.sp)
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
-                onClick = {},
+                onClick = onClick,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryGold),
                 border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold),
