@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Events from './pages/Events';
 import MapRoute from './pages/MapRoute';
+import Checkout from './pages/Checkout';
+import MyTickets from './pages/MyTickets';
 import './index.css';
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/map" element={<MapRoute />} />
+        <Route path="/checkout/:eventoId" element={<Checkout />} />
+        <Route path="/mis-boletos" element={<MyTickets />} />
       </Routes>
     </BrowserRouter>
   );
