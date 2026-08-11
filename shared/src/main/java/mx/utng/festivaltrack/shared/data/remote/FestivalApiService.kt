@@ -45,6 +45,15 @@ interface FestivalApiService {
         @retrofit2.http.Body request: ChatMessageDto
     )
 
+    @retrofit2.http.GET("biografias")
+    suspend fun getBiografias(): List<BiografiaDto>
+
+    @retrofit2.http.GET("canciones")
+    suspend fun getCanciones(): List<CancionDto>
+
+    @retrofit2.http.GET("galeria")
+    suspend fun getGalerias(): List<GaleriaDto>
+
     companion object {
         // 10.0.2.2 es el localhost de la máquina host desde el emulador de Android
         private const val BASE_URL = "http://10.0.2.2:3001/api/v1/"
@@ -160,4 +169,36 @@ data class TransmisionDto(
     val titulo: String,
     val streamUrl: String?,
     val estado: String
+)
+
+data class BiografiaDto(
+    val id: String,
+    val descripcion: String,
+    val citaCelebre: String?,
+    val hitos: String, // JSON String
+    val discografia: String, // JSON String
+    val artista: ArtistaDto?
+)
+
+data class CancionDto(
+    val id: String,
+    val titulo: String,
+    val artista: String,
+    val duracion: Int,
+    val archivoUrl: String,
+    val genero: String?
+)
+
+data class ImagenDto(
+    val id: String,
+    val url: String,
+    val titulo: String?,
+    val orden: Int
+)
+
+data class GaleriaDto(
+    val id: String,
+    val nombre: String,
+    val categoria: String,
+    val imagenes: List<ImagenDto>
 )
