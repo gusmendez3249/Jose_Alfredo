@@ -60,6 +60,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     // Live Streaming (RootEncoder) & Permissions
-    implementation("com.github.pedroSG94.RootEncoder:library:2.4.2")
+    implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 }
