@@ -9,6 +9,12 @@ interface FestivalApiService {
     @GET("eventos")
     suspend fun getEventos(): List<EventoDto>
 
+    @retrofit2.http.POST("auth/login")
+    suspend fun login(@retrofit2.http.Body request: LoginDto): AuthResponseDto
+
+    @retrofit2.http.POST("auth/register")
+    suspend fun register(@retrofit2.http.Body request: RegisterDto): AuthResponseDto
+
     @retrofit2.http.POST("eventos")
     suspend fun createEvento(@retrofit2.http.Body evento: EventoCreateDto): EventoDto
 
@@ -74,4 +80,27 @@ data class EventoCreateDto(
     val escenario: String?,
     val capacidad: Int,
     val estado: String
+)
+
+data class LoginDto(
+    val correo: String,
+    val contrasena: String
+)
+
+data class RegisterDto(
+    val nombre: String,
+    val correo: String,
+    val contrasena: String
+)
+
+data class AuthResponseDto(
+    val accessToken: String,
+    val usuario: UsuarioDto
+)
+
+data class UsuarioDto(
+    val id: String,
+    val nombre: String,
+    val correo: String,
+    val rol: String
 )

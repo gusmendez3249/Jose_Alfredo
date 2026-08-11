@@ -20,16 +20,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AuthViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
     onNavigateToDashboard: () -> Unit = {},
-    onNavigateToAdmin: () -> Unit = {}
+    onNavigateToAdmin: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    
+    val authState by viewModel.authState.collectAsState()
+    
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            val role = (authState as AuthState.Success).role
+            if (role == "ADMINISTRADOR") {
+                onNavigateToAdmin()
+            } else {
+                onNavigateToDashboard()
+            }
+        }
+    }
 
     val fieldColor = Color(0xFF1E2720) // Dark greenish gray from the design
 
@@ -103,16 +120,22 @@ fun LoginScreen(
             textAlign = TextAlign.End
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        if (authState is AuthState.Error) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = (authState as AuthState.Error).message,
+                color = Color.Red,
+                fontSize = 14.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
-                if (email.trim().lowercase() == "admin@admin.com") {
-                    onNavigateToAdmin()
-                } else {
-                    onNavigateToDashboard()
-                }
+                viewModel.login(email.trim(), password)
             },
+            enabled = authState !is AuthState.Loading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryGold,
                 contentColor = Color.Black
@@ -122,7 +145,11 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("INICIAR SESIÓN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            if (authState is AuthState.Loading) {
+                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+            } else {
+                Text("INICIAR SESIÓN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

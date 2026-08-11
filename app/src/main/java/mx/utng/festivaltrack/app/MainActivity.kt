@@ -65,6 +65,11 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("main") {
                                         popUpTo("login") { inclusive = true }
                                     }
+                                },
+                                onNavigateToAdmin = {
+                                    navController.navigate("admin_dashboard") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
                                 }
                             )
                         }
