@@ -26,17 +26,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AudioViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AudioScreen() {
+fun AudioScreen(viewModel: AudioViewModel = viewModel()) {
     val context = LocalContext.current
     var isPlaying by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(0.35f) }
     var currentTrackTitle by remember { mutableStateOf("El Rey - Mariachi Festival") }
     val scrollState = rememberScrollState()
 
-    // Sample online audio stream URL
-    val sampleAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    val canciones by viewModel.canciones.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    var currentTrack by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.CancionDto?>(null) }
+    
+    // Auto-select first track when loaded
+    LaunchedEffect(canciones) {
+        if (canciones.isNotEmpty() && currentTrack == null) {
+            currentTrack = canciones.first()
+        }
+    }
+
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
     DisposableEffect(Unit) {
@@ -101,14 +114,14 @@ fun AudioScreen() {
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = currentTrackTitle,
+                text = currentTrack?.titulo ?: "Selecciona una pista",
                 color = Color.White,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = if (isPlaying) "REPRODUCIENDO EN VIVO ♪" else "Toca Play para escuchar",
+                text = currentTrack?.artista ?: "",
                 color = if (isPlaying) PrimaryGold else Color.Gray,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
@@ -156,16 +169,16 @@ fun AudioScreen() {
                                 mediaPlayer?.pause()
                                 isPlaying = false
                             } else {
-                                if (mediaPlayer == null) {
+                                if (mediaPlayer == null && currentTrack != null) {
                                     mediaPlayer = MediaPlayer().apply {
-                                        setDataSource(sampleAudioUrl)
+                                        setDataSource(currentTrack!!.archivoUrl)
                                         prepareAsync()
                                         setOnPreparedListener {
                                             start()
                                             isPlaying = true
                                         }
                                     }
-                                } else {
+                                } else if (mediaPlayer != null) {
                                     mediaPlayer?.start()
                                     isPlaying = true
                                 }
@@ -198,30 +211,33 @@ fun AudioScreen() {
 
             // Episodes List
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Catálogo & Transmisiones", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Catálogo de Canciones", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                EpisodeItem(
-                    number = "1",
-                    title = "El Rey - Mariachi Festival",
-                    duration = "04:30",
-                    isPlaying = currentTrackTitle == "El Rey - Mariachi Festival",
-                    onClick = { currentTrackTitle = "El Rey - Mariachi Festival" }
-                )
-                EpisodeItem(
-                    number = "2",
-                    title = "Serenata Nocturna en Vivo",
-                    duration = "12:45",
-                    isPlaying = currentTrackTitle == "Serenata Nocturna en Vivo",
-                    onClick = { currentTrackTitle = "Serenata Nocturna en Vivo" }
-                )
-                EpisodeItem(
-                    number = "3",
-                    title = "Caminos de Guanajuato",
-                    duration = "03:52",
-                    isPlaying = currentTrackTitle == "Caminos de Guanajuato",
-                    onClick = { currentTrackTitle = "Caminos de Guanajuato" }
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = PrimaryGold, modifier = Modifier.align(Alignment.CenterHorizontally))
+                } else {
+                    canciones.forEachIndexed { index, cancion ->
+                        val minutes = cancion.duracion / 60
+                        val seconds = cancion.duracion % 60
+                        val durationStr = String.format("%02d:%02d", minutes, seconds)
+                        
+                        EpisodeItem(
+                            number = (index + 1).toString(),
+                            title = cancion.titulo,
+                            duration = durationStr,
+                            isPlaying = currentTrack?.id == cancion.id,
+                            onClick = { 
+                                if (currentTrack?.id != cancion.id) {
+                                    currentTrack = cancion
+                                    mediaPlayer?.release()
+                                    mediaPlayer = null
+                                    isPlaying = false
+                                }
+                            }
+                        )
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(32.dp))
