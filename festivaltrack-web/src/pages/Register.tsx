@@ -1,6 +1,27 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function Register() {
+  const [nombre, setNombre] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/auth/register', { nombre, correo, contrasena: password, rol: 'USUARIO' });
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        navigate('/mis-boletos');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al registrarse');
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}>
       <h2 style={{ marginBottom: '24px' }}>Registro</h2>
@@ -8,8 +29,41 @@ export default function Register() {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
           Crea una nueva cuenta para acceder a FestivalTrack.
         </p>
-        <button className="btn-primary" style={{ width: '100%', marginBottom: '16px' }}>Registrarme</button>
-        <Link to="/" style={{ color: 'var(--primary-color)' }}>Volver al Inicio</Link>
+        
+        {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
+        
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+          <input
+            type="text"
+            placeholder="Nombre completo"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
+            required
+          />
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
+            required
+          />
+          <button type="submit" className="btn-primary" style={{ width: '100%' }}>Registrarme</button>
+        </form>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <Link to="/login" style={{ color: 'var(--primary-color)' }}>¿Ya tienes cuenta? Inicia sesión</Link>
+          <Link to="/" style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Volver al Inicio</Link>
+        </div>
       </div>
     </div>
   );
