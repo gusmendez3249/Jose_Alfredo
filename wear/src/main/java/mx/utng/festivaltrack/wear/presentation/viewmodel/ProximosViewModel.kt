@@ -20,6 +20,9 @@ class ProximosViewModel(application: Application) : AndroidViewModel(application
     private val _eventos = MutableStateFlow<List<EventoEntity>>(emptyList())
     val eventos: StateFlow<List<EventoEntity>> = _eventos.asStateFlow()
 
+    private val _todosLosEventos = MutableStateFlow<List<EventoEntity>>(emptyList())
+    val todosLosEventos: StateFlow<List<EventoEntity>> = _todosLosEventos.asStateFlow()
+
     init {
         val database = FestivalDatabase.getInstance(application)
         repository = FestivalRepository(database.eventoDao())
@@ -44,6 +47,12 @@ class ProximosViewModel(application: Application) : AndroidViewModel(application
                 }.sortedBy { it.fechaHora }
                 
                 _eventos.value = filtrados.take(15)
+            }
+        }
+        
+        viewModelScope.launch {
+            repository.getEventosLocales().collectLatest { lista ->
+                _todosLosEventos.value = lista.sortedBy { it.fechaHora }
             }
         }
 

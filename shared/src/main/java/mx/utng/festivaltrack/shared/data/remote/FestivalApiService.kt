@@ -72,5 +72,6 @@ data class EventoCreateDto(
     val fechaHora: String,
     val ubicacion: String,
     val escenario: String?,
+    val capacidad: Int,
     val estado: String
 )

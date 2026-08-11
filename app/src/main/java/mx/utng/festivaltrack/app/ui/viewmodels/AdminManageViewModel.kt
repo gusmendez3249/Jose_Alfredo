@@ -28,17 +28,36 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
 
     fun saveEvent(id: String?, title: String, date: String, location: String, price: String) {
         viewModelScope.launch {
+            // Attempt to create an ISO string if the user typed something simple
+            var isoDate = date
+            try {
+                if (!date.contains("T")) {
+                    val sdf = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
+                    val parsed = sdf.parse(date)
+                    if (parsed != null) {
+                        val sdfOut = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault())
+                        isoDate = sdfOut.format(parsed)
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore, let it try what the user sent or fallback
+                isoDate = java.time.Instant.now().toString()
+            }
+
+            val finalId = id.takeIf { !it.isNullOrEmpty() } ?: java.util.UUID.randomUUID().toString()
+
             val dto = EventoCreateDto(
                 nombre = title,
-                fechaHora = date, // Note: real app would format this correctly
+                fechaHora = isoDate, 
                 ubicacion = location,
                 escenario = "Principal", // Placeholder
+                capacidad = 1000,
                 estado = "ACTIVO"
             )
             
             try {
                 if (id.isNullOrEmpty()) {
-                    repository.addEvento(dto)
+                    repository.addEvento(finalId, dto)
                 } else {
                     repository.updateEvento(id, dto)
                 }
