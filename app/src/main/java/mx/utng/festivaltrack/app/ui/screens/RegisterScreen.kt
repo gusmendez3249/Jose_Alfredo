@@ -18,16 +18,34 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AuthViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit = {},
-    onNavigateToDashboard: () -> Unit = {}
+    onNavigateToDashboard: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val authState by viewModel.authState.collectAsState()
+    
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            val role = (authState as AuthState.Success).role
+            if (role == "ADMINISTRADOR") {
+                onNavigateToAdmin()
+            } else {
+                onNavigateToDashboard()
+            }
+        }
+    }
 
     val scrollState = rememberScrollState()
     val fieldColor = Color(0xFF1E2720)
@@ -126,10 +144,22 @@ fun RegisterScreen(
             modifier = Modifier.align(Alignment.Start).padding(top = 8.dp)
         )
 
+        if (authState is AuthState.Error) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = (authState as AuthState.Error).message,
+                color = Color.Red,
+                fontSize = 14.sp
+            )
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = onNavigateToDashboard,
+            onClick = {
+                viewModel.register(name.trim(), email.trim(), password)
+            },
+            enabled = authState !is AuthState.Loading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryGold,
                 contentColor = Color.Black
@@ -139,7 +169,11 @@ fun RegisterScreen(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("REGISTRARSE AHORA", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            if (authState is AuthState.Loading) {
+                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+            } else {
+                Text("REGISTRARSE AHORA", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

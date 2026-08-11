@@ -9,6 +9,12 @@ interface FestivalApiService {
     @GET("eventos")
     suspend fun getEventos(): List<EventoDto>
 
+    @retrofit2.http.POST("auth/login")
+    suspend fun login(@retrofit2.http.Body request: LoginDto): AuthResponseDto
+
+    @retrofit2.http.POST("auth/register")
+    suspend fun register(@retrofit2.http.Body request: RegisterDto): AuthResponseDto
+
     @retrofit2.http.POST("eventos")
     suspend fun createEvento(@retrofit2.http.Body evento: EventoCreateDto): EventoDto
 
@@ -17,6 +23,17 @@ interface FestivalApiService {
 
     @retrofit2.http.DELETE("eventos/{id}")
     suspend fun deleteEvento(@retrofit2.http.Path("id") id: String)
+
+    @retrofit2.http.POST("boletos/comprar")
+    suspend fun comprarBoleto(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Body request: CompraBoletoDto
+    ): BoletoDto
+
+    @retrofit2.http.GET("boletos/mis-boletos")
+    suspend fun getMisBoletos(
+        @retrofit2.http.Header("Authorization") token: String
+    ): List<BoletoDto>
 
     companion object {
         // 10.0.2.2 es el localhost de la máquina host desde el emulador de Android
@@ -72,5 +89,48 @@ data class EventoCreateDto(
     val fechaHora: String,
     val ubicacion: String,
     val escenario: String?,
+    val capacidad: Int,
     val estado: String
+)
+
+data class LoginDto(
+    val correo: String,
+    val contrasena: String
+)
+
+data class RegisterDto(
+    val nombre: String,
+    val correo: String,
+    val contrasena: String
+)
+
+data class AuthResponseDto(
+    val accessToken: String,
+    val usuario: UsuarioDto
+)
+
+data class UsuarioDto(
+    val id: String,
+    val nombre: String,
+    val correo: String,
+    val rol: String
+)
+
+data class CompraBoletoDto(
+    val eventoId: String,
+    val categoria: String,
+    val cantidad: Int,
+    val precioTotal: Int,
+    val metodoPago: String
+)
+
+data class BoletoDto(
+    val id: String,
+    val eventoId: String,
+    val usuarioId: String,
+    val categoria: String,
+    val precio: Double,
+    val codigoQR: String,
+    val estado: String,
+    val evento: EventoDto?
 )

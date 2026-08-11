@@ -21,9 +21,17 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
 import mx.utng.festivaltrack.tv.ui.theme.*
 
+import androidx.annotation.OptIn
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.LocalContext
+
 data class ChatMessage(val user: String, val text: String, val time: String, val isAdmin: Boolean = false)
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
 @Composable
 fun TvLiveStreamScreen(
     currentNavIndex: Int,
@@ -31,6 +39,24 @@ fun TvLiveStreamScreen(
 ) {
     var isPlayingStream by remember { mutableStateOf(true) }
     var userMessageText by remember { mutableStateOf("") }
+    
+    val context = LocalContext.current
+    val streamUrl = "rtsp://10.0.2.2:1935"
+    
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            val mediaItem = MediaItem.fromUri(streamUrl)
+            setMediaItem(mediaItem)
+            prepare()
+            playWhenReady = true
+        }
+    }
+    
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
 
     val chatMessages = remember {
         mutableStateListOf(
@@ -86,19 +112,26 @@ fun TvLiveStreamScreen(
                 .fillMaxHeight()
                 .padding(20.dp)
         ) {
-            // Video Frame Simulation
+            // Video Player
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFF231B10), Color(0xFF0D140E))
-                        )
-                    )
-                    .padding(20.dp)
+                    .background(Color.Black)
             ) {
+                AndroidView(
+                    factory = { ctx ->
+                        PlayerView(ctx).apply {
+                            player = exoPlayer
+                            useController = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                
+                // Overlay Container (to keep UI on top of video)
+                Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
                 // Top Overlay Badges
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -166,7 +199,14 @@ fun TvLiveStreamScreen(
 
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Button(
-                            onClick = { isPlayingStream = !isPlayingStream },
+                            onClick = { 
+                                isPlayingStream = !isPlayingStream 
+                                if (isPlayingStream) {
+                                    exoPlayer.play()
+                                } else {
+                                    exoPlayer.pause()
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black),
                             shape = RoundedCornerShape(8.dp)
                         ) {
@@ -184,8 +224,8 @@ fun TvLiveStreamScreen(
                             Text("VER PROGRAMA", color = Color.White)
                         }
                     }
-                }
-            }
+                } // End Overlay Container
+            } // End Video Player Container
         }
 
         // 32% RIGHT CHAT & SETLIST PANEL
@@ -274,4 +314,5 @@ fun TvLiveStreamScreen(
             }
         }
     }
+}
 }

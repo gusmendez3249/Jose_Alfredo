@@ -6,28 +6,47 @@ export class BoletosService {
   constructor(private prisma: PrismaService) {}
 
   async comprar(usuarioId: string, body: any) {
-    const { eventoId, categoria, cantidad, precioTotal } = body;
+    const { eventoId, categoria, cantidad, precioTotal, metodoPago } = body;
     
-    // Crear boleto base
-    const boleto = await this.prisma.boleto.create({
-      data: {
-        eventoId,
-        usuarioId,
-        categoria: categoria || 'GENERAL',
-        precio: precioTotal,
-        // El codigoQR por default es un CUID, lo generamos manualmente si es necesario o usamos el autogenerado
-      },
+    // Validar cantidad (por ahora procesaremos 1 a 1, o iterar si cantidad > 1)
+    // Para simplificar, asumimos que crearán un boleto por la cantidad enviada
+    // En este caso, para cumplir la regla "1 Pago por cada Boleto" crearemos 1 boleto con su respectivo pago
+    
+    const resultado = await this.prisma.$transaction(async (tx) => {
+      // 1. Crear boleto base
+      const boleto = await tx.boleto.create({
+        data: {
+          eventoId,
+          usuarioId,
+          categoria: categoria || 'GENERAL',
+          precio: precioTotal,
+        },
+      });
+
+      // 2. Crear Pago asociado al boleto
+      await tx.pago.create({
+        data: {
+          boletoId: boleto.id,
+          monto: precioTotal,
+          metodo: metodoPago || 'TARJETA_CREDITO',
+          estado: 'COMPLETADO',
+          referencia: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+        }
+      });
+
+      // 3. Actualizar el QR con el formato FESTIVAL-TICKET-2024::ID
+      const qrFirma = `FESTIVAL-TICKET-2024::${boleto.id}`;
+      
+      const boletoFinal = await tx.boleto.update({
+        where: { id: boleto.id },
+        data: { codigoQR: qrFirma },
+        include: { pago: true } // Incluir el pago en la respuesta
+      });
+      
+      return boletoFinal;
     });
 
-    // Actualizar el QR con el formato FESTIVAL-TICKET-2024::ID
-    const qrFirma = `FESTIVAL-TICKET-2024::${boleto.id}`;
-    
-    const boletoFinal = await this.prisma.boleto.update({
-      where: { id: boleto.id },
-      data: { codigoQR: qrFirma },
-    });
-
-    return boletoFinal;
+    return resultado;
   }
 
   async misBoletos(usuarioId: string) {

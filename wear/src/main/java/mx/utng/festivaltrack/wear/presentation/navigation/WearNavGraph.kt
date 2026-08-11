@@ -10,6 +10,7 @@ sealed class WearScreen(val route: String) {
     object Splash       : WearScreen("splash")
     object WatchFace    : WearScreen("watch_face")
     object Proximos     : WearScreen("proximos")
+    object ProgramaCompleto : WearScreen("programa_completo")
     object Alerta       : WearScreen("alerta/{eventoId}") {
         fun createRoute(eventoId: String) = "alerta/$eventoId"
     }
@@ -41,6 +42,12 @@ fun WearNavGraph() {
         }
         composable(WearScreen.Proximos.route) {
             ProximosScreen(
+                onEventoClick = { id -> navController.navigate(WearScreen.Alerta.createRoute(id)) },
+                onProgramaCompletoClick = { navController.navigate(WearScreen.ProgramaCompleto.route) }
+            )
+        }
+        composable(WearScreen.ProgramaCompleto.route) {
+            ProgramaCompletoScreen(
                 onEventoClick = { id -> navController.navigate(WearScreen.Alerta.createRoute(id)) }
             )
         }

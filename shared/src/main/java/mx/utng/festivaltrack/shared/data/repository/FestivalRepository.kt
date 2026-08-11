@@ -47,17 +47,33 @@ class FestivalRepository(
         }
     }
 
-    suspend fun addEvento(eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
+    suspend fun addEvento(id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
         withContext(Dispatchers.IO) {
+            // Offline-first: Guardamos localmente inmediatamente
+            val localEntity = EventoEntity(
+                id = id,
+                nombre = eventoCreateDto.nombre,
+                fechaHora = eventoCreateDto.fechaHora,
+                ubicacion = eventoCreateDto.ubicacion,
+                escenario = eventoCreateDto.escenario,
+                bannerUrl = null,
+                estado = eventoCreateDto.estado,
+                artistaId = null,
+                artistaNombre = null,
+                latitud = null,
+                longitud = null,
+                updatedAt = System.currentTimeMillis()
+            )
+            eventoDao.upsert(localEntity)
+
             try {
                 // 1. Post to API
                 val remoteEvent = apiService.createEvento(eventoCreateDto)
-                // 2. Save locally
+                // 2. Save remote version locally (with real ID if different)
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Offline fallback logic could go here, but for now we require network
-                throw e
+                // It failed to sync, but we already saved it locally!
             }
         }
     }
