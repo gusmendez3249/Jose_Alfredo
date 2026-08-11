@@ -24,6 +24,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += listOf("-Xskip-metadata-version-check")
     }
 }
 
@@ -59,7 +60,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // Live Streaming (RootEncoder) & Permissions
-    implementation("com.github.pedroSG94.RootEncoder:library:2.4.2")
+    // Live Streaming (RootEncoder & RTSP Server) & Permissions
+    implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
+    implementation("com.github.pedroSG94:RTSP-Server:1.4.1")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 }
