@@ -102,6 +102,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        composable("live/{eventoId}") { backStackEntry ->
+                            val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                            mx.utng.festivaltrack.app.ui.screens.UserLiveStreamScreen(
+                                eventoId = eventoId,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
                         
                         // Admin Routes
                         composable("admin_dashboard") {

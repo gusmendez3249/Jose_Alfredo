@@ -84,6 +84,9 @@ fun MainScreen(
                         eventosViewModel = eventosViewModel,
                         onNavigateToTickets = {
                             navController.navigate(BottomNavItem.Tickets.route)
+                        },
+                        onNavigateToLive = { eventoId ->
+                            navController.navigate("live/$eventoId")
                         }
                     )
                 }

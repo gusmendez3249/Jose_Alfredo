@@ -35,6 +35,16 @@ interface FestivalApiService {
         @retrofit2.http.Header("Authorization") token: String
     ): List<BoletoDto>
 
+    @retrofit2.http.GET("stream/chat/{eventoId}")
+    suspend fun getChatMessages(
+        @retrofit2.http.Path("eventoId") eventoId: String
+    ): List<ChatMessageDto>
+
+    @retrofit2.http.POST("stream/chat")
+    suspend fun sendChatMessage(
+        @retrofit2.http.Body request: ChatMessageDto
+    )
+
     companion object {
         // 10.0.2.2 es el localhost de la máquina host desde el emulador de Android
         private const val BASE_URL = "http://10.0.2.2:3001/api/v1/"
@@ -59,7 +69,8 @@ data class EventoDto(
     val latitud: Double?,
     val longitud: Double?,
     val artistaId: String?,
-    val artista: ArtistaDto?
+    val artista: ArtistaDto?,
+    val transmision: TransmisionDto? = null
 ) {
     fun toEntity(): EventoEntity {
         return EventoEntity(
@@ -133,4 +144,20 @@ data class BoletoDto(
     val codigoQR: String,
     val estado: String,
     val evento: EventoDto?
+)
+
+data class ChatMessageDto(
+    val id: String? = null,
+    val eventoId: String,
+    val usuarioNombre: String,
+    val mensaje: String,
+    val esAdmin: Boolean = false,
+    val fechaEnvio: String? = null
+)
+
+data class TransmisionDto(
+    val id: String,
+    val titulo: String,
+    val streamUrl: String?,
+    val estado: String
 )
