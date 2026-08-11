@@ -25,9 +25,29 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.pedro.rtsp.utils.ConnectCheckerRtsp
+import com.pedro.common.ConnectChecker
 import com.pedro.rtspserver.RtspServerCamera1
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
+
+fun getLocalIpAddress(context: Context): String {
+    return try {
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val ipAddress = wifiManager?.connectionInfo?.ipAddress ?: 0
+        if (ipAddress != 0) {
+            String.format(
+                "%d.%d.%d.%d",
+                ipAddress and 0xff,
+                ipAddress shr 8 and 0xff,
+                ipAddress shr 16 and 0xff,
+                ipAddress shr 24 and 0xff
+            )
+        } else {
+            "10.0.2.2"
+        }
+    } catch (e: Exception) {
+        "10.0.2.2"
+    }
+}
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -42,64 +62,49 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
 
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
-    var streamUrl by remember { mutableStateOf("Desconocida") }
+    var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
         }
-        
-        // Obtener IP
-        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        val ipAddress = wifiManager.connectionInfo.ipAddress
-        if (ipAddress != 0) {
-            val ip = String.format(
-                "%d.%d.%d.%d",
-                ipAddress and 0xff,
-                ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff,
-                ipAddress shr 24 and 0xff
-            )
-            streamUrl = "rtsp://$ip:1935"
-        } else {
-            // Emuladores a veces no reportan Wifi. Para pruebas en emulador usando el adb forward:
-            streamUrl = "rtsp://10.0.2.2:1935"
-        }
+        val wifiIp = getLocalIpAddress(context)
+        streamUrl = "rtsp://$wifiIp:1935"
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            if (isStreaming) {
-                rtspServer?.stopStream()
+            try {
+                if (isStreaming) rtspServer?.stopStream()
+                rtspServer?.stopPreview()
+            } catch (e: Exception) {
+                // Ignore cleanup errors
             }
-            rtspServer?.stopPreview()
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Transmisión en Vivo", color = PrimaryGold, fontWeight = FontWeight.Bold) },
+                title = { Text("Panel Live - Administrador", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
             )
-        }
-    ) { paddingValues ->
+        },
+        containerColor = Color.Black
+    ) { padding ->
         if (permissionsState.allPermissionsGranted) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(paddingValues),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(padding)
             ) {
-                // Cámara Preview
-                Box(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -110,27 +115,31 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                             SurfaceView(ctx).apply {
                                 holder.addCallback(object : SurfaceHolder.Callback {
                                     override fun surfaceCreated(holder: SurfaceHolder) {
-                                        val checker = object : ConnectCheckerRtsp {
-                                            override fun onAuthErrorRtsp() { statusText = "Error de Auth" }
-                                            override fun onAuthSuccessRtsp() { }
-                                            override fun onConnectionFailedRtsp(reason: String) {
-                                                statusText = "Error: $reason"
-                                                isStreaming = false
-                                                rtspServer?.stopStream()
+                                        try {
+                                            val checker = object : ConnectChecker {
+                                                override fun onAuthError() { statusText = "Error de Auth" }
+                                                override fun onAuthSuccess() { }
+                                                override fun onConnectionFailed(reason: String) {
+                                                    statusText = "Error: $reason"
+                                                    isStreaming = false
+                                                    try { rtspServer?.stopStream() } catch (e: Exception) {}
+                                                }
+                                                override fun onConnectionStarted(url: String) {
+                                                    statusText = "Transmisión Activa en $url"
+                                                }
+                                                override fun onConnectionSuccess() { }
+                                                override fun onDisconnect() {
+                                                    statusText = "Transmisión detenida"
+                                                }
+                                                override fun onNewBitrate(bitrate: Long) { }
                                             }
-                                            override fun onConnectionStartedRtsp(rtspUrl: String) {
-                                                statusText = "Transmisión Activa en $rtspUrl"
-                                            }
-                                            override fun onConnectionSuccessRtsp() { }
-                                            override fun onDisconnectRtsp() {
-                                                statusText = "Transmisión detenida"
-                                            }
-                                            override fun onNewBitrateRtsp(bitrate: Long) { }
+                                            
+                                            val server = RtspServerCamera1(this@apply, checker, 1935)
+                                            rtspServer = server
+                                            server.startPreview()
+                                        } catch (e: Exception) {
+                                            statusText = "Error al iniciar cámara: ${e.localizedMessage}"
                                         }
-                                        
-                                        val server = RtspServerCamera1(this@apply, checker, 1935)
-                                        rtspServer = server
-                                        server.startPreview()
                                     }
 
                                     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
@@ -165,7 +174,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                             onClick = {
                                 if (!isStreaming) {
                                     if (rtspServer?.prepareAudio() == true && rtspServer?.prepareVideo() == true) {
-                                        rtspServer?.startStream("")
+                                        rtspServer?.startStream()
                                         isStreaming = true
                                     } else {
                                         statusText = "Error al inicializar cámara/audio"

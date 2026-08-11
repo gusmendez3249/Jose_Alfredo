@@ -223,8 +223,8 @@ fun TvLiveStreamScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("VER PROGRAMA", color = Color.White)
                         }
-                }
-            } // End Overlay Container
+                    }
+                } // End Overlay Container
             } // End Video Player Container
         }
 
@@ -314,4 +314,5 @@ fun TvLiveStreamScreen(
             }
         }
     }
+}
 }
