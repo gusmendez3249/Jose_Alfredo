@@ -26,6 +26,7 @@ function Routing({ userLoc, eventLoc }: { userLoc: [number, number]; eventLoc: [
       routeWhileDragging: false,
       addWaypoints: false,
       show: false,
+      // @ts-ignore
       createMarker: () => null // Let the routing machine just draw the line, we could add custom markers if needed
     }).addTo(map);
 

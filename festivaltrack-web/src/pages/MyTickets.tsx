@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { boletosService, BoletoDto } from '../services/boletos.service';
+import { boletosService } from '../services/boletos.service';
+import type { BoletoDto } from '../services/boletos.service';
 
 export default function MyTickets() {
   const [boletos, setBoletos] = useState<BoletoDto[]>([]);
