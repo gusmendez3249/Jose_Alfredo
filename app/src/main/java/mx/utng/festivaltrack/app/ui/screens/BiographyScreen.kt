@@ -22,9 +22,16 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.R
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.ArtistViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 @Composable
-fun BiographyScreen() {
+fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
     val scrollState = rememberScrollState()
+    val biografia by viewModel.biografia.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     Column(
         modifier = Modifier
@@ -81,26 +88,31 @@ fun BiographyScreen() {
             }
         }
 
-        Column(modifier = Modifier.padding(24.dp)) {
-            // Quote
-            Text(
-                text = "\"No tengo trono ni reina,\nni nadie que me\ncomprenda, pero sigo\nsiendo el Rey.\"",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Medium,
-                lineHeight = 28.sp
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Description
-            Text(
-                text = "José Alfredo Jiménez Sandoval fue un cantante y compositor mexicano de música ranchera, considerado por muchos como el mejor de la historia. Sus canciones se convirtieron en himnos del alma mexicana.",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 13.sp,
-                lineHeight = 18.sp
-            )
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryGold, modifier = Modifier.padding(32.dp))
+            }
+        } else if (biografia != null) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                // Quote
+                Text(
+                    text = biografia!!.citaCelebre ?: "\"No tengo trono ni reina,\nni nadie que me\ncomprenda, pero sigo\nsiendo el Rey.\"",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 28.sp
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Description
+                Text(
+                    text = biografia!!.descripcion,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
+                )
 
             Spacer(modifier = Modifier.height(32.dp))
             
@@ -174,6 +186,7 @@ fun BiographyScreen() {
             
             Spacer(modifier = Modifier.height(32.dp))
         }
+        } // End of if (biografia != null)
     }
 }
 
