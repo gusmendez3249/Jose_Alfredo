@@ -6,8 +6,10 @@ import { SyncModule } from './sync/sync.module';
 import { BoletosModule } from './boletos/boletos.module';
 import { GaleriaModule } from './galeria/galeria.module';
 import { ChatModule } from './chat/chat.module';
+import { BiografiasModule } from './biografias/biografias.module';
+import { CancionesModule } from './canciones/canciones.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, EventosModule, SyncModule, BoletosModule, GaleriaModule, ChatModule],
+  imports: [PrismaModule, AuthModule, EventosModule, SyncModule, BoletosModule, GaleriaModule, ChatModule, BiografiasModule, CancionesModule],
 })
 export class AppModule {}
