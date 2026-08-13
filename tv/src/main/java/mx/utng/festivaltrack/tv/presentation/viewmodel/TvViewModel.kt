@@ -28,8 +28,17 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // Sync with backend API
-        sync()
+        // Sync with backend API immediately and poll every 5 seconds for real-time updates
+        viewModelScope.launch {
+            while (true) {
+                try {
+                    repository.syncEventos()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                kotlinx.coroutines.delay(5000)
+            }
+        }
     }
 
     fun sync() {

@@ -7,10 +7,29 @@ import mx.utng.festivaltrack.shared.data.local.dao.EventoDao
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
+/**
+ * Repositorio central de datos para la plataforma FestivalTrack.
+ *
+ * Implementa el patrón **Offline-First**: los datos se leen primero desde la
+ * base de datos local (Room/SQLite), y se sincronizan con el servidor remoto
+ * (NestJS + PostgreSQL) cuando hay conexión disponible.
+ *
+ * Este repositorio es el único punto de acceso a datos para los ViewModels.
+ * La UI nunca accede directamente a [EventoDao] ni a [FestivalApiService].
+ *
+ * @property eventoDao DAO de Room para operaciones CRUD en SQLite local.
+ * @property apiService Cliente HTTP Retrofit para comunicación con el backend.
+ *
+ * Diagrama de flujo de datos:
+ * ```
+ * ViewModel → Repository → [Room (local)] ← sync() → [NestJS API (remoto)]
+ * ```
+ */
 class FestivalRepository(
     private val eventoDao: EventoDao,
     private val apiService: FestivalApiService = FestivalApiService.create()
 ) {
+
     
     // Obtenemos los eventos locales (Offline-First)
     fun getEventosLocales(): Flow<List<EventoEntity>> {
@@ -35,11 +54,23 @@ class FestivalRepository(
                 val remoteEventos = apiService.getEventos()
                 
                 // 2. Convertir a entidades de Room
-                val localEntities = remoteEventos.map { it.toEntity() }
+                val remoteEntities = remoteEventos.map { it.toEntity() }
+                val remoteIds = remoteEntities.map { it.id }.toSet()
                 
-                // 3. Limpiar base de datos local y guardar los nuevos de la nube
-                eventoDao.deleteAll()
-                eventoDao.upsertAll(localEntities)
+                // 3. Insertar / actualizar los eventos que vienen del servidor
+                eventoDao.upsertAll(remoteEntities)
+
+                // 4. Eliminar de Room SOLO los eventos que el servidor ya no tiene
+                //    (soft-delete remoto = CANCELADO fue filtrado por el backend, así que
+                //     cualquier ID local que no esté en remoteIds fue eliminado en servidor).
+                //    Conservamos eventos locales cuyo ID empiece con letras UUID (pendientes
+                //    de sincronizar) para no perder los que aún no se subieron.
+                val allLocal = eventoDao.getAllOnce()
+                val toDelete = allLocal.filter { local ->
+                    // Solo borramos si NO es un UUID local (los EVT-xxx que ya no están en server)
+                    local.id.startsWith("EVT-") && local.id !in remoteIds
+                }
+                toDelete.forEach { eventoDao.delete(it) }
             } catch (e: Exception) {
                 e.printStackTrace()
                 // Si falla (no hay internet), no hacemos nada, la app seguirá usando Room (Offline)
@@ -47,7 +78,7 @@ class FestivalRepository(
         }
     }
 
-    suspend fun addEvento(id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
+    suspend fun addEvento(token: String? = null, id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
         withContext(Dispatchers.IO) {
             // Offline-first: Guardamos localmente inmediatamente
             val localEntity = EventoEntity(
@@ -67,44 +98,62 @@ class FestivalRepository(
             eventoDao.upsert(localEntity)
 
             try {
-                // 1. Post to API
-                val remoteEvent = apiService.createEvento(eventoCreateDto)
-                // 2. Save remote version locally (with real ID if different)
+                // 1. Post to API con token si está presente
+                val authToken = token?.let { if (it.startsWith("Bearer ")) it else "Bearer $it" }
+                val remoteEvent = apiService.createEvento(authToken, eventoCreateDto)
+                // 2. Save remote version locally (with real ID if assigned by server)
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
                 e.printStackTrace()
-                // It failed to sync, but we already saved it locally!
+                // Si falla la red, ya quedó guardado localmente en Room
             }
         }
     }
 
-    suspend fun updateEvento(id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
+    suspend fun updateEvento(token: String? = null, id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
         withContext(Dispatchers.IO) {
+            // 1. Actualizar localmente inmediatamente
+            val localEntity = EventoEntity(
+                id = id,
+                nombre = eventoCreateDto.nombre,
+                fechaHora = eventoCreateDto.fechaHora,
+                ubicacion = eventoCreateDto.ubicacion,
+                escenario = eventoCreateDto.escenario,
+                bannerUrl = null,
+                estado = eventoCreateDto.estado,
+                artistaId = null,
+                artistaNombre = null,
+                latitud = null,
+                longitud = null,
+                updatedAt = System.currentTimeMillis()
+            )
+            eventoDao.upsert(localEntity)
+
             try {
-                // 1. Put to API
-                val remoteEvent = apiService.updateEvento(id, eventoCreateDto)
-                // 2. Update locally
+                // 2. Actualizar en API remota
+                val authToken = token?.let { if (it.startsWith("Bearer ")) it else "Bearer $it" }
+                val remoteEvent = apiService.updateEvento(authToken, id, eventoCreateDto)
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
                 e.printStackTrace()
-                throw e
             }
         }
     }
 
-    suspend fun deleteEvento(id: String) {
+    suspend fun deleteEvento(token: String? = null, id: String) {
         withContext(Dispatchers.IO) {
+            // 1. Eliminar localmente inmediatamente
+            val localEvent = eventoDao.getEventoById(id)
+            if (localEvent != null) {
+                eventoDao.delete(localEvent)
+            }
+
             try {
-                // 1. Delete from API
-                apiService.deleteEvento(id)
-                // 2. Delete locally
-                val localEvent = eventoDao.getEventoById(id)
-                if (localEvent != null) {
-                    eventoDao.delete(localEvent)
-                }
+                // 2. Eliminar en API remota
+                val authToken = token?.let { if (it.startsWith("Bearer ")) it else "Bearer $it" }
+                apiService.deleteEvento(authToken, id)
             } catch (e: Exception) {
                 e.printStackTrace()
-                throw e
             }
         }
     }

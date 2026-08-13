@@ -55,8 +55,14 @@ class MainActivity : ComponentActivity() {
                                 onNavSelect = { currentScreenIndex = it }
                             )
                             3 -> TvScheduleScreen(
+                                eventos = eventos,
                                 currentNavIndex = currentScreenIndex,
                                 onNavSelect = { currentScreenIndex = it }
+                            )
+                            4 -> mx.utng.festivaltrack.tv.presentation.screens.TvSettingsScreen(
+                                currentNavIndex = currentScreenIndex,
+                                onNavSelect = { currentScreenIndex = it },
+                                onLogout = { isLoggedIn = false }
                             )
                             else -> TvMainScreen(
                                 eventos = eventos,

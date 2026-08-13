@@ -26,7 +26,8 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 @Composable
 fun DashboardScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToTickets: () -> Unit = {}
+    onNavigateToTickets: () -> Unit = {},
+    onNavigateToLive: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
@@ -235,6 +236,27 @@ fun DashboardScreen(
             }
         }
         
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Live stream option
+        Button(
+            onClick = {
+                val eId = eventos.firstOrNull()?.id ?: "EVT-001"
+                onNavigateToLive(eId)
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFC51111), // Red for live
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .height(52.dp)
+        ) {
+            Text("▶ VER EN VIVO AHORA", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
     }
 

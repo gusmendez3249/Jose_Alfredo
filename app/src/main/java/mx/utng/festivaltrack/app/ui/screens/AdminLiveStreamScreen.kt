@@ -27,8 +27,21 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
 import com.pedro.rtspserver.RtspServerCamera1
+import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
+import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 
+/**
+ * Obtiene la dirección IP local del dispositivo dentro de la red Wi-Fi.
+ *
+ * Esta función consulta el [WifiManager] de Android para calcular la IP en formato `X.X.X.X`.
+ * Si el dispositivo se encuentra dentro del emulador Android o la IP es nula, retorna
+ * por defecto `"10.0.2.2"` (alias del host en emuladores).
+ *
+ * @param context Contexto de la aplicación.
+ * @return Dirección IP en formato String para la URL del servidor RTSP.
+ */
 fun getLocalIpAddress(context: Context): String {
     return try {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
@@ -49,10 +62,30 @@ fun getLocalIpAddress(context: Context): String {
     }
 }
 
+/**
+ * Pantalla de Emisión de Transmisión en Vivo para Administradores ([AdminLiveStreamScreen]).
+ *
+ * Implementa un servidor RTSP nativo utilizando la librería `Root-less RTSP Server` de Pedro.
+ * Permite capturar video desde la cámara física del smartphone y emitir un stream en vivo
+ * por el puerto TCP `1935`.
+ *
+ * Características clave:
+ * 1. **Gestión de Permisos**: Solicita dinámicamente permisos de `CAMERA` y `RECORD_AUDIO`.
+ * 2. **Previsualización de Cámara**: Usa [AndroidView] envolviendo un [SurfaceView] de Android.
+ * 3. **Servidor RTSP Integrado**: Escucha conexiones entrantes de clientes (Smart TV o Web)
+ *    en `rtsp://<IP>:1935`.
+ * 4. **Limpieza Automática**: [DisposableEffect] detiene la vista previa y el stream al salir.
+ *
+ * @param onNavigateBack Callback de navegación para regresar al panel anterior.
+ */
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val api = remember { FestivalApiService.create() }
+
+    // Estado para gestionar permisos en runtime (Cámara y Micrófono)
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.CAMERA,
@@ -60,11 +93,13 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         )
     )
 
+    // Instancia del servidor RTSP de cámara
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
     var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
+    // Solicita permisos al cargar la pantalla y obtiene la IP local
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
@@ -73,13 +108,14 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         streamUrl = "rtsp://$wifiIp:1935"
     }
 
+    // Efecto de limpieza: se ejecuta cuando la pantalla se destruye o el usuario navega fuera
     DisposableEffect(Unit) {
         onDispose {
             try {
                 if (isStreaming) rtspServer?.stopStream()
                 rtspServer?.stopPreview()
             } catch (e: Exception) {
-                // Ignore cleanup errors
+                // Previene cierres inesperados durante la liberación de hardware
             }
         }
     }
@@ -104,6 +140,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                     .fillMaxSize()
                     .padding(padding)
             ) {
+                // Tarjeta contenedora de la vista previa de la cámara
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -116,6 +153,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                 holder.addCallback(object : SurfaceHolder.Callback {
                                     override fun surfaceCreated(holder: SurfaceHolder) {
                                         try {
+                                            // Callback de estado para el servidor de RTSP
                                             val checker = object : ConnectChecker {
                                                 override fun onAuthError() { statusText = "Error de Auth" }
                                                 override fun onAuthSuccess() { }
@@ -134,6 +172,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                                 override fun onNewBitrate(bitrate: Long) { }
                                             }
                                             
+                                            // Inicializa el servidor RTSP en el puerto 1935
                                             val server = RtspServerCamera1(this@apply, checker, 1935)
                                             rtspServer = server
                                             server.startPreview()
@@ -154,6 +193,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                     )
                 }
 
+                // Panel inferior de control y estado del stream
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,12 +210,28 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                         
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Botón de Inicio / Detención de Transmisión
                         Button(
                             onClick = {
                                 if (!isStreaming) {
-                                    if (rtspServer?.prepareAudio() == true && rtspServer?.prepareVideo() == true) {
+                                    // Prepara códecs de audio y video con resolución compatible 640x480
+                                    val audioPrepared = rtspServer?.prepareAudio() ?: false
+                                    val videoPrepared = try {
+                                        rtspServer?.prepareVideo(640, 480, 30, 1200 * 1024, 0) ?: false
+                                    } catch (e: Exception) {
+                                        rtspServer?.prepareVideo() ?: false
+                                    }
+
+                                    if (audioPrepared && videoPrepared) {
                                         rtspServer?.startStream()
                                         isStreaming = true
+                                        statusText = "Transmisión en Vivo ACTIVA"
+                                        // Publicar URL del stream al backend para que la TV se conecte
+                                        coroutineScope.launch {
+                                            try {
+                                                api.setStreamStatus(StreamStatusDto(streamUrl = streamUrl, isLive = true))
+                                            } catch (e: Exception) { /* Fallo silencioso */ }
+                                        }
                                     } else {
                                         statusText = "Error al inicializar cámara/audio"
                                     }
@@ -183,6 +239,12 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     rtspServer?.stopStream()
                                     isStreaming = false
                                     statusText = "Listo para transmitir"
+                                    // Notificar al backend que el stream terminó
+                                    coroutineScope.launch {
+                                        try {
+                                            api.setStreamStatus(StreamStatusDto(streamUrl = "", isLive = false))
+                                        } catch (e: Exception) { /* Fallo silencioso */ }
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -200,6 +262,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                 }
             }
         } else {
+            // Pantalla de advertencia si no se otorgaron permisos de hardware
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Se requieren permisos de cámara y micrófono.", color = Color.White)
             }

@@ -56,6 +56,12 @@ dependencies {
     implementation(libs.osmdroid.android)
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
+    // Media3 (ExoPlayer & RTSP for Live Stream)
+    val media3_version = "1.3.1"
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+    implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
+    implementation("androidx.media3:media3-ui:$media3_version")
+
     // Retrofit + Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

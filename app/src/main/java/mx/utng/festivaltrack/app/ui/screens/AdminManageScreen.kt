@@ -35,7 +35,8 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
 @Composable
 fun AdminManageScreen(
     viewModel: AdminManageViewModel,
-    onNavigateToCreateEvent: () -> Unit = {}
+    onNavigateToCreateEvent: () -> Unit = {},
+    onEditEvent: (mx.utng.festivaltrack.shared.data.local.entity.EventoEntity) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var searchQuery by remember { mutableStateOf("") }
@@ -127,6 +128,7 @@ fun AdminManageScreen(
                 if (eventos.isEmpty()) {
                     Text("No hay eventos disponibles.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
+                    val context = androidx.compose.ui.platform.LocalContext.current
                     eventos.forEach { evento ->
                         ManageItemCard(
                             status = evento.estado,
@@ -134,7 +136,11 @@ fun AdminManageScreen(
                             title = evento.nombre,
                             subtitle = "${evento.ubicacion} • ${evento.fechaHora}",
                             iconType = "event",
-                            onDelete = { viewModel.deleteEvent(evento.id) }
+                            onEdit = { onEditEvent(evento) },
+                            onDelete = {
+                                val token = mx.utng.festivaltrack.app.data.TokenManager(context).getToken()
+                                viewModel.deleteEvent(token, evento.id)
+                            }
                         )
                     }
                 }
@@ -145,6 +151,7 @@ fun AdminManageScreen(
                     title = "El Rey",
                     subtitle = "Mariachi Clásico • 3:24",
                     iconType = "music",
+                    onEdit = {},
                     onDelete = {}
                 )
                 ManageItemCard(
@@ -153,6 +160,7 @@ fun AdminManageScreen(
                     title = "Festival...",
                     subtitle = "Galería • 4.2 MB",
                     iconType = "image",
+                    onEdit = {},
                     onDelete = {}
                 )
             }
@@ -203,12 +211,14 @@ fun ManageItemCard(
     title: String,
     subtitle: String,
     iconType: String,
+    onEdit: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onEdit() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171A18)),
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold.copy(alpha = 0.5f))
@@ -268,9 +278,23 @@ fun ManageItemCard(
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = PrimaryGold, modifier = Modifier.size(24.dp))
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = "Editar",
+                tint = PrimaryGold,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onEdit() }
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFE57373), modifier = Modifier.size(24.dp).clickable { onDelete() })
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = "Eliminar",
+                tint = Color(0xFFE57373),
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onDelete() }
+            )
         }
     }
 }

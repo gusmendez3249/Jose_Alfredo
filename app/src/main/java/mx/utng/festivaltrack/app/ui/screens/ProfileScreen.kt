@@ -25,6 +25,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.ProfileViewModel
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
+    onLogout: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by viewModel.profileState.collectAsState()
@@ -40,6 +41,11 @@ fun ProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+                    }
+                },
+                actions = {
+                    TextButton(onClick = onLogout) {
+                        Text("Cerrar Sesión", color = Color.Red, fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

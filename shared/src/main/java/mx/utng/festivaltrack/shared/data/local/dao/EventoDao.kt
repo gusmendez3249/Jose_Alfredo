@@ -15,6 +15,9 @@ interface EventoDao {
     @Query("SELECT * FROM eventos WHERE id = :id LIMIT 1")
     suspend fun getEventoById(id: String): EventoEntity?
 
+    @Query("SELECT * FROM eventos ORDER BY fechaHora ASC")
+    suspend fun getAllOnce(): List<EventoEntity>
+
     @Upsert
     suspend fun upsertAll(eventos: List<EventoEntity>)
 

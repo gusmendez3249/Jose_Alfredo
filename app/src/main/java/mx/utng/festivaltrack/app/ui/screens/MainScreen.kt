@@ -29,13 +29,15 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
     object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
+    object Gallery : BottomNavItem("gallery", Icons.Default.Person, "Galería")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
 }
 
 @Composable
 fun MainScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
+    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> },
+    onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -44,6 +46,7 @@ fun MainScreen(
         BottomNavItem.Map,
         BottomNavItem.Audio,
         BottomNavItem.Tickets,
+        BottomNavItem.Gallery,
         BottomNavItem.Profile
     )
 
@@ -84,6 +87,9 @@ fun MainScreen(
                         eventosViewModel = eventosViewModel,
                         onNavigateToTickets = {
                             navController.navigate(BottomNavItem.Tickets.route)
+                        },
+                        onNavigateToLive = { eventoId ->
+                            navController.navigate("live/$eventoId")
                         }
                     )
                 }
@@ -104,9 +110,13 @@ fun MainScreen(
                         onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
                     )
                 }
+                composable(BottomNavItem.Gallery.route) {
+                    GalleryScreen()
+                }
                 composable(BottomNavItem.Profile.route) {
                     mx.utng.festivaltrack.app.ui.screens.ProfileScreen(
-                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) }
+                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) },
+                        onLogout = onLogout
                     )
                 }
             }

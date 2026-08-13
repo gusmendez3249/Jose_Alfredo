@@ -86,10 +86,20 @@ export default function Events() {
                     <span>{(evento.escenario || evento.ubicacion).toUpperCase()}</span>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                   <div style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '1.5rem' }}>
                     {time}
                   </div>
+                  <button 
+                    className="btn-primary" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/checkout/${evento.id}`);
+                    }}
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                  >
+                    Comprar Boleto
+                  </button>
                 </div>
               </div>
             );

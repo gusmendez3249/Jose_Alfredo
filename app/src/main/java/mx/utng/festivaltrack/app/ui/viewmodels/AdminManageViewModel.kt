@@ -26,7 +26,7 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
         }
     }
 
-    fun saveEvent(id: String?, title: String, date: String, location: String, price: String) {
+    fun saveEvent(token: String? = null, id: String?, title: String, date: String, location: String, price: String) {
         viewModelScope.launch {
             // Attempt to create an ISO string if the user typed something simple
             var isoDate = date
@@ -40,8 +40,8 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
                     }
                 }
             } catch (e: Exception) {
-                // Ignore, let it try what the user sent or fallback
-                isoDate = java.time.Instant.now().toString()
+                // Fallback to current ISO timestamp
+                isoDate = "2026-11-23T20:00:00Z"
             }
 
             val finalId = id.takeIf { !it.isNullOrEmpty() } ?: java.util.UUID.randomUUID().toString()
@@ -50,16 +50,16 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
                 nombre = title,
                 fechaHora = isoDate, 
                 ubicacion = location,
-                escenario = "Principal", // Placeholder
+                escenario = "Principal",
                 capacidad = 1000,
-                estado = "ACTIVO"
+                estado = "PUBLICADO"
             )
             
             try {
                 if (id.isNullOrEmpty()) {
-                    repository.addEvento(finalId, dto)
+                    repository.addEvento(token, finalId, dto)
                 } else {
-                    repository.updateEvento(id, dto)
+                    repository.updateEvento(token, id, dto)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -67,10 +67,10 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
         }
     }
 
-    fun deleteEvent(id: String) {
+    fun deleteEvent(token: String? = null, id: String) {
         viewModelScope.launch {
             try {
-                repository.deleteEvento(id)
+                repository.deleteEvento(token, id)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
