@@ -24,23 +24,40 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutViewModel
 import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutState
 
+/**
+ * Pantalla de Procesamiento de Pago y Compra de Boletos ([CheckoutScreen]).
+ *
+ * Permite ingresar la información de pago con tarjeta de crédito/débito para finalizar
+ * la compra de accesos al festival. Se conecta con [CheckoutViewModel] para enviar
+ * la petición `POST /boletos/comprar` al backend REST.
+ *
+ * @param eventoId ID del evento seleccionado (ej. "EVT-001"). Si está vacío usa "EVT-001" como fallback.
+ * @param totalPrice Monto total acumulado en pesos mexicanos (MXN).
+ * @param totalTickets Cantidad total de boletos a comprar.
+ * @param onNavigateBack Callback de navegación para regresar al paso anterior.
+ * @param onPaymentSuccess Callback ejecutado cuando el backend confirma el pago con éxito.
+ * @param viewModel Instancia del ViewModel para la lógica de negocio del checkout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
     eventoId: String = "",
-    totalPrice: Int = 4500, // Default for demo
-    totalTickets: Int = 1,  // Default for demo
+    totalPrice: Int = 4500,
+    totalTickets: Int = 1,
     onNavigateBack: () -> Unit = {},
     onPaymentSuccess: () -> Unit = {},
     viewModel: CheckoutViewModel = viewModel()
 ) {
+    // Estados locales para los campos de texto del formulario de pago
     var cardNumber by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
     var cvv by remember { mutableStateOf("") }
     var cardHolder by remember { mutableStateOf("") }
 
+    // Observa los estados del Checkout ViewModel (Idle, Processing, Success, Error)
     val checkoutState by viewModel.checkoutState.collectAsState()
 
+    // Escucha cambios de estado: al tener éxito, reinicia el estado y navega a TicketSuccessScreen
     LaunchedEffect(checkoutState) {
         if (checkoutState is CheckoutState.Success) {
             viewModel.resetState()
@@ -69,6 +86,7 @@ fun CheckoutScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
+                    // Muestra mensajes de error devueltos por la validación o el backend
                     if (checkoutState is CheckoutState.Error) {
                         Text(
                             text = (checkoutState as CheckoutState.Error).message,
@@ -80,7 +98,7 @@ fun CheckoutScreen(
                     Button(
                         onClick = {
                             viewModel.procesarPago(
-                                eventoId = if (eventoId.isNotBlank()) eventoId else "cm0d1e3j7000008jt4h7m2k0l", // Fallback ID if empty
+                                eventoId = if (eventoId.isNotBlank()) eventoId else "EVT-001",
                                 categoria = "VIP",
                                 cantidad = totalTickets,
                                 precioTotal = totalPrice,
@@ -102,11 +120,11 @@ fun CheckoutScreen(
                         if (checkoutState is CheckoutState.Processing) {
                             CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
                         } else {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = "Pagar")
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("PAGAR $$totalPrice MXN", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
+                            Text(
+                                text = "CONFIRMAR PAGO - $$totalPrice MXN",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
                         }
                     }
                 }
@@ -116,117 +134,136 @@ fun CheckoutScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Order Summary
+            // Resumen de la Orden
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
-                shape = RoundedCornerShape(12.dp)
+                colors = CardDefaults.cardColors(containerColor = fieldColor),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Resumen de Compra", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Resumen del Pedido", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Boletos ($totalTickets)", color = Color.Gray)
-                        Text("$$totalPrice", color = Color.White)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Accesos ($totalTickets x VIP)", color = Color.White)
+                        Text("$$totalPrice MXN", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Cargos por servicio", color = Color.Gray)
-                        Text("$0", color = Color.White) // Free fees for demo
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(color = Color.DarkGray)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("TOTAL", color = PrimaryGold, fontWeight = FontWeight.Bold)
-                        Text("$$totalPrice MXN", color = PrimaryGold, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Cargos por servicio", color = Color.Gray, fontSize = 12.sp)
+                        Text("Incluidos", color = PrimaryGold, fontSize = 12.sp)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-            Text("Método de Pago", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Payment Form
+            // Formulario de Tarjeta Bancaria
+            Text("Detalles de la Tarjeta", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Nombre del Titular
             OutlinedTextField(
                 value = cardHolder,
                 onValueChange = { cardHolder = it },
-                label = { Text("Nombre en la tarjeta") },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
+                label = { Text("Nombre del Titular") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = fieldColor,
+                    unfocusedContainerColor = fieldColor,
                     focusedBorderColor = PrimaryGold,
                     unfocusedBorderColor = Color.Transparent,
-                    containerColor = fieldColor,
-                    focusedLabelColor = PrimaryGold,
-                    unfocusedLabelColor = Color.Gray
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // Número de Tarjeta
             OutlinedTextField(
                 value = cardNumber,
-                onValueChange = { cardNumber = it },
-                label = { Text("Número de tarjeta") },
-                trailingIcon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.Gray) },
+                onValueChange = { if (it.length <= 16) cardNumber = it },
+                label = { Text("Número de Tarjeta (16 dígitos)") },
+                trailingIcon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = PrimaryGold) },
+                singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = fieldColor,
+                    unfocusedContainerColor = fieldColor,
                     focusedBorderColor = PrimaryGold,
                     unfocusedBorderColor = Color.Transparent,
-                    containerColor = fieldColor,
-                    focusedLabelColor = PrimaryGold,
-                    unfocusedLabelColor = Color.Gray
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
                 ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Fecha de Expiración
                 OutlinedTextField(
                     value = expiryDate,
-                    onValueChange = { expiryDate = it },
+                    onValueChange = { if (it.length <= 5) expiryDate = it },
                     label = { Text("MM/AA") },
+                    singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = fieldColor,
+                        unfocusedContainerColor = fieldColor,
                         focusedBorderColor = PrimaryGold,
                         unfocusedBorderColor = Color.Transparent,
-                        containerColor = fieldColor,
-                        focusedLabelColor = PrimaryGold,
-                        unfocusedLabelColor = Color.Gray
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     ),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
 
+                // Código CVV
                 OutlinedTextField(
                     value = cvv,
-                    onValueChange = { cvv = it },
+                    onValueChange = { if (it.length <= 4) cvv = it },
                     label = { Text("CVV") },
+                    singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = fieldColor,
+                        unfocusedContainerColor = fieldColor,
                         focusedBorderColor = PrimaryGold,
                         unfocusedBorderColor = Color.Transparent,
-                        containerColor = fieldColor,
-                        focusedLabelColor = PrimaryGold,
-                        unfocusedLabelColor = Color.Gray
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     ),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Leyenda de Pago Encriptado
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PrimaryGold, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Transacción encriptada con tecnología SSL de 256 bits.", color = Color.Gray, fontSize = 12.sp)
+            }
         }
     }
 }

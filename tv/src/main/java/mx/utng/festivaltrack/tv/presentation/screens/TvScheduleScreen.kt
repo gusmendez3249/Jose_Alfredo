@@ -26,18 +26,36 @@ data class ScheduleItem(val time: String, val title: String, val stage: String, 
 
 @Composable
 fun TvScheduleScreen(
+    eventos: List<mx.utng.festivaltrack.shared.data.local.entity.EventoEntity> = emptyList(),
     currentNavIndex: Int,
     onNavSelect: (Int) -> Unit
 ) {
     var activeDialogText by remember { mutableStateOf<String?>(null) }
 
-    val scheduleList = remember {
-        listOf(
-            ScheduleItem("18:00 HRS", "Serenata de Bienvenida", "Mausoleo José Alfredo", "Mariachi Femenil", isCurrent = false),
-            ScheduleItem("19:30 HRS", "Gran Gala Mariachi", "Escenario Principal", "Mariachi Sol de México", isCurrent = true),
-            ScheduleItem("21:00 HRS", "Homenaje Cuerdas de Dolores", "Teatro del Pueblo", "Orquesta Guanajuato", isCurrent = false),
-            ScheduleItem("22:30 HRS", "Cierre Estelar: El Rey", "Escenario Principal", "Voces Magistrales", isCurrent = false)
-        )
+    val scheduleList = remember(eventos) {
+        if (eventos.isNotEmpty()) {
+            eventos.mapIndexed { index, e ->
+                val formattedTime = if (e.fechaHora.contains("T")) {
+                    e.fechaHora.substringAfter("T").take(5) + " HRS"
+                } else {
+                    e.fechaHora
+                }
+                ScheduleItem(
+                    time = formattedTime,
+                    title = e.nombre,
+                    stage = e.escenario ?: e.ubicacion,
+                    artist = e.artistaNombre ?: "Mariachi & Artistas Invitados",
+                    isCurrent = index == 0
+                )
+            }
+        } else {
+            listOf(
+                ScheduleItem("18:00 HRS", "Serenata de Bienvenida", "Mausoleo José Alfredo", "Mariachi Femenil", isCurrent = false),
+                ScheduleItem("19:30 HRS", "Gran Gala Mariachi", "Escenario Principal", "Mariachi Sol de México", isCurrent = true),
+                ScheduleItem("21:00 HRS", "Homenaje Cuerdas de Dolores", "Teatro del Pueblo", "Orquesta Guanajuato", isCurrent = false),
+                ScheduleItem("22:30 HRS", "Cierre Estelar: El Rey", "Escenario Principal", "Voces Magistrales", isCurrent = false)
+            )
+        }
     }
 
     Row(

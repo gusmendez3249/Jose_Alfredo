@@ -20,8 +20,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.GalleryViewModel
 
@@ -75,6 +77,7 @@ fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(imagenes) { imagen ->
+                            val context = LocalContext.current
                             Card(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
@@ -82,7 +85,11 @@ fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
                                     .aspectRatio(1f)
                             ) {
                                 AsyncImage(
-                                    model = imagen.url,
+                                    model = ImageRequest.Builder(context)
+                                        .data(imagen.url)
+                                        .setHeader("User-Agent", "Mozilla/5.0")
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = imagen.titulo,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()

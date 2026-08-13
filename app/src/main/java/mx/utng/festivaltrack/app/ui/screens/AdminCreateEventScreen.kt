@@ -25,21 +25,28 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminCreateEventScreen(
+    eventId: String? = null,
+    initialTitle: String = "",
+    initialDate: String = "",
+    initialLocation: String = "",
+    initialPrice: String = "",
     viewModel: AdminManageViewModel? = null,
     onNavigateBack: () -> Unit = {}
 ) {
-    var title by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle) }
+    var date by remember { mutableStateOf(initialDate) }
+    var location by remember { mutableStateOf(initialLocation) }
+    var price by remember { mutableStateOf(initialPrice) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scrollState = rememberScrollState()
     val fieldColor = Color(0xFF1E2720)
+    val isEditing = !eventId.isNullOrEmpty()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Evento", color = PrimaryGold, fontWeight = FontWeight.Bold) },
+                title = { Text(if (isEditing) "Editar Evento" else "Crear Evento", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = Color.White)
@@ -56,8 +63,10 @@ fun AdminCreateEventScreen(
                 Column(modifier = Modifier.padding(24.dp)) {
                     Button(
                         onClick = {
+                            val token = mx.utng.festivaltrack.app.data.TokenManager(context).getToken()
                             viewModel?.saveEvent(
-                                id = null,
+                                token = token,
+                                id = eventId,
                                 title = title,
                                 date = date,
                                 location = location,
@@ -77,7 +86,7 @@ fun AdminCreateEventScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Save, contentDescription = "Guardar")
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("GUARDAR EVENTO", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(if (isEditing) "GUARDAR CAMBIOS" else "GUARDAR EVENTO", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
                 }

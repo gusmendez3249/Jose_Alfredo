@@ -6,39 +6,60 @@ async function main() {
   console.log('Seeding data...');
 
   // 1. Artista y Biografía
-  const artista = await prisma.artista.create({
-    data: {
-      nombre: 'José Alfredo Jiménez',
-      imagenUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Jos%C3%A9_Alfredo_Jim%C3%A9nez.jpg',
-      biografia: {
-        create: {
-          descripcion: 'José Alfredo Jiménez Sandoval fue un cantante y compositor mexicano, considerado uno de los más grandes exponentes de la música regional mexicana.',
-          citaCelebre: '"El dinero no vale nada"',
-          hitos: JSON.stringify(['Nació en Dolores Hidalgo', 'Escribió más de mil canciones']),
-          discografia: JSON.stringify(['El Rey', 'Caminos de Guanajuato'])
+  let artista = await prisma.artista.findFirst({ where: { nombre: 'José Alfredo Jiménez' } });
+  if (!artista) {
+    artista = await prisma.artista.create({
+      data: {
+        nombre: 'José Alfredo Jiménez',
+        imagenUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+        biografia: {
+          create: {
+            descripcion: 'José Alfredo Jiménez Sandoval fue un cantante y compositor mexicano, considerado uno de los más grandes exponentes de la música regional mexicana.',
+            citaCelebre: '"El dinero no vale nada"',
+            hitos: JSON.stringify(['Nació en Dolores Hidalgo', 'Escribió más de mil canciones']),
+            discografia: JSON.stringify(['El Rey', 'Caminos de Guanajuato'])
+          }
         }
       }
-    }
-  });
-  console.log('Artista y Biografía creados.');
+    });
+  }
+  console.log('Artista y Biografía listos.');
 
   // Necesitamos un administrador para relacionar la galería y las canciones
-  // Vamos a crear un admin dummy o buscar uno
-  const usuarioAdmin = await prisma.usuario.create({
-    data: {
-      nombre: 'Admin Seed',
-      correo: 'adminseed@festivaltrack.com',
-      contrasena: 'password', // hash en prod
-      rol: 'ADMINISTRADOR',
-    }
-  });
+  const bcrypt = await import('bcryptjs');
+  const hashedPassAdmin = await bcrypt.hash('admin123', 10);
 
-  const admin = await prisma.administrador.create({
-    data: {
-      usuarioId: usuarioAdmin.id,
-      nivel: 1
-    }
-  });
+  // Crear o actualizar admin@admin.com con contraseña admin123 y hash bcrypt
+  let usuarioAdmin = await prisma.usuario.findUnique({ where: { correo: 'admin@admin.com' } });
+  if (!usuarioAdmin) {
+    usuarioAdmin = await prisma.usuario.create({
+      data: {
+        nombre: 'Administrador Principal',
+        correo: 'admin@admin.com',
+        contrasena: hashedPassAdmin,
+        rol: 'ADMINISTRADOR',
+      }
+    });
+  } else {
+    usuarioAdmin = await prisma.usuario.update({
+      where: { correo: 'admin@admin.com' },
+      data: {
+        contrasena: hashedPassAdmin,
+        rol: 'ADMINISTRADOR'
+      }
+    });
+  }
+
+  let admin = await prisma.administrador.findUnique({ where: { usuarioId: usuarioAdmin.id } });
+  if (!admin) {
+    admin = await prisma.administrador.create({
+      data: {
+        usuarioId: usuarioAdmin.id,
+        nivel: 1
+      }
+    });
+  }
+  console.log('Administrador admin@admin.com configurado correctamente.');
 
   // 2. Canciones
   await prisma.cancion.createMany({
@@ -74,14 +95,24 @@ async function main() {
       imagenes: {
         create: [
           {
-            url: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Jos%C3%A9_Alfredo_Jim%C3%A9nez.jpg',
-            titulo: 'Retrato Clásico',
+            url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+            titulo: 'Gala Inaugural Mariachi',
             orden: 1
           },
           {
-            url: 'https://upload.wikimedia.org/wikipedia/commons/7/77/Jose_Alfredo_Jimenez.jpg',
-            titulo: 'En Concierto',
+            url: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80',
+            titulo: 'Concierto en Dolores Hidalgo',
             orden: 2
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+            titulo: 'Noche de Homenaje',
+            orden: 3
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
+            titulo: 'Escenario Principal',
+            orden: 4
           }
         ]
       }

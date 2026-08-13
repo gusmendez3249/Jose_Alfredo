@@ -36,7 +36,8 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun MainScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
+    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> },
+    onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -114,7 +115,8 @@ fun MainScreen(
                 }
                 composable(BottomNavItem.Profile.route) {
                     mx.utng.festivaltrack.app.ui.screens.ProfileScreen(
-                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) }
+                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) },
+                        onLogout = onLogout
                     )
                 }
             }

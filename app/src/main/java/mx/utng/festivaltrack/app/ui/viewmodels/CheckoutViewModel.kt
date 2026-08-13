@@ -64,7 +64,8 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
                 api.comprarBoleto("Bearer $token", dto)
                 _checkoutState.value = CheckoutState.Success
             } catch (e: Exception) {
-                _checkoutState.value = CheckoutState.Error("El pago fue rechazado o falló la conexión.")
+                val detail = e.localizedMessage ?: "Error desconocido"
+                _checkoutState.value = CheckoutState.Error("Error al procesar compra: $detail")
             }
         }
     }

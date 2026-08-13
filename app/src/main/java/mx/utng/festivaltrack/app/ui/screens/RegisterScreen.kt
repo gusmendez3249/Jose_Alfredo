@@ -36,6 +36,10 @@ fun RegisterScreen(
 
     val authState by viewModel.authState.collectAsState()
     
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+    }
+    
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             val role = (authState as AuthState.Success).role

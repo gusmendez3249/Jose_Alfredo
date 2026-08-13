@@ -241,7 +241,7 @@ fun DashboardScreen(
         // Live stream option
         Button(
             onClick = {
-                val eId = eventos.firstOrNull()?.id ?: "cm0d1e3j7000008jt4h7m2k0l"
+                val eId = eventos.firstOrNull()?.id ?: "EVT-001"
                 onNavigateToLive(eId)
             },
             colors = ButtonDefaults.buttonColors(

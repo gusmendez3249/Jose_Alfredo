@@ -48,18 +48,24 @@ fun UserLiveStreamScreen(
     }
 
     DisposableEffect(streamUrl) {
-        if (streamUrl != null) {
+        val targetUrl = streamUrl ?: "rtsp://10.0.2.2:1935"
+        try {
             val player = ExoPlayer.Builder(context).build()
             val mediaSource = RtspMediaSource.Factory()
-                .createMediaSource(MediaItem.fromUri(Uri.parse(streamUrl)))
+                .setForceUseRtpTcp(true)
+                .createMediaSource(MediaItem.fromUri(Uri.parse(targetUrl)))
             player.setMediaSource(mediaSource)
             player.prepare()
             player.playWhenReady = true
             exoPlayer = player
+        } catch (e: Exception) {
+            // Prevent crash on player error
         }
 
         onDispose {
-            exoPlayer?.release()
+            try {
+                exoPlayer?.release()
+            } catch (e: Exception) {}
             exoPlayer = null
             viewModel.stopLiveStream()
         }

@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -251,6 +252,9 @@ fun AdminUploadScreen() {
             
             Spacer(modifier = Modifier.height(32.dp))
             
+            val coroutineScope = rememberCoroutineScope()
+            val api = remember { mx.utng.festivaltrack.shared.data.remote.FestivalApiService.create() }
+
             // Publish Action Button
             Button(
                 onClick = {
@@ -258,15 +262,43 @@ fun AdminUploadScreen() {
                         Toast.makeText(context, "Por favor ingresa un título", Toast.LENGTH_SHORT).show()
                     } else {
                         isUploading = true
-                        uploadProgress = 1.0f
-                        Toast.makeText(context, "¡Publicado exitosamente en el catálogo!", Toast.LENGTH_LONG).show()
+                        uploadProgress = 0.5f
+                        coroutineScope.launch {
+                            try {
+                                // 1. Guardar Canción en el Backend
+                                api.createCancion(
+                                    mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
+                                        titulo = title,
+                                        artista = if (artist.isNotBlank()) artist else "José Alfredo Jiménez"
+                                    )
+                                )
+                                // 2. Si seleccionó una imagen, guardar también en la Galería
+                                if (selectedImageUri != null) {
+                                    api.addImagenGaleria(
+                                        mx.utng.festivaltrack.shared.data.remote.ImagenCreateDto(
+                                            titulo = title
+                                        )
+                                    )
+                                }
+                                uploadProgress = 1.0f
+                                isUploading = false
+                                Toast.makeText(context, "¡Publicado exitosamente en el catálogo!", Toast.LENGTH_LONG).show()
+                                title = ""
+                                artist = ""
+                                selectedImageUri = null
+                                selectedAudioUri = null
+                            } catch (e: Exception) {
+                                isUploading = false
+                                Toast.makeText(context, "Error al publicar: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("PUBLICAR EN EL CATÁLOGOS", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("PUBLICAR EN EL CATÁLOGO", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
             
             Spacer(modifier = Modifier.height(32.dp))
