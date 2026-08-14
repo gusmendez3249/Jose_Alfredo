@@ -29,6 +29,15 @@ export declare class GaleriaController {
         orden: number;
         galeriaId: string;
     }>;
+    removeImagen(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        url: string;
+        titulo: string | null;
+        etiquetas: string[];
+        orden: number;
+        galeriaId: string;
+    }>;
 }
 export declare class UploadController {
     uploadFile(file: Express.Multer.File): {

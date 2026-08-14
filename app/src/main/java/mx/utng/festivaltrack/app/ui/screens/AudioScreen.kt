@@ -43,6 +43,10 @@ fun AudioScreen(viewModel: AudioViewModel = viewModel()) {
 
     var currentTrack by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.CancionDto?>(null) }
     
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     // Auto-select first track when loaded
     LaunchedEffect(canciones) {
         if (canciones.isNotEmpty() && currentTrack == null) {

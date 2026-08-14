@@ -33,6 +33,10 @@ fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
     val galerias by viewModel.galerias.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,7 +91,6 @@ fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
                                         .data(imagen.url)
-                                        .setHeader("User-Agent", "Mozilla/5.0")
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = imagen.titulo,

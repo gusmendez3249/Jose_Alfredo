@@ -45,6 +45,9 @@ let CancionesService = class CancionesService {
             }
         });
     }
+    async remove(id) {
+        return this.prisma.cancion.delete({ where: { id } });
+    }
 };
 exports.CancionesService = CancionesService;
 exports.CancionesService = CancionesService = __decorate([

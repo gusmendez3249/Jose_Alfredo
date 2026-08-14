@@ -32,4 +32,13 @@ export declare class GaleriaService {
         orden: number;
         galeriaId: string;
     }>;
+    removeImagen(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        url: string;
+        titulo: string | null;
+        etiquetas: string[];
+        orden: number;
+        galeriaId: string;
+    }>;
 }

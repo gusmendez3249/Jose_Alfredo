@@ -29,6 +29,9 @@ let GaleriaController = class GaleriaController {
     addImagen(body) {
         return this.galeriaService.addImagen(body);
     }
+    removeImagen(id) {
+        return this.galeriaService.removeImagen(id);
+    }
 };
 exports.GaleriaController = GaleriaController;
 __decorate([
@@ -44,6 +47,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], GaleriaController.prototype, "addImagen", null);
+__decorate([
+    (0, common_1.Delete)('imagen/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], GaleriaController.prototype, "removeImagen", null);
 exports.GaleriaController = GaleriaController = __decorate([
     (0, common_1.Controller)('galeria'),
     __metadata("design:paramtypes", [galeria_service_1.GaleriaService])

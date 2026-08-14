@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -16,6 +16,11 @@ export class GaleriaController {
   @Post('imagen')
   addImagen(@Body() body: any) {
     return this.galeriaService.addImagen(body);
+  }
+
+  @Delete('imagen/:id')
+  removeImagen(@Param('id') id: string) {
+    return this.galeriaService.removeImagen(id);
   }
 }
 
