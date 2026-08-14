@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { CancionesService } from './canciones.service';
 
 @Controller('canciones')
@@ -13,5 +13,10 @@ export class CancionesController {
   @Post()
   create(@Body() body: any) {
     return this.cancionesService.create(body);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.cancionesService.remove(id);
   }
 }

@@ -26,4 +26,16 @@ export declare class CancionesController {
         archivoUrl: string;
         genero: string | null;
     }>;
+    remove(id: string): Promise<{
+        artista: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        administradorId: string;
+        titulo: string;
+        estado: import(".prisma/client").$Enums.EstadoCancion;
+        duracion: number;
+        archivoUrl: string;
+        genero: string | null;
+    }>;
 }

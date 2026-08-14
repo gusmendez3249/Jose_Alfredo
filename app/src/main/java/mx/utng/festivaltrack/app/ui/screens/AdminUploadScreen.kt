@@ -47,9 +47,17 @@ fun AdminUploadScreen() {
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
         if (uri != null) {
-            Toast.makeText(context, "Imagen seleccionada", Toast.LENGTH_SHORT).show()
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val file = java.io.File(context.filesDir, "upload_img_${System.currentTimeMillis()}.jpg")
+                file.outputStream().use { out -> inputStream?.copyTo(out) }
+                selectedImageUri = Uri.fromFile(file)
+                Toast.makeText(context, "Imagen lista para publicar", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                selectedImageUri = uri
+                Toast.makeText(context, "Imagen seleccionada", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -258,31 +266,38 @@ fun AdminUploadScreen() {
             // Publish Action Button
             Button(
                 onClick = {
-                    if (title.isBlank()) {
-                        Toast.makeText(context, "Por favor ingresa un título", Toast.LENGTH_SHORT).show()
+                    if (selectedImageUri == null && selectedAudioUri == null && title.isBlank()) {
+                        Toast.makeText(context, "Por favor selecciona una imagen, audio o ingresa un título", Toast.LENGTH_SHORT).show()
                     } else {
                         isUploading = true
                         uploadProgress = 0.5f
                         coroutineScope.launch {
                             try {
-                                // 1. Guardar Canción en el Backend
-                                api.createCancion(
-                                    mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
-                                        titulo = title,
-                                        artista = if (artist.isNotBlank()) artist else "José Alfredo Jiménez"
-                                    )
-                                )
-                                // 2. Si seleccionó una imagen, guardar también en la Galería
-                                if (selectedImageUri != null) {
-                                    api.addImagenGaleria(
-                                        mx.utng.festivaltrack.shared.data.remote.ImagenCreateDto(
-                                            titulo = title
+                                val finalTitle = if (title.isNotBlank()) title else "Nueva Publicación"
+                                
+                                // 1. Si hay audio o título, guardar Canción en Backend
+                                if (selectedAudioUri != null || title.isNotBlank()) {
+                                    api.createCancion(
+                                        mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
+                                            titulo = finalTitle,
+                                            artista = if (artist.isNotBlank()) artist else "José Alfredo Jiménez"
                                         )
                                     )
                                 }
+                                
+                                // 2. Si seleccionó una imagen, guardar en la Galería
+                                if (selectedImageUri != null) {
+                                    api.addImagenGaleria(
+                                        mx.utng.festivaltrack.shared.data.remote.ImagenCreateDto(
+                                            url = selectedImageUri.toString(),
+                                            titulo = finalTitle
+                                        )
+                                    )
+                                }
+                                
                                 uploadProgress = 1.0f
                                 isUploading = false
-                                Toast.makeText(context, "¡Publicado exitosamente en el catálogo!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "¡Publicado exitosamente! Revisa la Galería o Audio.", Toast.LENGTH_LONG).show()
                                 title = ""
                                 artist = ""
                                 selectedImageUri = null

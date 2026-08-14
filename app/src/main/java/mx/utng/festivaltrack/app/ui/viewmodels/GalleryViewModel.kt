@@ -21,10 +21,10 @@ class GalleryViewModel : ViewModel() {
     val error: StateFlow<String?> = _error
 
     init {
-        fetchGalerias()
+        refresh()
     }
 
-    private fun fetchGalerias() {
+    fun refresh() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true

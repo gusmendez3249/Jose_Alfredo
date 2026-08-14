@@ -8,7 +8,11 @@ export class GaleriaService {
   async getGaleria() {
     // Retornamos todas las galerías junto con sus imágenes
     return this.prisma.galeria.findMany({
-      include: { imagenes: true },
+      include: {
+        imagenes: {
+          orderBy: { createdAt: 'desc' }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
   }
@@ -38,5 +42,9 @@ export class GaleriaService {
         titulo: dto.titulo || 'Nueva Foto del Festival',
       }
     });
+  }
+
+  async removeImagen(id: string) {
+    return this.prisma.imagen.delete({ where: { id } });
   }
 }

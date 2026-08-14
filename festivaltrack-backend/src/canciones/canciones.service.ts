@@ -35,4 +35,8 @@ export class CancionesService {
       }
     });
   }
+
+  async remove(id: string) {
+    return this.prisma.cancion.delete({ where: { id } });
+  }
 }

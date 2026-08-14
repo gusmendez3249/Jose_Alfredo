@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
@@ -123,12 +124,31 @@ fun AdminManageScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
+            val api = remember { mx.utng.festivaltrack.shared.data.remote.FestivalApiService.create() }
+            var cancionesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.CancionDto>>(emptyList()) }
+            var imagenesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.ImagenDto>>(emptyList()) }
+
+            fun reloadData() {
+                coroutineScope.launch {
+                    try {
+                        cancionesList = api.getCanciones()
+                        val galerias = api.getGalerias()
+                        imagenesList = galerias.flatMap { it.imagenes }
+                    } catch (e: Exception) {}
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                reloadData()
+            }
+
             // List Items
             if (selectedFilter == "Eventos") {
                 if (eventos.isEmpty()) {
                     Text("No hay eventos disponibles.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
-                    val context = androidx.compose.ui.platform.LocalContext.current
                     eventos.forEach { evento ->
                         ManageItemCard(
                             status = evento.estado,
@@ -144,25 +164,98 @@ fun AdminManageScreen(
                         )
                     }
                 }
+            } else if (selectedFilter == "Canciones") {
+                if (cancionesList.isEmpty()) {
+                    Text("No hay canciones registradas en el catálogo.", color = Color.Gray, modifier = Modifier.padding(16.dp))
+                } else {
+                    cancionesList.forEach { cancion ->
+                        ManageItemCard(
+                            status = "PUBLICADO",
+                            isDraft = false,
+                            title = cancion.titulo,
+                            subtitle = "${cancion.artista} • ${cancion.duracion}s",
+                            iconType = "music",
+                            onEdit = {},
+                            onDelete = {
+                                coroutineScope.launch {
+                                    try {
+                                        api.deleteCancion(cancion.id)
+                                        android.widget.Toast.makeText(context, "Canción eliminada del catálogo", android.widget.Toast.LENGTH_SHORT).show()
+                                        reloadData()
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, "Error al eliminar canción", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            } else if (selectedFilter == "Galería") {
+                if (imagenesList.isEmpty()) {
+                    Text("No hay fotos en la galería.", color = Color.Gray, modifier = Modifier.padding(16.dp))
+                } else {
+                    imagenesList.forEach { imagen ->
+                        ManageItemCard(
+                            status = "PUBLICADO",
+                            isDraft = false,
+                            title = imagen.titulo ?: "Foto de Galería",
+                            subtitle = "Galería del Festival",
+                            iconType = "image",
+                            onEdit = {},
+                            onDelete = {
+                                coroutineScope.launch {
+                                    try {
+                                        api.deleteImagenGaleria(imagen.id)
+                                        android.widget.Toast.makeText(context, "Imagen eliminada de la galería", android.widget.Toast.LENGTH_SHORT).show()
+                                        reloadData()
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, "Error al eliminar imagen", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
             } else {
-                ManageItemCard(
-                    status = "PUBLICADO",
-                    isDraft = false,
-                    title = "El Rey",
-                    subtitle = "Mariachi Clásico • 3:24",
-                    iconType = "music",
-                    onEdit = {},
-                    onDelete = {}
-                )
-                ManageItemCard(
-                    status = "BORRADOR",
-                    isDraft = true,
-                    title = "Festival...",
-                    subtitle = "Galería • 4.2 MB",
-                    iconType = "image",
-                    onEdit = {},
-                    onDelete = {}
-                )
+                // Todos (Canciones + Galería)
+                cancionesList.forEach { cancion ->
+                    ManageItemCard(
+                        status = "PUBLICADO",
+                        isDraft = false,
+                        title = cancion.titulo,
+                        subtitle = "Canción • ${cancion.artista}",
+                        iconType = "music",
+                        onEdit = {},
+                        onDelete = {
+                            coroutineScope.launch {
+                                try {
+                                    api.deleteCancion(cancion.id)
+                                    android.widget.Toast.makeText(context, "Canción eliminada", android.widget.Toast.LENGTH_SHORT).show()
+                                    reloadData()
+                                } catch (e: Exception) {}
+                            }
+                        }
+                    )
+                }
+                imagenesList.forEach { imagen ->
+                    ManageItemCard(
+                        status = "PUBLICADO",
+                        isDraft = false,
+                        title = imagen.titulo ?: "Foto de Galería",
+                        subtitle = "Imagen de Galería",
+                        iconType = "image",
+                        onEdit = {},
+                        onDelete = {
+                            coroutineScope.launch {
+                                try {
+                                    api.deleteImagenGaleria(imagen.id)
+                                    android.widget.Toast.makeText(context, "Imagen eliminada", android.widget.Toast.LENGTH_SHORT).show()
+                                    reloadData()
+                                } catch (e: Exception) {}
+                            }
+                        }
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(80.dp)) // Space for FAB
