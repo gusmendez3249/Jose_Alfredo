@@ -7,10 +7,21 @@ import android.content.Intent
 import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
 import java.time.Instant
 
+/**
+ * Caso de uso para programar alertas locales para los eventos.
+ * Utiliza [AlarmManager] para registrar notificaciones previas al evento.
+ *
+ * @property context Contexto de la aplicación.
+ * @property db Instancia de [FestivalDatabase].
+ * @constructor Inicializa el caso de uso con el contexto y la base de datos.
+ */
 class ScheduleAlertasUseCase(
     private val context: Context,
     private val db: FestivalDatabase
 ) {
+    /**
+     * Ejecuta la programación de las alertas locales.
+     */
     suspend fun execute() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val eventos = db.eventoDao().observeProximos(Instant.now().toString())

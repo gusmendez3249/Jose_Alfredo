@@ -20,6 +20,14 @@ import mx.utng.jose_alfredo.presentation.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
 
+/**
+ * Pantalla que muestra el programa completo del festival.
+ * Utiliza [ScalingLazyColumn] para renderizar todos los eventos ordenados por fecha y hora
+ * en la interfaz circular de Wear OS.
+ *
+ * @param onEventoClick Acción que se invoca al presionar una tarjeta de evento, pasando el ID.
+ * @param viewModel ViewModel de donde se extrae el [StateFlow] con todos los eventos.
+ */
 @Composable
 fun ProgramaCompletoScreen(
     onEventoClick: (String) -> Unit,

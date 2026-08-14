@@ -25,6 +25,15 @@ let AuthController = class AuthController {
     register(dto) { return this.authService.register(dto); }
     login(dto) { return this.authService.login(dto); }
     tvSync(body) { return this.authService.tvSync(body); }
+    getUsuarios() {
+        return this.authService.getUsuarios();
+    }
+    registerAdmin(dto) {
+        return this.authService.registerAdmin(dto);
+    }
+    updateRole(id, rol) {
+        return this.authService.updateRole(id, rol);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -48,6 +57,27 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "tvSync", null);
+__decorate([
+    (0, common_1.Get)('usuarios'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getUsuarios", null);
+__decorate([
+    (0, common_1.Post)('register-admin'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "registerAdmin", null);
+__decorate([
+    (0, common_1.Put)('usuarios/:id/rol'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('rol')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "updateRole", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

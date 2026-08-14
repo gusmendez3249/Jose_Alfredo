@@ -21,6 +21,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 
+/**
+ * Pantalla que simula una carátula (WatchFace) como punto de entrada de la aplicación.
+ * Renderiza el título del festival y permite navegar al listado de eventos.
+ *
+ * @param onTap Acción que se invoca cuando el usuario presiona el botón "VER EVENTOS".
+ */
 @Composable
 fun WatchFaceScreen(onTap: () -> Unit) {
     Scaffold(

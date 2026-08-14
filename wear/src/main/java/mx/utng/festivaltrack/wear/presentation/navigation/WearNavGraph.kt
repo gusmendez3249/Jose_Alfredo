@@ -6,22 +6,46 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import mx.utng.festivaltrack.wear.presentation.screens.*
 
+/**
+ * Rutas de navegación selladas para Wear OS.
+ * @property route El identificador de la ruta en la navegación.
+ */
 sealed class WearScreen(val route: String) {
+    /** Pantalla inicial tipo Splash. */
     object Splash       : WearScreen("splash")
+    /** Pantalla que simula una carátula o menú principal. */
     object WatchFace    : WearScreen("watch_face")
+    /** Pantalla de listado de próximos eventos. */
     object Proximos     : WearScreen("proximos")
+    /** Pantalla de listado completo de eventos. */
     object ProgramaCompleto : WearScreen("programa_completo")
+    /**
+     * Pantalla de alerta de un evento próximo.
+     * @property eventoId ID del evento.
+     */
     object Alerta       : WearScreen("alerta/{eventoId}") {
         fun createRoute(eventoId: String) = "alerta/$eventoId"
     }
+    /**
+     * Pantalla de opciones de navegación a un escenario.
+     * @property eventoId ID del evento.
+     */
     object NavEscenario : WearScreen("nav_escenario/{eventoId}") {
         fun createRoute(eventoId: String) = "nav_escenario/$eventoId"
     }
+    /**
+     * Pantalla del mapa interactivo para acceder al evento.
+     * @property eventoId ID del evento.
+     */
     object MapaAcceso   : WearScreen("mapa_acceso/{eventoId}") {
         fun createRoute(eventoId: String) = "mapa_acceso/$eventoId"
     }
 }
 
+/**
+ * Gráfico de navegación principal para la aplicación en Wear OS.
+ * Utiliza [SwipeDismissableNavHost] que es el estándar en relojes para deslizar hacia atrás.
+ */
 @Composable
 fun WearNavGraph() {
     val navController = rememberSwipeDismissableNavController()

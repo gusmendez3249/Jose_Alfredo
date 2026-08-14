@@ -119,6 +119,13 @@ fun MainScreen(
                         onLogout = onLogout
                     )
                 }
+                composable("live/{eventoId}") { backStackEntry ->
+                    val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                    UserLiveStreamScreen(
+                        eventoId = eventoId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

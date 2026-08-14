@@ -10,20 +10,66 @@ import mx.utng.festivaltrack.app.data.TokenManager
 import mx.utng.festivaltrack.shared.data.remote.CompraBoletoDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
+/**
+ * Estado de pago — patrón Sealed Class para representar el flujo de checkout.
+ *
+ * La UI observa [CheckoutViewModel.checkoutState] y reacciona a cada estado:
+ * - [Idle]: pantalla en reposo, esperando que el usuario inicie el pago.
+ * - [Processing]: pago en proceso, muestra un indicador de carga.
+ * - [Success]: pago completado con éxito, navegación a pantalla de éxito.
+ * - [Error]: muestra un mensaje de error si el pago falla.
+ */
 sealed class CheckoutState {
+    /** Estado inicial o en reposo. */
     object Idle : CheckoutState()
+    
+    /** El pago está siendo procesado por el servidor. */
     object Processing : CheckoutState()
+    
+    /** Pago exitoso. */
     object Success : CheckoutState()
+    
+    /**
+     * Error durante el proceso de pago.
+     * @property message Mensaje de error para mostrar al usuario.
+     */
     data class Error(val message: String) : CheckoutState()
 }
 
+/**
+ * ViewModel que gestiona la lógica de compra de boletos para el evento.
+ *
+ * Responsabilidades:
+ * - Validar los datos de la tarjeta (simulación local).
+ * - Enviar la petición de compra al backend llamando a `POST /boletos/comprar`.
+ * - Exponer el estado actual del checkout mediante [StateFlow].
+ *
+ * @param application La instancia de la aplicación, requerida para [TokenManager].
+ */
 class CheckoutViewModel(application: Application) : AndroidViewModel(application) {
+    
+    /** Gestiona el token JWT. */
     private val tokenManager = TokenManager(application)
+    
+    /** Cliente HTTP Retrofit para llamadas al backend. */
     private val api = FestivalApiService.create()
 
     private val _checkoutState = MutableStateFlow<CheckoutState>(CheckoutState.Idle)
+    
+    /** Estado de checkout observable por la UI. */
     val checkoutState: StateFlow<CheckoutState> = _checkoutState
 
+    /**
+     * Procesa el pago de boletos validando la tarjeta y llamando al API.
+     *
+     * @param eventoId ID del evento para el cual se compran boletos.
+     * @param categoria Categoría del boleto (e.g., VIP, General).
+     * @param cantidad Cantidad de boletos a comprar.
+     * @param precioTotal Monto total de la compra.
+     * @param tarjetaNumero Número de la tarjeta de crédito/débito.
+     * @param tarjetaVencimiento Fecha de expiración de la tarjeta.
+     * @param tarjetaCVV Código de seguridad de la tarjeta.
+     */
     fun procesarPago(
         eventoId: String,
         categoria: String,
@@ -70,6 +116,9 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
         }
     }
     
+    /**
+     * Reinicia el estado de checkout a [CheckoutState.Idle].
+     */
     fun resetState() {
         _checkoutState.value = CheckoutState.Idle
     }

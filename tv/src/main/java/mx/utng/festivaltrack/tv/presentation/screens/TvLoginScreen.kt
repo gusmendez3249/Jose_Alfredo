@@ -20,6 +20,14 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.tv.ui.utils.DynamicQrCode
 import mx.utng.festivaltrack.tv.ui.theme.*
 
+/**
+ * Pantalla de inicio de sesión para Android TV.
+ * Renderiza una vista dividida:
+ * - A la izquierda: un código QR dinámico para permitir el inicio de sesión desde un móvil.
+ * - A la derecha: un formulario tradicional con usuario y contraseña (accesible vía D-Pad).
+ *
+ * @param onLoginSuccess Callback que se ejecuta cuando el usuario inicia sesión exitosamente.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TvLoginScreen(

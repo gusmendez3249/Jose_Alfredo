@@ -15,6 +15,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+/**
+ * Renderiza un código QR simulado basado en el contenido proporcionado.
+ * Útil para Android TV al mostrar un QR de inicio de sesión que el usuario puede escanear con su dispositivo móvil.
+ *
+ * @param content El texto o URL que el QR representaría.
+ * @param modifier Modificador de Compose para aplicar a la vista.
+ * @param foregroundColor El color principal de los bloques del código QR.
+ * @param backgroundColor El color de fondo sobre el cual se dibuja el código QR.
+ */
 @Composable
 fun DynamicQrCode(
     content: String,

@@ -4,6 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
+/**
+ * Esquema de colores oscuros personalizado para el módulo de Android TV.
+ */
 private val DarkColorScheme = darkColorScheme(
     primary = FestivalGold,
     secondary = FestivalGoldDark,
@@ -14,6 +17,11 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = FestivalTextPrimary
 )
 
+/**
+ * Tema principal para la aplicación de Android TV de FestivalTrack.
+ *
+ * @param content El contenido [Composable] que será renderizado usando este tema.
+ */
 @Composable
 fun FestivalTrackTvTheme(
     content: @Composable () -> Unit

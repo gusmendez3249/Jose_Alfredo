@@ -49,12 +49,15 @@ data class ChatMessage(val user: String, val text: String, val time: String, val
 /**
  * Pantalla de Transmisión en Vivo para Smart TV ([TvLiveStreamScreen]).
  *
- * Esta pantalla integra:
- * 1. **Sidebar de Navegación (20%)**: Menú lateral navegable con D-Pad.
- * 2. **Reproductor de Video RTSP (68%)**: Utiliza [ExoPlayer] de Media3 para reproducir la señal `rtsp://10.0.2.2:1935`.
- * 3. **Chat de la Comunidad (32%)**: Panel lateral con refresco automático de mensajes cada 3 segundos.
- * 4. **Entrada de Texto para D-Pad**: En Android TV no se usan campos de texto directos. Se implementa un
- *    área enfocable que al presionar OK despliega [TvChatInputDialog] con teclado en pantalla.
+ * Esta pantalla integra el flujo en vivo del festival adaptado a pantallas grandes.
+ * Layout estructurado en:
+ * - **Reproductor RTSP (68%)**: Reproductor principal implementado con [ExoPlayer] (Media3) para
+ *   consumir una señal de video en tiempo real (RTSP) directamente desde el emulador o red local.
+ * - **Panel de Chat (32%)**: Barra lateral que muestra mensajes en vivo. Utiliza una técnica de
+ *   polling cada 3 segundos para sincronizar la lista de mensajes con el backend mediante HTTP.
+ *
+ * Para interactuar en el chat usando un control remoto, cuenta con un área especial navegable
+ * con el D-Pad. Al presionarse ("OK"), invoca el [TvChatInputDialog] que levanta el teclado en pantalla.
  *
  * @param currentNavIndex Índice de la opción de navegación actualmente seleccionada.
  * @param onNavSelect Callback para cambiar de pantalla al usar el menú lateral.

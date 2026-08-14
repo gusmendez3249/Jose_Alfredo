@@ -31,6 +31,20 @@ import mx.utng.festivaltrack.tv.R
 import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
 import mx.utng.festivaltrack.tv.ui.theme.*
 
+/**
+ * Pantalla principal (Home) de la aplicación para Android TV.
+ *
+ * Muestra el panel lateral (sidebar) izquierdo para navegación principal y
+ * un área central (main content) con un hero banner y un carrusel (`LazyRow`) de próximos eventos.
+ * Todo el layout está optimizado para navegación con D-Pad, usando [onFocusChanged] en las tarjetas
+ * para resaltar visualmente el elemento actual.
+ *
+ * @param eventos Lista de eventos actual proveniente del ViewModel (Room).
+ * @param currentNavIndex Índice actual de la opción seleccionada en el Sidebar.
+ * @param onNavSelect Callback al seleccionar un elemento en el Sidebar.
+ * @param onVerEnVivo Callback disparado al hacer clic en el botón "Ver en Vivo" del banner principal.
+ * @param onComprarBoletos Callback disparado al pulsar el botón "Comprar Boletos".
+ */
 @Composable
 fun TvMainScreen(
     eventos: List<EventoEntity>,
@@ -284,6 +298,14 @@ fun TvMainScreen(
     }
 }
 
+/**
+ * Componente que representa una tarjeta de evento en el carrusel horizontal.
+ * Gestiona su propio estado de foco ([onFocusChanged]) para dibujar un borde dorado
+ * y cambiar el color de fondo al ser seleccionado con el D-Pad del control remoto.
+ *
+ * @param evento El [EventoEntity] con la información a mostrar en la tarjeta.
+ * @param onClick La acción a ejecutar al pulsar el botón de OK en el control.
+ */
 @Composable
 fun TvEventCard(evento: EventoEntity, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }

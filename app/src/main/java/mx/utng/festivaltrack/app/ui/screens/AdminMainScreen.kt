@@ -43,6 +43,7 @@ fun AdminMainScreen(
     onNavigateToCreateEvent: () -> Unit = {},
     onEditEvent: (mx.utng.festivaltrack.shared.data.local.entity.EventoEntity) -> Unit = {},
     onNavigateToLivePanel: () -> Unit = {},
+    onNavigateToUsers: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -111,7 +112,8 @@ fun AdminMainScreen(
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (selectedTab) {
                 0 -> AdminDashboardScreen(
-                    onNavigateToLivePanel = onNavigateToLivePanel
+                    onNavigateToLivePanel = onNavigateToLivePanel,
+                    onNavigateToUsers = onNavigateToUsers
                 )
                 1 -> AdminUploadScreen()
                 2 -> AdminManageScreen(

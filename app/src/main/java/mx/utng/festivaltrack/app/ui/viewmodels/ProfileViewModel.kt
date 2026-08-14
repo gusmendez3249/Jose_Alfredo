@@ -36,8 +36,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 // Here we fetch mis boletos
                 val boletos = api.getMisBoletos("Bearer $token")
                 
-                // For a real app we'd fetch the user profile, but for now we'll just mock the name
-                val userName = "Usuario" 
+                // Fetch the real name from TokenManager
+                val userName = tokenManager.getUserName() ?: "Usuario" 
                 
                 _profileState.value = ProfileState.Success(boletos, userName)
             } catch (e: Exception) {

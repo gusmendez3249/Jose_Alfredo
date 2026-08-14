@@ -186,6 +186,42 @@ interface FestivalApiService {
     @retrofit2.http.POST("stream/status")
     suspend fun setStreamStatus(@retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
 
+    /**
+     * Obtiene la lista de todos los usuarios registrados (requiere rol ADMIN).
+     * @param token Token JWT del admin en formato "Bearer <token>".
+     * @return Lista de [UsuarioDto].
+     */
+    @retrofit2.http.GET("auth/usuarios")
+    suspend fun getUsuarios(
+        @retrofit2.http.Header("Authorization") token: String? = null
+    ): List<UsuarioDto>
+
+    /**
+     * Registra un nuevo administrador en el sistema (requiere rol ADMIN).
+     * @param token Token JWT del admin creador en formato "Bearer <token>".
+     * @param request Datos del nuevo administrador.
+     * @return [AuthResponseDto] con los datos generados.
+     */
+    @retrofit2.http.POST("auth/register-admin")
+    suspend fun registerAdmin(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Body request: RegisterDto
+    ): AuthResponseDto
+
+    /**
+     * Actualiza el rol de un usuario existente (requiere rol ADMIN).
+     * @param token Token JWT del admin en formato "Bearer <token>".
+     * @param id ID del usuario a modificar.
+     * @param request DTO con el nuevo rol.
+     * @return [UsuarioDto] actualizado.
+     */
+    @retrofit2.http.PUT("auth/usuarios/{id}/rol")
+    suspend fun updateUserRole(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Path("id") id: String,
+        @retrofit2.http.Body request: RoleUpdateDto
+    ): UsuarioDto
+
     companion object {
         /**
          * URL base del API REST.
@@ -486,6 +522,14 @@ data class StreamStatusDto(
     val port: Int = 1935
 )
 
+/**
+ * Datos requeridos para crear o publicar una nueva canción en el catálogo.
+ * @property titulo Título de la canción.
+ * @property artista Nombre del artista (por defecto José Alfredo Jiménez).
+ * @property duracion Duración en segundos.
+ * @property archivoUrl URL pública de la canción (MP3).
+ * @property genero Género musical.
+ */
 data class CancionCreateDto(
     val titulo: String,
     val artista: String = "José Alfredo Jiménez",
@@ -494,7 +538,20 @@ data class CancionCreateDto(
     val genero: String = "Ranchera"
 )
 
+/**
+ * Datos requeridos para agregar una nueva imagen a la galería.
+ * @property url URL pública donde está alojada la imagen.
+ * @property titulo Título o descripción breve de la foto.
+ */
 data class ImagenCreateDto(
     val url: String = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
     val titulo: String = "Nueva Foto"
+)
+
+/**
+ * Payload para actualizar el rol de un usuario existente.
+ * @property rol Nuevo rol a asignar, típicamente "USER" o "ADMIN".
+ */
+data class RoleUpdateDto(
+    val rol: String
 )

@@ -29,6 +29,15 @@ import mx.utng.festivaltrack.tv.R
 import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
 import mx.utng.festivaltrack.tv.ui.theme.*
 
+/**
+ * Elemento de datos que representa una imagen en la galería histórica.
+ *
+ * @property id Identificador único.
+ * @property title Título de la obra o fotografía.
+ * @property category Categoría (ej. "Primeros Años", "Época de Oro").
+ * @property drawableId Recurso estático de la imagen local.
+ * @property isHighlighted Indica si el elemento debe ocupar más espacio/destacar.
+ */
 data class GalleryItem(
     val id: String,
     val title: String,
@@ -37,6 +46,14 @@ data class GalleryItem(
     val isHighlighted: Boolean = false
 )
 
+/**
+ * Pantalla que muestra una galería de fotos e historia en un formato de grilla.
+ * Permite filtrar por categorías (pestañas) usando los botones superiores.
+ * Cada elemento de la grilla es navegable usando las flechas direccionales del control remoto.
+ *
+ * @param currentNavIndex Índice actual de la navegación en el menú lateral.
+ * @param onNavSelect Callback para manejar la navegación del sidebar.
+ */
 @Composable
 fun TvGalleryScreen(
     currentNavIndex: Int,
@@ -243,6 +260,15 @@ fun TvGalleryScreen(
     }
 }
 
+/**
+ * Componente interactivo (focusable) para mostrar una imagen de la galería.
+ *
+ * Cuando obtiene el foco ([Modifier.onFocusChanged]), se añade un borde dorado
+ * para que el usuario sepa dónde está ubicado.
+ *
+ * @param item El [GalleryItem] que provee datos y la imagen a mostrar.
+ * @param onClick Acción que se ejecuta al pulsar el botón principal sobre la tarjeta.
+ */
 @Composable
 fun GalleryCard(item: GalleryItem, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }

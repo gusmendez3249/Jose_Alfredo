@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Rol } from '@prisma/client';
 
 /**
  * Servicio de autenticación del sistema FestivalTrack.
@@ -103,5 +104,42 @@ export class AuthService {
   async tvSync(body: { tvToken: string, userId: string }) {
     // TODO: Implementar persistencia real de sesiones TV o WebSockets
     return { status: 'SUCCESS', message: 'Smart TV vinculada correctamente', tvToken: body.tvToken };
+  }
+  /**
+   * Obtiene todos los usuarios registrados.
+   */
+  async getUsuarios() {
+    return this.prisma.usuario.findMany({
+      select: { id: true, nombre: true, correo: true, rol: true },
+      orderBy: { rol: 'asc' }
+    });
+  }
+
+  /**
+   * Registra un nuevo administrador.
+   */
+  async registerAdmin(dto: RegisterDto) {
+    const existe = await this.prisma.usuario.findUnique({ where: { correo: dto.correo } });
+    if (existe) throw new ConflictException('El correo ya está registrado');
+    const hash = await bcrypt.hash(dto.contrasena, 10);
+    const usuario = await this.prisma.usuario.create({
+      data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: Rol.ADMINISTRADOR },
+    });
+    return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
+  }
+
+  /**
+   * Cambia el rol de un usuario existente.
+   */
+  async updateRole(id: string, rol: string) {
+    console.log('Update role called with:', { id, rol });
+    if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
+      throw new ConflictException(`Rol inválido recibido: ${rol}`);
+    }
+    return this.prisma.usuario.update({
+      where: { id },
+      data: { rol: Rol[rol as keyof typeof Rol] },
+      select: { id: true, nombre: true, correo: true, rol: true }
+    });
   }
 }

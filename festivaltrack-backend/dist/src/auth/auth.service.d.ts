@@ -35,4 +35,26 @@ export declare class AuthService {
         message: string;
         tvToken: string;
     }>;
+    getUsuarios(): Promise<{
+        id: string;
+        nombre: string;
+        correo: string;
+        rol: import(".prisma/client").$Enums.Rol;
+    }[]>;
+    registerAdmin(dto: RegisterDto): Promise<{
+        accessToken: string;
+        token: string;
+        usuario: {
+            id: string;
+            nombre: string;
+            correo: string;
+            rol: string;
+        };
+    }>;
+    updateRole(id: string, rol: string): Promise<{
+        id: string;
+        nombre: string;
+        correo: string;
+        rol: import(".prisma/client").$Enums.Rol;
+    }>;
 }

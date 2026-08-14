@@ -1,219 +1,187 @@
-# 📱 Módulo `app` — Guía Paso a Paso y Código Documentado
+# FestivalTrack - Módulo de Aplicación Móvil (App)
 
-> Aplicación Android nativa desarrollada con **Kotlin** y **Jetpack Compose** para usuarios finales y administradores del **Festival José Alfredo Jiménez**.
+Este es el módulo principal de la aplicación móvil de **FestivalTrack**, desarrollado en **Kotlin** utilizando **Jetpack Compose** y una arquitectura **MVVM (Model-View-ViewModel)**. 
 
----
-
-## 📋 Índice
-1. [Requisitos Previos](#1-requisitos-previos)
-2. [Estructura Completa del Módulo](#2-estructura-completa-del-módulo)
-3. [Paso 1: Configuración en Android Studio](#paso-1-configuración-en-android-studio)
-4. [Paso 2: Compilación y Verificación de Dependencias](#paso-2-compilación-y-verificación-de-dependencias)
-5. [Paso 3: Configuración de Red para Backend Local](#paso-3-configuración-de-red-para-backend-local)
-6. [Paso 4: Ejecución en Emulador o Dispositivo Físico](#paso-4-ejecución-en-emulador-o-dispositivo-físico)
-7. [Paso 5: Flujo de Uso Paso a Paso (Usuario Espectador)](#paso-5-flujo-de-uso-paso-a-paso-usuario-espectador)
-8. [Paso 6: Flujo de Uso Paso a Paso (Administrador)](#paso-6-flujo-de-uso-paso-a-paso-administrador)
-9. [Paso 7: Código Fuente Explicado y Documentado](#paso-7-código-fuente-explicado-y-documentado)
-10. [Paso 8: Solución de Problemas Frecuentes](#paso-8-solución-de-problemas-frecuentes)
+Este módulo permite tanto a los asistentes como a los administradores gestionar su experiencia en el festival de música, incluyendo compra de boletos, visualización de mapas, live streams, administración de usuarios y creación de eventos.
 
 ---
 
-## 1. Requisitos Previos
+## 1. Arquitectura MVVM y Capas
 
-- **Android Studio**: Jellyfish / Koala o superior.
-- **JDK**: OpenJDK 17 configurado en Gradle.
-- **Android SDK**: API 34 (Android 14) o superior (mínimo soportado: API 24).
-- **Backend NestJS**: Debe estar en ejecución en `http://localhost:3001` (ver guía de `festivaltrack-backend`).
+La aplicación está diseñada usando el patrón MVVM, asegurando una separación clara de responsabilidades:
+- **Model**: Entidades y Repositorios (gestionados a través de Retrofit y Room, mayormente en el módulo `shared`).
+- **View**: Pantallas construidas enteramente con **Jetpack Compose** (`ui/screens`).
+- **ViewModel**: Lógica de negocio y manejo del estado expuesto como `StateFlow` (`ui/viewmodels`).
 
----
-
-## 2. Estructura Completa del Módulo
-
-```
+### Estructura de Directorios Actualizada
+```text
 app/src/main/java/mx/utng/festivaltrack/app/
-│
-├── MainActivity.kt                  # Punto de entrada. NavHost y rutas globales.
-├── FestivalTrackApplication.kt      # Contenedor global de dependencias (AppContainer).
-│
+├── FestivalTrackApplication.kt
+├── MainActivity.kt
 ├── data/
-│   └── TokenManager.kt              # Persistencia segura del token JWT en SharedPreferences.
-│
+│   └── TokenManager.kt
 ├── di/
-│   └── AppModule.kt                 # Inyección de dependencias manual.
-│
-└── ui/
-    ├── screens/
-    │   ├── WelcomeScreen.kt         # Bienvenida y splash.
-    │   ├── LoginScreen.kt           # Autenticación JWT.
-    │   ├── RegisterScreen.kt        # Registro de usuarios.
-    │   ├── MainScreen.kt            # Contenedor con BottomNav (usuario).
-    │   ├── DashboardScreen.kt       # Portada principal y eventos.
-    │   ├── AudioScreen.kt           # Reproductor musical.
-    │   ├── BiographyScreen.kt       # Biografía interactiva.
-    │   ├── GalleryScreen.kt         # Galería de fotos oficial.
-    │   ├── MapScreen.kt             # Mapa de escenarios recinto.
-    │   ├── TicketsScreen.kt         # Selección de boletos.
-    │   ├── CheckoutScreen.kt        # Formulario de pago seguro.
-    │   ├── TicketSuccessScreen.kt   # Confirmación con código QR.
-    │   ├── ProfileScreen.kt         # Perfil del usuario y logout.
-    │   ├── UserLiveStreamScreen.kt  # Reproductor live stream + chat.
-    │   ├── AdminMainScreen.kt       # Contenedor BottomNav (admin).
-    │   ├── AdminDashboardScreen.kt  # Panel principal del administrador.
-    │   ├── AdminLiveStreamScreen.kt # ⭐ Emisión de video cámara RTSP (puerto 1935).
-    │   ├── AdminUploadScreen.kt     # Subida de contenido.
-    │   ├── AdminManageScreen.kt     # CRUD de eventos.
-    │   ├── AdminCreateEventScreen.kt# Creación de eventos.
-    │   └── AdminScannerScreen.kt   # Escáner QR de entradas.
-    │
-    └── viewmodels/
-        ├── AuthViewModel.kt         # Gestión de login/registro.
-        ├── EventosViewModel.kt      # Carga de eventos.
-        ├── CheckoutViewModel.kt     # Proceso de pago.
-        └── AdminManageViewModel.kt  # Operaciones CRUD admin.
+│   └── AppContainer.kt
+├── ui/
+│   ├── screens/
+│   │   ├── AdminCreateEventScreen.kt
+│   │   ├── AdminDashboardScreen.kt
+│   │   ├── AdminLiveStreamScreen.kt
+│   │   ├── AdminMainScreen.kt
+│   │   ├── AdminManageScreen.kt
+│   │   ├── AdminScannerScreen.kt
+│   │   ├── AdminUploadScreen.kt
+│   │   ├── AdminUsersScreen.kt
+│   │   ├── AudioScreen.kt
+│   │   ├── BiographyScreen.kt
+│   │   ├── CheckoutScreen.kt
+│   │   ├── DashboardScreen.kt
+│   │   ├── GalleryScreen.kt
+│   │   ├── LoginScreen.kt
+│   │   ├── MainScreen.kt
+│   │   ├── MapScreen.kt
+│   │   ├── ProfileScreen.kt
+│   │   ├── RegisterScreen.kt
+│   │   ├── TicketSuccessScreen.kt
+│   │   ├── TicketsScreen.kt
+│   │   ├── UserLiveStreamScreen.kt
+│   │   └── WelcomeScreen.kt
+│   ├── theme/
+│   │   ├── Color.kt
+│   │   └── Theme.kt
+│   ├── utils/
+│   │   └── QrCodeGenerator.kt
+│   └── viewmodels/
+│       ├── AdminManageViewModel.kt
+│       ├── AdminUsersViewModel.kt
+│       ├── ArtistViewModel.kt
+│       ├── AudioViewModel.kt
+│       ├── AuthViewModel.kt
+│       ├── CheckoutViewModel.kt
+│       ├── EventosViewModel.kt
+│       ├── GalleryViewModel.kt
+│       ├── LiveViewModel.kt
+│       └── ProfileViewModel.kt
 ```
 
 ---
 
-## Paso 1: Configuración en Android Studio
+## 2. Paso 1: Requisitos y Configuración de `build.gradle.kts`
 
-1. Abre Android Studio.
-2. Selecciona **Open** y navega a la carpeta raíz del proyecto (`Jose_Alfredo`).
-3. Espera a que Gradle sincronice todas las dependencias del proyecto (*Gradle Sync*).
+El módulo utiliza múltiples librerías modernas para su funcionamiento. Aquí se muestra cómo está configurado el archivo `build.gradle.kts`:
 
----
-
-## Paso 2: Compilación y Verificación de Dependencias
-
-Puedes compilar la app desde consola usando Gradle Wrapper:
-
-```powershell
-.\gradlew.bat :app:assembleDebug
-```
-
-**Ubicación del APK resultante:**
-`app/build/outputs/apk/debug/app-debug.apk`
-
----
-
-## Paso 3: Configuración de Red para Backend Local
-
-La app conecta con el backend usando Retrofit apuntando por defecto a:
-`http://10.0.2.2:3001/api/v1/`
-
-- **En Emulador Android**: `10.0.2.2` apunta automáticamente al `localhost` de tu computadora.
-- **En Celular Físico**: Cambia la dirección en `shared/src/.../remote/FestivalApiService.kt` a la IP local de tu máquina en la red Wi-Fi (ej. `http://192.168.1.50:3001/api/v1/`).
-
----
-
-## Paso 4: Ejecución en Emulador o Dispositivo Físico
-
-1. En la barra superior de Android Studio, selecciona el target **`app`**.
-2. Elige tu emulador o dispositivo Android físico.
-3. Haz clic en **Run (▶️)** o presiona `Shift + F10`.
-
----
-
-## Paso 5: Flujo de Uso Paso a Paso (Usuario Espectador)
-
-1. **Pantalla de Bienvenida**: Presiona *"Iniciar Sesión"*.
-2. **Registro**: Si no tienes cuenta, selecciona *"Regístrate"*, ingresa tu nombre, correo y contraseña.
-3. **Inicio de Sesión**: Inicia sesión. La app guardará tu token JWT y te llevará al **Dashboard**.
-4. **Explorar Eventos**: Revisa la agenda de actuaciones y artistas.
-5. **Comprar Boletos**:
-   - Selecciona un evento.
-   - Elige cantidad y categoría (*General / VIP*).
-   - Presiona *"Proceder al Pago"*.
-   - Ingresa los datos del formulario en **`CheckoutScreen`** y confirma.
-   - Verás la pantalla **`TicketSuccessScreen`** con tu código QR generado.
-6. **Ver Transmisión en Vivo**:
-   - Toca *"Ver Transmisión en Vivo"* para abrir el reproductor y el chat.
-
----
-
-## Paso 6: Flujo de Uso Paso a Paso (Administrador)
-
-1. **Login como Admin**:
-   - **Correo**: `admin@admin.com`
-   - **Contraseña**: `admin123`
-2. **Panel de Administración**:
-   - Accede a las pestañas *Inicio, Subir, Gestionar, Perfil*.
-3. **Transmisión de Cámara en Vivo (RTSP)**:
-   - Ve a la sección de Transmisión.
-   - Otorga permisos de **Cámara** y **Micrófono**.
-   - Presiona *"INICIAR EN VIVO"*. Tu teléfono comenzará a emitir la señal de video RTSP en `rtsp://<IP>:1935`.
-4. **Escáner QR**:
-   - Abre la herramienta de escaneo de cámara para leer boletos de visitantes en el recinto.
-5. **Cerrar Sesión Segura**:
-   - Ve a la pestaña *"Perfil"*, presiona *"Cerrar Sesión"* y confirma. El token JWT y el backstack se limpiarán completamente.
-
----
-
-## Paso 7: Código Fuente Explicado y Documentado
-
-### 1. `MainActivity.kt` — Grafo de Navegación Completo
 ```kotlin
-// Grafo de navegación principal de la aplicación
-NavHost(navController = navController, startDestination = "login") {
-    composable("login") {
-        LoginScreen(
-            onNavigateToDashboard = { 
-                navController.navigate("main") { popUpTo("login") { inclusive = true } }
-            },
-            onNavigateToAdmin = {
-                navController.navigate("admin_dashboard") { popUpTo("login") { inclusive = true } }
+plugins {
+    alias(libs.plugins.android.application)
+    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace = "mx.utng.festivaltrack.app"
+    compileSdk = 35
+    // ... configuraciones por defecto
+    buildFeatures { compose = true }
+}
+
+dependencies {
+    implementation(project(":shared"))
+    
+    // Jetpack Compose
+    implementation("androidx.compose.ui:ui:1.6.1")
+    implementation("androidx.compose.material3:material3:1.2.0")
+    
+    // Navigation & ViewModel
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    
+    // Media3 (ExoPlayer & RTSP para Live Stream)
+    val media3_version = "1.3.1"
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+    implementation("androidx.media3:media3-exoplayer-rtsp:$media3_version")
+    
+    // Permisos y Transmisión de video (Cámara)
+    implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
+    implementation("com.github.pedroSG94:RTSP-Server:1.4.1")
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    
+    // Retrofit (Red)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+}
+```
+
+---
+
+## 3. Paso 2: Configuración de AndroidManifest.xml
+
+Para que las funcionalidades de mapa, red, y streaming (cámara/micrófono) funcionen, requerimos los siguientes permisos en el `AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
+    <application
+        android:name=".FestivalTrackApplication"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.FestivalTrack">
+        <!-- ... activities ... -->
+    </application>
+</manifest>
+```
+
+---
+
+## 4. Paso 3: Estructura de Navegación (NavHost)
+
+El flujo de pantallas se maneja en el archivo `MainActivity.kt` y `MainScreen.kt` a través de `NavHost`. Las rutas principales incluyen:
+
+- `welcome`: Pantalla de inicio
+- `login` / `register`: Autenticación
+- `dashboard`: Panel principal del usuario (Tickets, Mapa, Live, Perfil)
+- `admin_dashboard`: Panel principal del administrador (Gestión de eventos, Escáner, Live, Usuarios)
+- `checkout/{eventoId}`: Flujo de compra
+- `ticket_success`: Confirmación de pago
+
+---
+
+## 5. Paso 4: Implementación de Autenticación JWT
+
+La autenticación utiliza el `AuthViewModel` para realizar llamadas a la API y guardar el token usando `TokenManager`.
+
+```kotlin
+/**
+ * ViewModel de autenticación para las pantallas LoginScreen y RegisterScreen.
+ *
+ * Responsabilidades:
+ * - Verificar si hay una sesión activa al iniciar la app.
+ * - Realizar el login llamando a `POST /auth/login` y guardar el token.
+ * - Proporcionar el estado actual del flujo auth a través de un [StateFlow].
+ */
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+    private val tokenManager = TokenManager(application)
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
+    val authState: StateFlow<AuthState> = _authState
+
+    /**
+     * Inicia sesión con correo y contraseña.
+     * @param correo Correo electrónico del usuario.
+     * @param contrasena Contraseña del usuario.
+     */
+    fun login(correo: String, contrasena: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                val response = api.login(LoginDto(correo, contrasena))
+                tokenManager.saveToken(response.accessToken)
+                tokenManager.saveUserRole(response.usuario.rol)
+                _authState.value = AuthState.Success(response.usuario.rol)
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Credenciales inválidas")
             }
-        )
-    }
-    composable("admin_dashboard") {
-        AdminMainScreen(
-            onLogout = {
-                // Borra token JWT y destruye toda la pila de navegación
-                TokenManager(this@MainActivity).clear()
-                navController.navigate("login") { popUpTo(0) { inclusive = true } }
-            }
-        )
-    }
-}
-```
-
-### 2. `AdminLiveStreamScreen.kt` — Servidor de Cámara RTSP Nativo
-```kotlin
-// Inicialización del servidor RTSP en el puerto TCP 1935 mediante SurfaceView
-SurfaceView(ctx).apply {
-    holder.addCallback(object : SurfaceHolder.Callback {
-        override fun surfaceCreated(holder: SurfaceHolder) {
-            val server = RtspServerCamera1(this@apply, connectChecker, 1935)
-            rtspServer = server
-            server.startPreview() // Inicia vista previa de cámara física
-        }
-        override fun surfaceDestroyed(holder: SurfaceHolder) {
-            if (isStreaming) rtspServer?.stopStream()
-            rtspServer?.stopPreview()
-        }
-    })
-}
-```
-
-### 3. `AuthViewModel.kt` — Gestión de Estados de Autenticación
-```kotlin
-// Estado de autenticación mediante Sealed Class
-sealed class AuthState {
-    object Idle : AuthState()
-    object Loading : AuthState()
-    data class Success(val role: String) : AuthState()
-    data class Error(val message: String) : AuthState()
-}
-
-fun login(correo: String, contrasena: String) {
-    viewModelScope.launch {
-        _authState.value = AuthState.Loading
-        try {
-            val response = api.login(LoginDto(correo, contrasena))
-            tokenManager.saveToken(response.accessToken)
-            tokenManager.saveUserRole(response.usuario.rol)
-            _authState.value = AuthState.Success(response.usuario.rol)
-        } catch (e: Exception) {
-            _authState.value = AuthState.Error("Credenciales inválidas o error de red")
         }
     }
 }
@@ -221,10 +189,138 @@ fun login(correo: String, contrasena: String) {
 
 ---
 
-## Paso 8: Solución de Problemas Frecuentes
+## 6. Paso 5: CRUD de Eventos Admin
 
-### Error de permisos al iniciar la cámara
-- Ve a Ajustes de Android -> Aplicaciones -> FestivalTrack -> Permisos -> Activa Cámara y Micrófono.
+El `AdminManageViewModel` permite sincronizar y modificar eventos.
 
-### No carga información del backend
-- Verifica que el backend NestJS esté corriendo en `http://localhost:3001`.
+```kotlin
+/**
+ * ViewModel encargado de la gestión de eventos por parte del administrador.
+ * 
+ * Interactúa con el [FestivalRepository] para mantener sincronizada la fuente 
+ * de datos local (Room) con la remota (API).
+ */
+class AdminManageViewModel(private val repository: FestivalRepository) : ViewModel() {
+    /** Flujo de estado que expone la lista de eventos locales desde Room. */
+    val eventos: StateFlow<List<EventoEntity>> = repository.getEventosLocales()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * Guarda o actualiza un evento.
+     * @param token Token JWT del administrador.
+     * @param id ID del evento (null si es creación).
+     * @param title Título del evento.
+     */
+    fun saveEvent(token: String?, id: String?, title: String, date: String, location: String, price: String) {
+        // Genera el DTO y llama a repository.addEvento o repository.updateEvento
+    }
+}
+```
+
+---
+
+## 7. Paso 6: Gestión de Usuarios y Roles
+
+A través de `AdminUsersViewModel`, los administradores pueden registrar otros administradores o cambiar los roles.
+
+```kotlin
+/**
+ * ViewModel para gestionar usuarios desde el panel de administrador.
+ * 
+ * Responsabilidades:
+ * - Cargar la lista de todos los usuarios registrados.
+ * - Cambiar el rol (USUARIO <-> ADMINISTRADOR).
+ */
+class AdminUsersViewModel(application: Application) : AndroidViewModel(application) {
+    /**
+     * Intercambia el rol del usuario especificado.
+     * @param usuarioId ID del usuario a modificar.
+     * @param currentRole El rol actual ("USUARIO" o "ADMINISTRADOR").
+     */
+    fun toggleRole(usuarioId: String, currentRole: String) {
+        val newRole = if (currentRole == "ADMINISTRADOR") "USUARIO" else "ADMINISTRADOR"
+        // Llama a API y actualiza el StateFlow
+    }
+}
+```
+
+---
+
+## 8. Paso 7: Compra de Boletos y Código QR
+
+La compra de boletos está gestionada por el `CheckoutViewModel`.
+
+```kotlin
+/**
+ * ViewModel que gestiona la lógica de compra de boletos.
+ *
+ * Responsabilidades:
+ * - Validar los datos de la tarjeta localmente.
+ * - Enviar la petición de compra al backend llamando a `POST /boletos/comprar`.
+ */
+class CheckoutViewModel(application: Application) : AndroidViewModel(application) {
+    /**
+     * Procesa el pago de boletos validando la tarjeta y llamando al API.
+     */
+    fun procesarPago(eventoId: String, categoria: String, cantidad: Int, precioTotal: Int, tarjetaNumero: String, tarjetaVencimiento: String, tarjetaCVV: String) {
+        // Validaciones...
+        // Llamada a api.comprarBoleto()
+    }
+}
+```
+
+Una vez completado el pago, el usuario puede ver su boleto generado con un **código QR** desde `QrCodeGenerator.kt`.
+
+---
+
+## 9. Paso 8: Live Stream y Chat con Polling
+
+Los usuarios pueden ver transmisiones en vivo gracias a `ExoPlayer`, mientras que el administrador transmite desde la cámara de su dispositivo con la librería **RootEncoder**.
+
+En `LiveViewModel.kt`, se maneja la obtención y envío de mensajes en el chat de la transmisión:
+
+```kotlin
+/**
+ * ViewModel que controla la lógica de la transmisión en vivo y el chat (Polling).
+ */
+class LiveViewModel(application: Application) : AndroidViewModel(application) {
+    // Implementa la lógica para refrescar el chat cada N segundos
+    // y para mandar mensajes a la sala del stream activo.
+}
+```
+
+---
+
+## 10. Paso 9: Flujo completo Usuario vs Administrador
+
+Dependiendo del rol en el JWT, el usuario es redirigido:
+
+- **USUARIO**: 
+  - `DashboardScreen`: Muestra opciones para comprar boletos (`TicketsScreen`).
+  - Ver el mapa de los escenarios (`MapScreen`).
+  - Entrar al Live Stream del concierto en curso (`UserLiveStreamScreen`).
+  - Ver sus boletos y perfil (`ProfileScreen`).
+  
+- **ADMINISTRADOR**:
+  - `AdminDashboardScreen`: Tiene accesos directos de administración.
+  - CRUD de Eventos (`AdminManageScreen`).
+  - Cambiar privilegios de usuarios (`AdminUsersScreen`).
+  - Transmitir la cámara del dispositivo al servidor RTSP (`AdminLiveStreamScreen`).
+  - Escanear Códigos QR en la entrada del evento (`AdminScannerScreen`).
+
+---
+
+## 11. Paso 10: Compilación y Comandos Gradle
+
+Para limpiar, compilar e instalar la aplicación en un dispositivo conectado:
+
+```bash
+# Limpiar el proyecto
+./gradlew :app:clean
+
+# Compilar un APK de depuración
+./gradlew :app:assembleDebug
+
+# Instalar el APK directamente en el emulador o dispositivo
+./gradlew :app:installDebug
+```

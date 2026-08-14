@@ -1,178 +1,312 @@
-# 📺 Módulo `tv` — Guía Paso a Paso y Código Documentado
+# 📺 Módulo `tv` — Aplicación Android TV (FestivalTrack)
 
-> Aplicación Android TV desarrollada con **Compose for TV** y **ExoPlayer (Media3)** para transmitir el **Festival José Alfredo Jiménez** en pantallas grandes.
+## Descripción Técnica y Paradigma de Android TV
 
----
+Desarrollar para Android TV es un paradigma radicalmente diferente al desarrollo móvil tradicional. Las principales diferencias son:
+- **Navegación basada en D-Pad:** A diferencia de los móviles que dependen del "touch", en Android TV el usuario utiliza un control remoto con flechas direccionales (Arriba, Abajo, Izquierda, Derecha) y un botón de selección (OK/Enter). Esto requiere un manejo exhaustivo del "foco" en los elementos de la interfaz.
+- **Pantallas grandes (10-foot UI):** Los elementos visuales, tipografías y el espaciado deben estar optimizados para ser leídos desde una distancia aproximada de 3 metros (10 pies).
+- **Interacción indirecta:** No existen gestos de deslizamiento directo sobre componentes. Si un menú lateral o un cuadro de texto necesita interacción, este debe solicitar proactivamente el foco o mostrar diálogos accesibles.
 
-## 📋 Índice
-1. [Requisitos Previos](#1-requisitos-previos)
-2. [Estructura Completa del Módulo](#2-estructura-completa-del-módulo)
-3. [Paso 1: Configurar Emulador de Android TV](#paso-1-configurar-emulador-de-android-tv)
-4. [Paso 2: Redirección ADB para el Puerto RTSP (1935)](#paso-2-redirección-adb-para-el-puerto-rtsp-1935)
-5. [Paso 3: Compilación y Ejecución](#paso-3-compilación-y-ejecución)
-6. [Paso 4: Guía de Navegación con D-Pad (Control Remoto)](#paso-4-guía-de-navegación-con-d-pad-control-remoto)
-7. [Paso 5: Probar Transmisión en Vivo y Chat Comunitario](#paso-5-probar-transmisión-en-vivo-y-chat-comunitario)
-8. [Paso 6: Código Fuente Explicado y Documentado](#paso-6-código-fuente-explicado-y-documentado)
-9. [Paso 7: Solución de Problemas Frecuentes](#paso-7-solución-de-problemas-frecuentes)
-
----
-
-## 1. Requisitos Previos
-
-- **Android Studio** Jellyfish / Koala o superior.
-- **Emulador de Android TV**: AVD con resolución 1080p (API 30 o API 34).
-- **Backend NestJS**: Ejecutándose en puerto `3001`.
-- **App Móvil (opcional)**: Transmitiendo video por la cámara en puerto `1935`.
-
----
-
-## 2. Estructura Completa del Módulo
+## Estructura de Directorios Completa
 
 ```
 tv/src/main/java/mx/utng/festivaltrack/tv/
-│
-├── MainActivity.kt                           # Entry Point TV. Contenedor de navegación por sidebar.
-│
+├── MainActivity.kt
 ├── presentation/
 │   ├── components/
-│   │   └── SidebarMenuItem.kt                # Ítem de menú lateral enfocable por D-Pad.
-│   │
+│   │   └── SidebarMenuItem.kt
 │   ├── screens/
-│   │   ├── TvHomeScreen.kt                   # Pantalla principal con agenda destacada.
-│   │   ├── TvHistoricalGalleryScreen.kt      # Galería fotográfica histórica.
-│   │   ├── TvLiveStreamScreen.kt             # ⭐ Reproductor RTSP + Chat de la comunidad.
-│   │   ├── TvProgramacionScreen.kt           # Cronograma completo de actividades.
-│   │   └── TvSettingsScreen.kt               # Ajustes y datos técnicos de conexión.
-│   │
+│   │   ├── TvGalleryScreen.kt
+│   │   ├── TvLiveStreamScreen.kt
+│   │   ├── TvLoginScreen.kt
+│   │   ├── TvMainScreen.kt
+│   │   ├── TvScheduleScreen.kt
+│   │   └── TvSettingsScreen.kt
 │   └── viewmodel/
-│       └── TvViewModel.kt                    # Gestión de estado UI para TV.
-│
+│       └── TvViewModel.kt
 └── ui/
-    ├── theme/                                # Paleta de colores y estilos oscuros para TV.
+    ├── theme/
+    │   ├── Color.kt
+    │   └── Theme.kt
     └── utils/
-        └── DynamicQrCode.kt                  # Generador de QR para la pantalla.
+        └── DynamicQrCode.kt
 ```
 
----
-
-## Paso 1: Configurar Emulador de Android TV
+## Paso 1: Configuración del Emulador Android TV (1080p, API 30+)
 
 1. Abre el **Device Manager** en Android Studio.
-2. Selecciona **Create Device**.
-3. Elige la categoría **TV** -> **Television (1080p)**.
-4. Selecciona la imagen del sistema (API 30+) y presiona **Finish**.
-5. Inicia la Smart TV virtual.
+2. Selecciona **Create Device** -> Categoría **TV**.
+3. Selecciona el perfil **Television (1080p)**.
+4. Elige una imagen del sistema con **API 30 o superior** (Android 11+).
+5. Inicia el emulador y asegúrate de que responde correctamente a los botones de flecha del teclado (simulando el D-Pad).
 
----
+## Paso 2: Configuración del `build.gradle.kts`
 
-## Paso 2: Redirección ADB para el Puerto RTSP (1935)
+Asegúrate de tener las dependencias correctas para el módulo de TV, incluyendo Media3 para ExoPlayer y Compose Material 3:
 
-Para conectar el flujo de video emitido por el teléfono hacia la Smart TV:
-
-```powershell
-& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" forward tcp:1935 tcp:1935
-```
-
----
-
-## Paso 3: Compilación y Ejecución
-
-Selecciona el módulo **`tv`** en Android Studio y presiona **Run (▶️)** o compila desde terminal:
-
-```powershell
-.\gradlew.bat :tv:assembleDebug
-```
-
----
-
-## Paso 4: Guía de Navegación con D-Pad (Control Remoto)
-
-- **Flechas Arriba / Abajo**: Moverse por las secciones del sidebar (*Inicio, Galería, En Vivo, Programación, Ajustes*).
-- **Flecha Derecha**: Pasar del sidebar al contenido principal de la pantalla.
-- **Teclas Enter / Espacio (OK)**: Activar elementos, pausar/reanudar streaming o abrir el cuadro de diálogo para comentar en el chat.
-
----
-
-## Paso 5: Probar Transmisión en Vivo y Chat Comunitario
-
-1. Navega a **"Transmisión En Vivo"**.
-2. **Distribución**:
-   - **68% Izquierda**: Reproductor ExoPlayer con streaming en directo (`rtsp://10.0.2.2:1935`).
-   - **32% Derecha**: Chat público con actualización automática mediante polling cada 3 segundos.
-3. **Escribir en el Chat**:
-   - Resalta el botón *"Pulsa OK para escribir un mensaje..."*.
-   - Presiona **OK / Enter**.
-   - Se abrirá un cuadro emergente modal con teclado.
-   - Escribe tu comentario y presiona el botón dorado **"Enviar"**.
-
----
-
-## Paso 6: Código Fuente Explicado y Documentado
-
-### 1. `TvLiveStreamScreen.kt` — Configuración de ExoPlayer para RTSP
 ```kotlin
-// Creación del reproductor de video para la URL del flujo RTSP
-val streamUrl = "rtsp://10.0.2.2:1935"
-val exoPlayer = remember {
-    ExoPlayer.Builder(context).build().apply {
-        val mediaItem = MediaItem.fromUri(streamUrl)
-        setMediaItem(mediaItem)
-        prepare()
-        playWhenReady = true
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+}
+
+android {
+    namespace = "mx.utng.festivaltrack.tv"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "mx.utng.festivaltrack.tv"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
     }
+
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation(project(":shared"))
+    
+    // Compose para TV / UI
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    
+    // ExoPlayer Media3
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-exoplayer-rtsp:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
 }
 ```
 
-### 2. Polling de Chat cada 3 Segundos
-```kotlin
-// Actualización automática de mensajes desde el backend NestJS
-LaunchedEffect(Unit) {
-    while (true) {
-        try {
-            val msgs = api.getChatMessages("EVT-001")
-            if (msgs.isNotEmpty()) {
-                chatMessages.clear()
-                msgs.forEach { m -> chatMessages.add(ChatMessage(m.usuarioNombre, m.mensaje, "En vivo", m.esAdmin)) }
-            }
-        } catch (e: Exception) {}
-        kotlinx.coroutines.delay(3000)
-    }
-}
-```
+## Paso 3: Navegación con D-Pad - `onFocusChanged` y `FocusRequester`
 
-### 3. `TvChatInputDialog` — Diálogo Accesible para Control Remoto
+Para la navegación por D-Pad utilizamos modificadores como `.onFocusChanged` y `.focusable()`.
+
 ```kotlin
-// Cuadro modal de texto que solicita automáticamente el foco del teclado para D-Pad
+/**
+ * Componente [Composable] para los elementos del menú en el Sidebar de la interfaz para Android TV.
+ * Renderiza el ícono, el texto y reacciona al enfoque (D-Pad) cambiando el color y el fondo.
+ *
+ * @param label El texto a mostrar para este elemento del menú.
+ * @param icon El [ImageVector] que representa a este elemento de forma visual.
+ * @param isSelected Indica si este elemento es el que está actualmente activo/seleccionado.
+ * @param onClick La función que se ejecutará al pulsar "OK" en el D-Pad sobre este elemento.
+ */
 @Composable
-fun TvChatInputDialog(onDismiss: () -> Unit, onSend: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
+fun SidebarMenuItem(label: String, icon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
+    var isFocused by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Escribe tu mensaje", color = Color.White) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
-            )
-        },
-        confirmButton = {
-            Button(onClick = { onSend(text); onDismiss() }) { Text("Enviar") }
-        }
-    )
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) FestivalGold else if (isFocused) Color.White.copy(alpha = 0.1f) else Color.Transparent,
+        contentColor = if (isSelected) Color.Black else Color.White,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
+    ) {
+        // ... (contenido interno)
+    }
 }
 ```
 
----
+## Paso 4: `TvViewModel` - Sincronización periódica (Polling con Room)
 
-## Paso 7: Solución de Problemas Frecuentes
+Mantener los datos de la TV actualizados requiere sincronización en segundo plano con la API y Room:
 
-### El video no carga
-- Comprueba que la app móvil esté transmitiendo y ejecutaste `adb forward tcp:1935 tcp:1935`.
+```kotlin
+/**
+ * ViewModel central para la app en Android TV.
+ * Gestiona el estado y la sincronización de los eventos mostrados en el televisor.
+ *
+ * @property eventos Flujo continuo con la lista de eventos actualizados.
+ * @constructor Crea el ViewModel iniciando la base de datos de Room y empezando el polling periódico.
+ */
+class TvViewModel(application: Application) : AndroidViewModel(application) {
+    
+    // ... setup
+    
+    init {
+        // Sync with backend API immediately and poll every 5 seconds for real-time updates
+        viewModelScope.launch {
+            while (true) {
+                try {
+                    repository.syncEventos()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                kotlinx.coroutines.delay(5000)
+            }
+        }
+    }
+}
+```
 
-### No se puede escribir en el chat
-- En Android TV no uses clics directos sobre el texto. Siempre selecciona el componente con el botón **OK / Enter** del control remoto para abrir el diálogo emergente con teclado.
+## Paso 5: `TvMainScreen` - Layout Sidebar (260dp) y Contenido Principal
+
+Se divide la pantalla horizontalmente: la barra lateral toma un ancho fijo de 260dp y el resto de la pantalla usa `weight(1f)`.
+
+```kotlin
+/**
+ * Pantalla principal (Home) de la aplicación para Android TV.
+ *
+ * Muestra el panel lateral (sidebar) izquierdo para navegación principal y
+ * un área central (main content) con un hero banner y un carrusel (`LazyRow`) de próximos eventos.
+ * Todo el layout está optimizado para navegación con D-Pad, usando [onFocusChanged] en las tarjetas
+ * para resaltar visualmente el elemento actual.
+ */
+@Composable
+fun TvMainScreen(eventos: List<EventoEntity>, currentNavIndex: Int, onNavSelect: (Int) -> Unit) {
+    Row(modifier = Modifier.fillMaxSize().background(FestivalDarkBg)) {
+        // ------------------ LEFT SIDEBAR ------------------
+        Column(
+            modifier = Modifier
+                .width(260.dp)
+                .fillMaxHeight()
+                .background(FestivalSidebarBg)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // ... (elementos del menú)
+        }
+        
+        // ------------------ MAIN CONTENT AREA ------------------
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(32.dp)
+        ) {
+             // ... (Hero banner y carrusel de eventos)
+        }
+    }
+}
+```
+
+## Paso 6: `TvLiveStreamScreen` - ExoPlayer RTSP + Chat Polling (68% / 32%)
+
+Aquí implementamos un layout distribuido (68% para video, 32% para chat). El chat usa una entrada de diálogo modal (`TvChatInputDialog`) porque los TextField nativos no son amigables para el D-Pad de la TV.
+
+```kotlin
+/**
+ * Pantalla de Transmisión en Vivo para Smart TV ([TvLiveStreamScreen]).
+ *
+ * Esta pantalla integra el flujo en vivo del festival adaptado a pantallas grandes.
+ * Layout estructurado en:
+ * - **Reproductor RTSP (68%)**: Reproductor principal implementado con [ExoPlayer] (Media3) para
+ *   consumir una señal de video en tiempo real (RTSP) directamente desde el emulador o red local.
+ * - **Panel de Chat (32%)**: Barra lateral que muestra mensajes en vivo. Utiliza una técnica de
+ *   polling cada 3 segundos para sincronizar la lista de mensajes con el backend mediante HTTP.
+ *
+ * Para interactuar en el chat usando un control remoto, cuenta con un área especial navegable
+ * con el D-Pad. Al presionarse ("OK"), invoca el [TvChatInputDialog] que levanta el teclado en pantalla.
+ */
+@Composable
+fun TvLiveStreamScreen(...) {
+    // ... (Configuración de ExoPlayer para RTSP y Polling)
+    
+    Row(modifier = Modifier.fillMaxSize().background(FestivalDarkBg)) {
+        // SIDEBAR MENÚ LATERAL
+        Column(modifier = Modifier.width(200.dp)) { /*...*/ }
+        
+        // ÁREA DEL REPRODUCTOR EN VIVO (68% del ancho)
+        Column(modifier = Modifier.weight(0.68f)) {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = exoPlayer
+                        useController = false
+                    }
+                }
+            )
+        }
+        
+        // PANEL DE CHAT LATERAL (32% del ancho)
+        Column(modifier = Modifier.weight(0.32f)) {
+            // ... LazyColumn con mensajes actualizados cada 3s
+            
+            // Botón interactivo para abrir TvChatInputDialog
+            Box(
+                modifier = Modifier
+                    .focusRequester(chatFocusRequester)
+                    .clickable { showChatDialog = true }
+                    // ... (bordes y colores)
+            ) {
+                Text("Pulsa OK para escribir un mensaje...")
+            }
+        }
+    }
+}
+```
+
+## Paso 7: `TvGalleryScreen` - Galería Navegable (D-Pad)
+
+La galería emplea `LazyVerticalGrid` e incluye `onFocusChanged` en cada imagen para crear un recuadro dorado y saber en qué foto está situado el control remoto.
+
+```kotlin
+/**
+ * Componente interactivo (focusable) para mostrar una imagen de la galería.
+ *
+ * Cuando obtiene el foco ([Modifier.onFocusChanged]), se añade un borde dorado
+ * para que el usuario sepa dónde está ubicado.
+ *
+ * @param item El [GalleryItem] que provee datos y la imagen a mostrar.
+ * @param onClick Acción que se ejecuta al pulsar el botón principal sobre la tarjeta.
+ */
+@Composable
+fun GalleryCard(item: GalleryItem, onClick: () -> Unit) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused) Color(0xFF2E3D30) else FestivalCardBg
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(if (item.isHighlighted) 160.dp else 130.dp)
+            .border(
+                width = if (isFocused) 3.dp else 0.dp,
+                color = if (isFocused) FestivalGold else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
+            .clickable { onClick() }
+    ) {
+        // ...
+    }
+}
+```
+
+## Paso 8: Redirección ADB Puerto RTSP 1935
+
+Para que el emulador de TV reciba la transmisión enviada por el móvil a la computadora anfitriona en el puerto 1935:
+
+```bash
+adb forward tcp:1935 tcp:1935
+```
+
+## Paso 9: Compilación y Ejecución
+
+Selecciona el módulo **`tv`** en Android Studio y ejecuta la aplicación (▶️). Alternativamente, usa:
+```bash
+./gradlew :tv:installDebug
+```
+
+## Solución de Problemas
+
+- **El video RTSP no carga:** Asegúrate de ejecutar el comando `adb forward tcp:1935 tcp:1935` mientras la app móvil está transmitiendo.
+- **La interfaz no responde a las flechas del teclado:** Haz click dentro de la ventana del emulador de TV para que capture los eventos de teclado como si fueran del control remoto.
+- **Falta dependencias Media3:** Revisa que hayas incluido las librerías `media3-exoplayer`, `media3-exoplayer-rtsp` y `media3-ui` en `build.gradle.kts`.
+- **No aparece el teclado del chat:** En Android TV debes presionar "OK" sobre el botón *"Pulsa OK para escribir un mensaje..."* para que el cuadro modal de texto reciba el foco y despierte el teclado nativo del sistema.

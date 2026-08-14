@@ -13,6 +13,14 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 import java.time.Instant
 
+/**
+ * ViewModel que gestiona el estado de los eventos en el módulo Wear OS.
+ * Implementa una estrategia Offline-First observando la base de datos Room.
+ * 
+ * @property eventos Flujo de los próximos 15 eventos filtrados mediante la hora actual.
+ * @property todosLosEventos Flujo con el listado completo de eventos.
+ * @constructor Crea un [ProximosViewModel] e inicializa el repositorio local.
+ */
 class ProximosViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: FestivalRepository
@@ -60,6 +68,10 @@ class ProximosViewModel(application: Application) : AndroidViewModel(application
         syncData()
     }
 
+    /**
+     * Sincroniza los eventos con el backend remoto.
+     * Actualiza la base de datos local lo cual automáticamente refresca los [StateFlow].
+     */
     private fun syncData() {
         viewModelScope.launch {
             repository.syncEventos()

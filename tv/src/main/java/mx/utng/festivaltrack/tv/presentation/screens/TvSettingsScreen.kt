@@ -19,6 +19,15 @@ import mx.utng.festivaltrack.tv.ui.theme.FestivalCardBg
 import mx.utng.festivaltrack.tv.ui.theme.FestivalDarkBg
 import mx.utng.festivaltrack.tv.ui.theme.FestivalGold
 
+/**
+ * Pantalla de configuración para la app en Android TV.
+ * Muestra información del servidor, estado de transmisión, y permite cerrar sesión.
+ * Incluye un menú lateral de navegación controlado por D-Pad.
+ *
+ * @param currentNavIndex Índice activo actualmente en el menú de navegación lateral.
+ * @param onNavSelect Callback disparado al elegir una opción en el menú lateral.
+ * @param onLogout Callback disparado al hacer clic en el botón de cerrar sesión.
+ */
 @Composable
 fun TvSettingsScreen(
     currentNavIndex: Int,
@@ -138,6 +147,13 @@ fun TvSettingsScreen(
     }
 }
 
+/**
+ * Tarjeta para mostrar una opción o información de configuración.
+ *
+ * @param icon Ícono [ImageVector] que representa la opción.
+ * @param title Título principal de la configuración.
+ * @param subtitle Texto secundario o descripción del estado actual.
+ */
 @Composable
 private fun SettingsCard(icon: ImageVector, title: String, subtitle: String) {
     Card(

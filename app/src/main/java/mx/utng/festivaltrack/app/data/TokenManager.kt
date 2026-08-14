@@ -30,6 +30,14 @@ class TokenManager(context: Context) {
         return prefs.getString("user_id", null)
     }
 
+    fun saveUserName(name: String) {
+        prefs.edit().putString("user_name", name).apply()
+    }
+
+    fun getUserName(): String? {
+        return prefs.getString("user_name", null)
+    }
+
     fun clear() {
         prefs.edit().clear().apply()
     }
