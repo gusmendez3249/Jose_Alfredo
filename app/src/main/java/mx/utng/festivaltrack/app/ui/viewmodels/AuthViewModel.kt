@@ -117,6 +117,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 tokenManager.saveToken(response.accessToken)
                 tokenManager.saveUserRole(response.usuario.rol)
                 tokenManager.saveUserId(response.usuario.id)
+                tokenManager.saveUserName(response.usuario.nombre)
                 _authState.value = AuthState.Success(response.usuario.rol)
             } catch (e: Exception) {
                 // Error genérico para no revelar si el correo existe o no (seguridad)
@@ -161,6 +162,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 tokenManager.saveToken(response.accessToken)
                 tokenManager.saveUserRole(response.usuario.rol)
                 tokenManager.saveUserId(response.usuario.id)
+                tokenManager.saveUserName(response.usuario.nombre)
                 _authState.value = AuthState.Success(response.usuario.rol)
             } catch (e: Exception) {
                 val errorMsg = e.localizedMessage ?: "Error de conexión con el servidor"

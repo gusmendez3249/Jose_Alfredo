@@ -63,7 +63,7 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
     fun sendMessage(eventoId: String, text: String) {
         if (text.isBlank()) return
         
-        val nombre = "Usuario" // Ideally fetch from profile
+        val nombre = tokenManager.getUserName() ?: "Usuario"
 
         viewModelScope.launch {
             try {
