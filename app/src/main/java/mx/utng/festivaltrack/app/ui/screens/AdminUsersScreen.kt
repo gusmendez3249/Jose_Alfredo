@@ -144,9 +144,9 @@ fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (usuario.rol == "ADMIN") Icons.Default.Security else Icons.Default.Person,
+                    imageVector = if (usuario.rol == "ADMINISTRADOR") Icons.Default.Security else Icons.Default.Person,
                     contentDescription = null,
-                    tint = if (usuario.rol == "ADMIN") PrimaryGold else Color.Gray
+                    tint = if (usuario.rol == "ADMINISTRADOR") PrimaryGold else Color.Gray
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -158,13 +158,13 @@ fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
             Button(
                 onClick = onToggleRole,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (usuario.rol == "ADMIN") Color(0xFF121212) else PrimaryGold,
-                    contentColor = if (usuario.rol == "ADMIN") PrimaryGold else Color.Black
+                    containerColor = if (usuario.rol == "ADMINISTRADOR") Color(0xFF121212) else PrimaryGold,
+                    contentColor = if (usuario.rol == "ADMINISTRADOR") PrimaryGold else Color.Black
                 ),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(if (usuario.rol == "ADMIN") "Quitar Admin" else "Hacer Admin", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (usuario.rol == "ADMINISTRADOR") "Quitar Admin" else "Hacer Admin", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

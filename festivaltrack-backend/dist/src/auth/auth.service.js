@@ -47,6 +47,7 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = __importStar(require("bcryptjs"));
+const client_1 = require("@prisma/client");
 let AuthService = class AuthService {
     prisma;
     jwt;
@@ -96,17 +97,17 @@ let AuthService = class AuthService {
             throw new common_1.ConflictException('El correo ya está registrado');
         const hash = await bcrypt.hash(dto.contrasena, 10);
         const usuario = await this.prisma.usuario.create({
-            data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: 'ADMIN' },
+            data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: client_1.Rol.ADMINISTRADOR },
         });
         return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
     }
     async updateRole(id, rol) {
-        if (rol !== 'USER' && rol !== 'ADMIN') {
+        if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
             throw new common_1.ConflictException('Rol inválido');
         }
         return this.prisma.usuario.update({
             where: { id },
-            data: { rol: rol },
+            data: { rol: client_1.Rol[rol] },
             select: { id: true, nombre: true, correo: true, rol: true }
         });
     }

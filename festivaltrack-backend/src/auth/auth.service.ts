@@ -123,7 +123,7 @@ export class AuthService {
     if (existe) throw new ConflictException('El correo ya está registrado');
     const hash = await bcrypt.hash(dto.contrasena, 10);
     const usuario = await this.prisma.usuario.create({
-      data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: 'ADMIN' as Rol },
+      data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: Rol.ADMINISTRADOR },
     });
     return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
   }
@@ -132,12 +132,12 @@ export class AuthService {
    * Cambia el rol de un usuario existente.
    */
   async updateRole(id: string, rol: string) {
-    if (rol !== 'USER' && rol !== 'ADMIN') {
+    if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
       throw new ConflictException('Rol inválido');
     }
     return this.prisma.usuario.update({
       where: { id },
-      data: { rol: rol as Rol },
+      data: { rol: Rol[rol as keyof typeof Rol] },
       select: { id: true, nombre: true, correo: true, rol: true }
     });
   }

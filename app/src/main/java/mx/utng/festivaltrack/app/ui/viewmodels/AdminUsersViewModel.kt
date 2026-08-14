@@ -67,7 +67,7 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             try {
                 val token = "Bearer ${tokenManager.getToken()}"
-                val newRole = if (currentRole == "ADMIN") "USER" else "ADMIN"
+                val newRole = if (currentRole == "ADMINISTRADOR") "USUARIO" else "ADMINISTRADOR"
                 api.updateUserRole(token, usuarioId, RoleUpdateDto(newRole))
                 
                 // Update local state directly to be snappy
