@@ -22,8 +22,25 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
 import mx.utng.festivaltrack.tv.ui.theme.*
 
+/**
+ * Representa un evento en la programación del festival.
+ *
+ * @property time Hora del evento.
+ * @property title Nombre del evento.
+ * @property stage Escenario o ubicación.
+ * @property artist Artista o banda.
+ * @property isCurrent Indica si el evento está sucediendo en este momento.
+ */
 data class ScheduleItem(val time: String, val title: String, val stage: String, val artist: String, val isCurrent: Boolean = false)
 
+/**
+ * Pantalla que muestra la programación completa (horarios) del festival.
+ * Utiliza un `LazyColumn` para listar los eventos y es completamente navegable vía D-Pad.
+ *
+ * @param eventos Lista de eventos obtenida del [TvViewModel] proveniente de Room.
+ * @param currentNavIndex Índice actual de la navegación en el menú lateral.
+ * @param onNavSelect Callback para manejar la navegación del sidebar.
+ */
 @Composable
 fun TvScheduleScreen(
     eventos: List<mx.utng.festivaltrack.shared.data.local.entity.EventoEntity> = emptyList(),
@@ -159,6 +176,13 @@ fun TvScheduleScreen(
     }
 }
 
+/**
+ * Tarjeta individual para mostrar un evento del horario en formato de línea de tiempo.
+ * Se redibuja dependiendo de si el elemento está enfocado ([Modifier.onFocusChanged]) o es el evento en curso.
+ *
+ * @param item El [ScheduleItem] a mostrar.
+ * @param onClick Acción al presionar "OK" en la tarjeta.
+ */
 @Composable
 fun ScheduleCard(item: ScheduleItem, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }

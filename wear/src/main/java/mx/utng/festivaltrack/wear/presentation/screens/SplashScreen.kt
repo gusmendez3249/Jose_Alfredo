@@ -15,6 +15,12 @@ import androidx.wear.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 import mx.utng.festivaltrack.wear.R
 
+/**
+ * Pantalla de carga inicial (Splash Screen).
+ * Muestra el logo del festival durante 2 segundos utilizando [LaunchedEffect] y `delay`.
+ *
+ * @param onSplashFinished Acción invocada cuando termina el tiempo de espera.
+ */
 @Composable
 fun SplashScreen(
     onSplashFinished: () -> Unit

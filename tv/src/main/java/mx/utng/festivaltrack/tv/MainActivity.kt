@@ -17,6 +17,12 @@ import mx.utng.festivaltrack.tv.presentation.viewmodel.TvViewModel
 import mx.utng.festivaltrack.tv.ui.theme.FestivalDarkBg
 import mx.utng.festivaltrack.tv.ui.theme.FestivalTrackTvTheme
 
+/**
+ * Actividad principal y punto de entrada para la aplicación en Android TV.
+ *
+ * Configura la interfaz de usuario con Jetpack Compose y maneja la navegación básica
+ * a través de un estado simple (`currentScreenIndex`).
+ */
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TvViewModel by viewModels()

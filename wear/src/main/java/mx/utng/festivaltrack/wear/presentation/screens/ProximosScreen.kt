@@ -23,6 +23,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
 
+/**
+ * Pantalla principal que muestra la lista de próximos eventos en el festival.
+ * Renderiza una lista adaptada para pantallas circulares de Wear OS mediante [ScalingLazyColumn].
+ *
+ * @param onEventoClick Lambda que se ejecuta al seleccionar un evento, recibe el ID del evento.
+ * @param onProgramaCompletoClick Lambda que se ejecuta al presionar el botón de "Programa completo".
+ * @param viewModel ViewModel que provee el flujo de datos [ProximosViewModel.eventos].
+ */
 @Composable
 fun ProximosScreen(
     onEventoClick: (String) -> Unit,

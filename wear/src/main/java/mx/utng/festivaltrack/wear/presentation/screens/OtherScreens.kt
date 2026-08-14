@@ -52,6 +52,14 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import mx.utng.festivaltrack.wear.R
 
+/**
+ * Pantalla que muestra una alerta inminente de un evento próximo.
+ * Utiliza un cronómetro reactivo implementado con [LaunchedEffect] y `delay(10000)` para actualizar
+ * el tiempo faltante sin saturar el hilo principal de la interfaz de Wear OS.
+ *
+ * @param eventoId ID del evento para consultar en la base de datos local.
+ * @param onVerMapa Acción a ejecutar para navegar a la pantalla del mapa del evento.
+ */
 @Composable
 fun AlertaScreen(eventoId: String, onVerMapa: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -155,6 +163,13 @@ fun AlertaScreen(eventoId: String, onVerMapa: () -> Unit) {
     }
 }
 
+/**
+ * Pantalla que muestra instrucciones básicas de navegación hacia un escenario o punto de interés.
+ * Diseñada para visualización rápida en pantalla circular (Glanceable UI).
+ *
+ * @param eventoId ID del evento de destino.
+ * @param onLlegarAhora Acción a ejecutar para abrir la navegación completa al escenario.
+ */
 @Composable
 fun NavEscenarioScreen(eventoId: String, onLlegarAhora: () -> Unit) {
     Scaffold(timeText = { TimeText() }) {
@@ -227,6 +242,17 @@ fun NavEscenarioScreen(eventoId: String, onLlegarAhora: () -> Unit) {
     }
 }
 
+/**
+ * Pantalla que integra un mapa de OSMDroid para navegación a pie.
+ * Utiliza [LocationServices.getFusedLocationProviderClient] para el GPS del usuario y
+ * consume el servicio de enrutamiento OSRM para dibujar una [Polyline] en el mapa.
+ *
+ * Configura un [FrameLayout] personalizado dentro de [AndroidView] para evitar que
+ * `SwipeDismissableNavHost` intercepte los toques, permitiendo arrastrar el mapa.
+ *
+ * @param eventoId ID del evento cuyo destino (lat, lon) se buscará en BD para la ruta.
+ * @param onBack Lambda para regresar a la pantalla anterior.
+ */
 @Composable
 fun MapaAccesoScreen(eventoId: String, onBack: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current

@@ -14,6 +14,10 @@ import mx.utng.festivaltrack.shared.data.local.entity.ArtistaEntity
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.wear.domain.usecase.ScheduleAlertasUseCase
 
+/**
+ * Servicio encargado de recibir y sincronizar los datos enviados desde la aplicación móvil.
+ * Escucha los eventos de datos del Data Layer de Wear OS a través de [WearableListenerService].
+ */
 class WearSyncService : WearableListenerService() {
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -36,6 +40,12 @@ class WearSyncService : WearableListenerService() {
         }
     }
 
+    /**
+     * Persiste los datos recibidos (Payload) en la base de datos Room local.
+     * Limpia la base de datos antes de insertar los nuevos datos para evitar duplicados.
+     *
+     * @param payload Objeto deserializado que contiene los artistas y eventos.
+     */
     private suspend fun persistirPayload(payload: WearSyncPayload) {
         val db = FestivalDatabase.getInstance(applicationContext)
 

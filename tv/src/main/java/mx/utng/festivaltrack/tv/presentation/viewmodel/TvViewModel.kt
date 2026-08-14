@@ -12,6 +12,13 @@ import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 
+/**
+ * ViewModel central para la app en Android TV.
+ * Gestiona el estado y la sincronización de los eventos mostrados en el televisor.
+ *
+ * @property eventos Flujo continuo con la lista de eventos actualizados.
+ * @constructor Crea el ViewModel iniciando la base de datos de Room y empezando el polling periódico.
+ */
 class TvViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: FestivalRepository
@@ -41,6 +48,9 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Sincroniza explícitamente los eventos desde el backend hacia la base de datos local (Room).
+     */
     fun sync() {
         viewModelScope.launch {
             try {

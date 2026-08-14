@@ -31,22 +31,49 @@ class FestivalRepository(
 ) {
 
     
-    // Obtenemos los eventos locales (Offline-First)
+    /**
+     * Obtiene todos los eventos locales como un flujo continuo.
+     * Esta función permite la arquitectura Offline-First, los ViewModels
+     * pueden observar los datos en tiempo real de la base local de SQLite.
+     *
+     * @return [Flow] que emite la lista de todos los [EventoEntity] cuando cambia.
+     */
     fun getEventosLocales(): Flow<List<EventoEntity>> {
         return eventoDao.observeTodos()
     }
 
-    // Obtenemos solo los próximos a partir de la hora actual
+    /**
+     * Obtiene solo los próximos eventos a partir de la hora indicada.
+     *
+     * @param ahora Cadena con la hora actual (ISO 8601) que sirve de límite inferior.
+     * @return [Flow] que emite la lista de los próximos [EventoEntity].
+     */
     fun getProximosEventosLocales(ahora: String): Flow<List<EventoEntity>> {
         return eventoDao.observeProximos(ahora)
     }
 
-    // Obtenemos un evento en particular
+    /**
+     * Obtiene un evento específico de la base de datos local por su ID.
+     *
+     * @param id Identificador único del evento a buscar.
+     * @return [EventoEntity] encontrado o null si no existe.
+     */
     suspend fun getEventoById(id: String): EventoEntity? {
         return eventoDao.getEventoById(id)
     }
 
-    // Sincronizamos con el servidor Postgres -> Room
+    /**
+     * Sincroniza la base de datos local con el servidor Postgres remoto.
+     *
+     * Estrategia Offline-First:
+     * 1. Consulta el servidor remoto.
+     * 2. Si es exitoso, actualiza las entradas locales en Room con `upsertAll`.
+     * 3. Realiza la limpieza eliminando de la base de datos local aquellos registros
+     *    que el servidor remoto ya no tiene (o han sido filtrados, ej. CANCELADO).
+     * 4. En caso de error de red, no hace nada para que la app pueda seguir usando Room de forma normal (Offline).
+     *
+     * Llama al endpoint remoto `GET /api/v1/eventos`.
+     */
     suspend fun syncEventos() {
         withContext(Dispatchers.IO) {
             try {
@@ -79,6 +106,17 @@ class FestivalRepository(
         }
     }
 
+    /**
+     * Agrega un nuevo evento tanto en la base local como en el servidor remoto.
+     *
+     * Guarda la entidad primero localmente para proveer de respuesta rápida, y
+     * luego intenta publicarlo en el servidor remoto a través de `POST /api/v1/eventos`.
+     * Si la red falla, la entrada se mantendrá en local permitiendo reintentos.
+     *
+     * @param token Token de autenticación del usuario.
+     * @param id ID provisional (típicamente UUID local) a sobreescribir.
+     * @param eventoCreateDto Datos del evento a crear mediante DTO de creación.
+     */
     suspend fun addEvento(token: String? = null, id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
         withContext(Dispatchers.IO) {
             // Offline-first: Guardamos localmente inmediatamente
@@ -115,6 +153,16 @@ class FestivalRepository(
         }
     }
 
+    /**
+     * Actualiza un evento existente en local y remoto.
+     *
+     * Llama a `PUT /api/v1/eventos/{id}` si hay red, pero antes lo almacena
+     * en Room para que los cambios se reflejen de inmediato en la UI.
+     *
+     * @param token Token de autenticación del usuario.
+     * @param id ID del evento a actualizar.
+     * @param eventoCreateDto Datos modificados del evento.
+     */
     suspend fun updateEvento(token: String? = null, id: String, eventoCreateDto: mx.utng.festivaltrack.shared.data.remote.EventoCreateDto) {
         withContext(Dispatchers.IO) {
             // 1. Actualizar localmente inmediatamente
@@ -145,6 +193,13 @@ class FestivalRepository(
         }
     }
 
+    /**
+     * Elimina un evento primero de la base local, e inmediatamente hace la
+     * petición de borrado al servidor en `DELETE /api/v1/eventos/{id}`.
+     *
+     * @param token Token de autenticación del usuario.
+     * @param id ID del evento que se va a eliminar.
+     */
     suspend fun deleteEvento(token: String? = null, id: String) {
         withContext(Dispatchers.IO) {
             // 1. Eliminar localmente inmediatamente

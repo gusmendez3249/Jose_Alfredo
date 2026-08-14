@@ -17,6 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.tv.ui.theme.FestivalGold
 
+/**
+ * Componente [Composable] para los elementos del menú en el Sidebar de la interfaz para Android TV.
+ * Renderiza el ícono, el texto y reacciona al enfoque (D-Pad) cambiando el color y el fondo.
+ *
+ * @param label El texto a mostrar para este elemento del menú.
+ * @param icon El [ImageVector] que representa a este elemento de forma visual.
+ * @param isSelected Indica si este elemento es el que está actualmente activo/seleccionado.
+ * @param onClick La función que se ejecutará al pulsar "OK" en el D-Pad sobre este elemento.
+ */
 @Composable
 fun SidebarMenuItem(
     label: String,
