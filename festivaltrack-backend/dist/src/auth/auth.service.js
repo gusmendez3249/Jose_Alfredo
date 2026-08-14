@@ -74,8 +74,10 @@ let AuthService = class AuthService {
         return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
     }
     firmarToken(id, nombre, correo, rol) {
+        const token = this.jwt.sign({ sub: id, correo, rol });
         return {
-            accessToken: this.jwt.sign({ sub: id, correo, rol }),
+            accessToken: token,
+            token,
             usuario: { id, nombre, correo, rol }
         };
     }
