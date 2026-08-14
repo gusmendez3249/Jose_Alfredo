@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RoleUpdateDto } from './dto/role-update.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -48,7 +49,7 @@ export declare class AuthController {
             rol: string;
         };
     }>;
-    updateRole(id: string, rol: string): Promise<{
+    updateRole(id: string, dto: RoleUpdateDto): Promise<{
         id: string;
         nombre: string;
         correo: string;

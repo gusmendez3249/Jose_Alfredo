@@ -102,8 +102,9 @@ let AuthService = class AuthService {
         return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
     }
     async updateRole(id, rol) {
+        console.log('Update role called with:', { id, rol });
         if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
-            throw new common_1.ConflictException('Rol inválido');
+            throw new common_1.ConflictException(`Rol inválido recibido: ${rol}`);
         }
         return this.prisma.usuario.update({
             where: { id },
