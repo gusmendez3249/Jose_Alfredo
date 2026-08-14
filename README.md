@@ -1,3 +1,20 @@
+## Videos de Demostración
+
+<p align="center">
+  <!-- Video Presidencia -->
+  <a href="https://drive.google.com/file/d/1dLFeqdP5TnHkWoP2MHVgiJjMQGENU93T/view?usp=sharing" target="_blank">
+    <img width="45%" src="https://github.com/user-attachments/assets/c293ed36-3619-4b3c-909d-5f65cc7f6f1a" alt="Ver Video Presidencia" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <!-- Video Exposición -->
+  <a href="https://drive.google.com/file/d/12nPtrItlh9Xz9OyqE5wiD0VzrLD60jWl/view?usp=sharing" target="_blank">
+    <img width="45%" src="https://github.com/user-attachments/assets/e2107fb9-f226-4423-8b4b-d3b74d1a1240" alt="Ver Video Exposición" />
+  </a>
+</p>
+<p align="center">
+  <i>▶️ Haz clic en las imágenes para reproducir los videos en Google Drive.</i>
+</p>
+
 # 🎺 FestivalTrack — Plataforma Multiplataforma del Festival José Alfredo Jiménez
 
 > **FestivalTrack** es un ecosistema multiplataforma integral diseñado para la gestión, promoción, compra de boletos digitales, consulta cultural y transmisión en vivo en tiempo real del **Festival José Alfredo Jiménez** en Dolores Hidalgo, Cuna de la Independencia Nacional, Guanajuato.
@@ -96,3 +113,52 @@ Para desplegar y ejecutar cada módulo paso a paso con su código documentado, c
 4. [📄 Guía Paso a Paso Portal Web React](./festivaltrack-web/README.md)
 5. [📄 Guía Paso a Paso Librería Shared](./shared/README.md)
 6. [📄 Guía Paso a Paso Módulo WearOS](./wear/README.md)
+
+## Evidencia Modulo Móvil
+
+<p align="center">
+  <img width="22%" src="https://github.com/user-attachments/assets/397fcb0e-1236-46b4-99c5-cb054c3302cd" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/c1efb6e5-76c3-423b-bc55-bcac175be64a" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/4ddf2be9-a215-4a2b-b85a-ccb3d9764d3e" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/65468143-07b2-4893-bec6-efdcc07fdb3c" />
+  <br><br>
+  <img width="22%" src="https://github.com/user-attachments/assets/4ad0b104-938d-4d5b-bfee-b1c558b7c3f9" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/220addd5-7eea-4a5d-bd68-cf92fe373c78" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/ee424e38-0866-4da7-8cce-f2c7b02d67fc" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/b5b351e4-6153-4e5b-8091-50f604320275" />
+  <br><br>
+  <img width="22%" src="https://github.com/user-attachments/assets/caa75b59-616b-478c-834e-18db20ed40b3" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/9c16d7c7-fb4e-4d58-b331-db464f5a4675" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/dd97d986-2aa6-4139-91dc-552ed7c58a08" />&nbsp;&nbsp;
+  <img width="22%" src="https://github.com/user-attachments/assets/b6351086-fdaa-4a28-b5fb-1e302afa21f7" />
+  <br><br>
+  <img width="22%" src="https://github.com/user-attachments/assets/f208c15e-ec54-4b35-84a9-5b0646f57032" />
+</p>
+
+## Evidencia Modulo Wearable
+
+<p align="center">
+  <img width="28%" src="https://github.com/user-attachments/assets/a921311b-74f2-4bda-945d-7e5931467a42" />&nbsp;&nbsp;
+  <img width="28%" src="https://github.com/user-attachments/assets/38bcefcf-7db3-4744-830d-bd1fad621563" />&nbsp;&nbsp;
+  <img width="28%" src="https://github.com/user-attachments/assets/0d3a0533-6899-4ef7-946b-b0383d1ad678" />
+  <br><br>
+  <img width="28%" src="https://github.com/user-attachments/assets/6afab30e-2cfc-4773-9d5e-8e54d4d0f4a5" />&nbsp;&nbsp;
+  <img width="28%" src="https://github.com/user-attachments/assets/26b47a6c-cdef-4886-bdcf-e707ebe97b87" />
+</p>
+
+## Evidencia Modulo Smart TV
+
+<p align="center">
+  <img width="45%" src="https://github.com/user-attachments/assets/1ecb50ae-1741-4c3d-945a-8302fef61e8a" />&nbsp;&nbsp;
+  <img width="45%" src="https://github.com/user-attachments/assets/164daac9-406e-4b8a-ba22-cdd9af7297a6" />
+  <br><br>
+  <img width="45%" src="https://github.com/user-attachments/assets/1e471c0a-14b2-45cf-ab0f-e7a90d997436" />&nbsp;&nbsp;
+  <img width="45%" src="https://github.com/user-attachments/assets/e7cbca18-8abb-4776-bee5-bc79cefbe1b0" />
+  <br><br>
+  <img width="45%" src="https://github.com/user-attachments/assets/2d9834c5-eb9f-4d50-a3de-848d1a55036d" />&nbsp;&nbsp;
+  <img width="45%" src="https://github.com/user-attachments/assets/abf56b3c-7e0c-4974-9ec2-30d360b8ee7d" />
+</p>
+
+
+
+
