@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
 export default function Login() {
@@ -7,15 +7,21 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = (location.state as { message?: string } | null)?.message;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await api.post('/auth/login', { correo, contrasena: password });
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        // Assuming user role logic if needed
+      const token = res.data.accessToken ?? res.data.token;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('accessToken', token);
         navigate('/mis-boletos');
+      } else {
+        setError('No se recibió un token válido del servidor.');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');
@@ -30,6 +36,7 @@ export default function Login() {
           Ingresa con tus credenciales para continuar.
         </p>
         
+        {successMessage && <p style={{ color: '#4caf50', marginBottom: '16px' }}>{successMessage}</p>}
         {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
         
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>

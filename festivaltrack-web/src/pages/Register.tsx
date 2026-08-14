@@ -13,10 +13,16 @@ export default function Register() {
     e.preventDefault();
     try {
       const res = await api.post('/auth/register', { nombre, correo, contrasena: password, rol: 'USUARIO' });
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        navigate('/mis-boletos');
+      const token = res.data.accessToken ?? res.data.token;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('accessToken', token);
       }
+
+      navigate('/login', {
+        state: { message: 'Registro completado correctamente. Ya puedes iniciar sesión.' }
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al registrarse');
     }

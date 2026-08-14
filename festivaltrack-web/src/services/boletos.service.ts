@@ -13,7 +13,14 @@ export interface BoletoDto {
 
 export const boletosService = {
   comprarBoleto: async (eventoId: string, categoria: string, cantidad: number) => {
-    const response = await api.post('/boletos/comprar', { eventoId, categoria, cantidad });
+    const precioTotal = 4500 * cantidad;
+    const response = await api.post('/boletos/comprar', {
+      eventoId,
+      categoria,
+      cantidad,
+      precioTotal,
+      metodoPago: 'TARJETA_CREDITO'
+    });
     return response.data;
   },
 

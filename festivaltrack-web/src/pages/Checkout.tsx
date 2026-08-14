@@ -16,6 +16,13 @@ export default function Checkout() {
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const token = localStorage.getItem('token') ?? localStorage.getItem('accessToken');
+    if (!token) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     if (tarjeta.length < 15) {
       setError('Número de tarjeta no válido.');
       return;
@@ -25,10 +32,14 @@ export default function Checkout() {
     setError('');
     
     try {
-      // Assuming a default purchase of 1 General ticket for this flow
       await boletosService.comprarBoleto(eventoId || 'EVT-001', 'GENERAL', 1);
-      navigate('/mis-boletos');
+      navigate('/mis-boletos', { replace: true });
     } catch (err: any) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        navigate('/login', { replace: true });
+      }
       setError(err.response?.data?.message || 'Error al procesar el pago.');
     } finally {
       setLoading(false);

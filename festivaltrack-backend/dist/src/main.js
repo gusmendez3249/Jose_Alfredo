@@ -8,7 +8,7 @@ async function bootstrap() {
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     app.enableCors({ origin: '*' });
     app.setGlobalPrefix('api/v1');
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 3001;
     await app.listen(port);
     console.log(`FestivalTrack API corriendo en puerto ${port}`);
 }

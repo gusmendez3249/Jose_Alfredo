@@ -29,6 +29,9 @@ export class BoletosService {
    */
   async comprar(usuarioId: string, body: any) {
     let { eventoId, categoria, cantidad, precioTotal, metodoPago } = body;
+    const cantidadFinal = Number(cantidad || 1);
+    const precioUnitario = Number(precioTotal || 4500);
+    const montoTotal = precioUnitario * cantidadFinal;
     
     // Garantizar que exista un Evento válido en la BD para la FK de Boleto
     let evento = eventoId ? await this.prisma.evento.findUnique({ where: { id: eventoId } }) : null;
@@ -78,7 +81,7 @@ export class BoletosService {
           eventoId: realEventoId,
           usuarioId,
           categoria: categoria || 'GENERAL',
-          precio: precioTotal || 4500,
+          precio: montoTotal,
         },
       });
 
@@ -86,7 +89,7 @@ export class BoletosService {
       await tx.pago.create({
         data: {
           boletoId: boleto.id,
-          monto: precioTotal,
+          monto: montoTotal,
           metodo: metodoPago || 'TARJETA_CREDITO',
           estado: 'COMPLETADO',
           referencia: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`

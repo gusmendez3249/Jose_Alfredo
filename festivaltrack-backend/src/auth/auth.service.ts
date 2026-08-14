@@ -81,8 +81,11 @@ export class AuthService {
    * @returns Objeto con accessToken (JWT firmado) y datos del usuario.
    */
   private firmarToken(id: string, nombre: string, correo: string, rol: string) {
+    const token = this.jwt.sign({ sub: id, correo, rol });
+
     return {
-      accessToken: this.jwt.sign({ sub: id, correo, rol }),
+      accessToken: token,
+      token,
       usuario: { id, nombre, correo, rol }
     };
   }

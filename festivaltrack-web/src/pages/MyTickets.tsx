@@ -12,9 +12,9 @@ export default function MyTickets() {
 
   useEffect(() => {
     const fetchBoletos = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') ?? localStorage.getItem('accessToken');
       if (!token) {
-        navigate('/login');
+        navigate('/login', { replace: true });
         return;
       }
 
@@ -23,7 +23,9 @@ export default function MyTickets() {
         setBoletos(data);
       } catch (err: any) {
         if (err.response?.status === 401) {
-          navigate('/login');
+          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
+          navigate('/login', { replace: true });
         } else {
           setError('No se pudieron cargar tus boletos.');
         }
