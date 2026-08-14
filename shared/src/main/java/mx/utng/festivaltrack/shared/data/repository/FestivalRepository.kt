@@ -67,8 +67,9 @@ class FestivalRepository(
                 //    de sincronizar) para no perder los que aún no se subieron.
                 val allLocal = eventoDao.getAllOnce()
                 val toDelete = allLocal.filter { local ->
-                    // Solo borramos si NO es un UUID local (los EVT-xxx que ya no están en server)
-                    local.id.startsWith("EVT-") && local.id !in remoteIds
+                    val isStaleEvt = local.id.startsWith("EVT-") && local.id !in remoteIds
+                    val isDuplicateUuid = !local.id.startsWith("EVT-") && remoteEntities.any { it.nombre == local.nombre && it.fechaHora == local.fechaHora }
+                    isStaleEvt || isDuplicateUuid
                 }
                 toDelete.forEach { eventoDao.delete(it) }
             } catch (e: Exception) {
@@ -101,7 +102,11 @@ class FestivalRepository(
                 // 1. Post to API con token si está presente
                 val authToken = token?.let { if (it.startsWith("Bearer ")) it else "Bearer $it" }
                 val remoteEvent = apiService.createEvento(authToken, eventoCreateDto)
-                // 2. Save remote version locally (with real ID if assigned by server)
+                // 2. Si el servidor asignó un ID distinto (ej. EVT-004 vs UUID), eliminar la entidad temporal local
+                if (remoteEvent.id != id) {
+                    eventoDao.delete(localEntity)
+                }
+                // 3. Guardar la versión oficial del servidor en Room
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
                 e.printStackTrace()

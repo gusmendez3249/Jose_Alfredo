@@ -160,6 +160,18 @@ interface FestivalApiService {
     suspend fun addImagenGaleria(@retrofit2.http.Body request: ImagenCreateDto): ImagenDto
 
     /**
+     * Elimina una canción del catálogo por su ID.
+     */
+    @retrofit2.http.DELETE("canciones/{id}")
+    suspend fun deleteCancion(@retrofit2.http.Path("id") id: String)
+
+    /**
+     * Elimina una imagen de la galería por su ID.
+     */
+    @retrofit2.http.DELETE("galeria/imagen/{id}")
+    suspend fun deleteImagenGaleria(@retrofit2.http.Path("id") id: String)
+
+    /**
      * Obtiene el estado actual de la transmisión en vivo (URL del stream RTSP y si está activo).
      * La Smart TV llama esto cada 5 segundos para conectarse automáticamente cuando el admin inicia el live.
      * @return [StreamStatusDto] con streamUrl e isLive.

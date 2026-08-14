@@ -21,10 +21,10 @@ class AudioViewModel : ViewModel() {
     val error: StateFlow<String?> = _error
 
     init {
-        fetchCanciones()
+        refresh()
     }
 
-    private fun fetchCanciones() {
+    fun refresh() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
