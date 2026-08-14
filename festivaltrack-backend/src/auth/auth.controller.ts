@@ -2,6 +2,7 @@ import { Body, Controller, Post, Get, Put, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RoleUpdateDto } from './dto/role-update.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,7 +23,7 @@ export class AuthController {
   }
 
   @Put('usuarios/:id/rol')
-  updateRole(@Param('id') id: string, @Body('rol') rol: string) {
-    return this.authService.updateRole(id, rol);
+  updateRole(@Param('id') id: string, @Body() dto: RoleUpdateDto) {
+    return this.authService.updateRole(id, dto.rol);
   }
 }

@@ -132,8 +132,9 @@ export class AuthService {
    * Cambia el rol de un usuario existente.
    */
   async updateRole(id: string, rol: string) {
+    console.log('Update role called with:', { id, rol });
     if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
-      throw new ConflictException('Rol inválido');
+      throw new ConflictException(`Rol inválido recibido: ${rol}`);
     }
     return this.prisma.usuario.update({
       where: { id },
