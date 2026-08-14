@@ -84,6 +84,32 @@ let AuthService = class AuthService {
     async tvSync(body) {
         return { status: 'SUCCESS', message: 'Smart TV vinculada correctamente', tvToken: body.tvToken };
     }
+    async getUsuarios() {
+        return this.prisma.usuario.findMany({
+            select: { id: true, nombre: true, correo: true, rol: true },
+            orderBy: { rol: 'asc' }
+        });
+    }
+    async registerAdmin(dto) {
+        const existe = await this.prisma.usuario.findUnique({ where: { correo: dto.correo } });
+        if (existe)
+            throw new common_1.ConflictException('El correo ya está registrado');
+        const hash = await bcrypt.hash(dto.contrasena, 10);
+        const usuario = await this.prisma.usuario.create({
+            data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: 'ADMIN' },
+        });
+        return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
+    }
+    async updateRole(id, rol) {
+        if (rol !== 'USER' && rol !== 'ADMIN') {
+            throw new common_1.ConflictException('Rol inválido');
+        }
+        return this.prisma.usuario.update({
+            where: { id },
+            data: { rol: rol },
+            select: { id: true, nombre: true, correo: true, rol: true }
+        });
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

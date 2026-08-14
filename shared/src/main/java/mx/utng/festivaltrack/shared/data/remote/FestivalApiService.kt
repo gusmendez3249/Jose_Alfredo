@@ -186,6 +186,24 @@ interface FestivalApiService {
     @retrofit2.http.POST("stream/status")
     suspend fun setStreamStatus(@retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
 
+    @retrofit2.http.GET("auth/usuarios")
+    suspend fun getUsuarios(
+        @retrofit2.http.Header("Authorization") token: String? = null
+    ): List<UsuarioDto>
+
+    @retrofit2.http.POST("auth/register-admin")
+    suspend fun registerAdmin(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Body request: RegisterDto
+    ): AuthResponseDto
+
+    @retrofit2.http.PUT("auth/usuarios/{id}/rol")
+    suspend fun updateUserRole(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Path("id") id: String,
+        @retrofit2.http.Body request: RoleUpdateDto
+    ): UsuarioDto
+
     companion object {
         /**
          * URL base del API REST.
@@ -497,4 +515,8 @@ data class CancionCreateDto(
 data class ImagenCreateDto(
     val url: String = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
     val titulo: String = "Nueva Foto"
+)
+
+data class RoleUpdateDto(
+    val rol: String
 )

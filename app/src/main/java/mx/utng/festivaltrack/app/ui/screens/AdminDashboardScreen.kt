@@ -30,7 +30,8 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
-    onNavigateToLivePanel: () -> Unit = {}
+    onNavigateToLivePanel: () -> Unit = {},
+    onNavigateToUsers: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     
@@ -47,21 +48,19 @@ fun AdminDashboardScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = PrimaryGold)
-            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text("José Alfredo", color = PrimaryGold, fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
                 Text("Jiménez", color = PrimaryGold, fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
             }
-            Box(
+            IconButton(
+                onClick = onNavigateToUsers,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF1E2720))
-                    .border(1.dp, PrimaryGold, CircleShape),
-                contentAlignment = Alignment.Center
+                    .border(1.dp, PrimaryGold, CircleShape)
             ) {
-                Icon(Icons.Default.PersonAdd, contentDescription = "Profile", tint = PrimaryGold, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.PersonAdd, contentDescription = "Manage Users", tint = PrimaryGold, modifier = Modifier.size(20.dp))
             }
         }
         

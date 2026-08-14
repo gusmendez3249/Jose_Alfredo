@@ -179,6 +179,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLivePanel = {
                                     navController.navigate("admin_live_stream")
                                 },
+                                onNavigateToUsers = {
+                                    navController.navigate("admin_users")
+                                },
                                 onLogout = {
                                     // Borra token y limpia TODA la pila de navegación (popUpTo(0))
                                     // para que el botón Atrás no regrese al panel admin tras cerrar sesión
@@ -218,6 +221,13 @@ class MainActivity : ComponentActivity() {
                         // Panel de transmisión en vivo del administrador (con cámara)
                         composable("admin_live_stream") {
                             mx.utng.festivaltrack.app.ui.screens.AdminLiveStreamScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        // Gestión de usuarios y administradores
+                        composable("admin_users") {
+                            mx.utng.festivaltrack.app.ui.screens.AdminUsersScreen(
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

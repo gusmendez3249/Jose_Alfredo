@@ -1,0 +1,91 @@
+package mx.utng.festivaltrack.app.ui.viewmodels
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.data.TokenManager
+import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.RegisterDto
+import mx.utng.festivaltrack.shared.data.remote.RoleUpdateDto
+import mx.utng.festivaltrack.shared.data.remote.UsuarioDto
+
+sealed class AdminUsersState {
+    object Loading : AdminUsersState()
+    data class Success(val users: List<UsuarioDto>) : AdminUsersState()
+    data class Error(val message: String) : AdminUsersState()
+}
+
+class AdminUsersViewModel(application: Application) : AndroidViewModel(application) {
+    private val api = FestivalApiService.create()
+    private val tokenManager = TokenManager(application)
+
+    private val _uiState = MutableStateFlow<AdminUsersState>(AdminUsersState.Loading)
+    val uiState: StateFlow<AdminUsersState> = _uiState
+
+    private val _actionMessage = MutableStateFlow<String?>(null)
+    val actionMessage: StateFlow<String?> = _actionMessage
+
+    init {
+        loadUsers()
+    }
+
+    fun loadUsers() {
+        viewModelScope.launch {
+            _uiState.value = AdminUsersState.Loading
+            try {
+                val token = "Bearer ${tokenManager.getToken()}"
+                val users = api.getUsuarios(token)
+                _uiState.value = AdminUsersState.Success(users)
+            } catch (e: Exception) {
+                _uiState.value = AdminUsersState.Error("Error al cargar usuarios: ${e.message}")
+            }
+        }
+    }
+
+    fun registerAdmin(nombre: String, correo: String, contrasena: String) {
+        if (nombre.isBlank() || correo.isBlank() || contrasena.isBlank()) {
+            _actionMessage.value = "Por favor, llena todos los campos"
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val token = "Bearer ${tokenManager.getToken()}"
+                api.registerAdmin(token, RegisterDto(nombre, correo, contrasena))
+                _actionMessage.value = "Administrador registrado exitosamente"
+                loadUsers() // Reload list
+            } catch (e: Exception) {
+                _actionMessage.value = "Error al registrar administrador: ${e.message}"
+            }
+        }
+    }
+
+    fun toggleRole(usuarioId: String, currentRole: String) {
+        viewModelScope.launch {
+            try {
+                val token = "Bearer ${tokenManager.getToken()}"
+                val newRole = if (currentRole == "ADMIN") "USER" else "ADMIN"
+                api.updateUserRole(token, usuarioId, RoleUpdateDto(newRole))
+                
+                // Update local state directly to be snappy
+                val currentState = _uiState.value
+                if (currentState is AdminUsersState.Success) {
+                    val updatedUsers = currentState.users.map { 
+                        if (it.id == usuarioId) it.copy(rol = newRole) else it 
+                    }
+                    _uiState.value = AdminUsersState.Success(updatedUsers)
+                }
+                _actionMessage.value = "Rol actualizado correctamente"
+            } catch (e: Exception) {
+                _actionMessage.value = "Error al cambiar rol: ${e.message}"
+            }
+        }
+    }
+
+    fun clearActionMessage() {
+        _actionMessage.value = null
+    }
+}
