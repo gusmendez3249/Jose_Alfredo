@@ -83,10 +83,14 @@ fun ProfileScreen(
                     if (boletos.isEmpty()) {
                         Text("No has comprado ningún boleto aún.", color = Color.Gray)
                     } else {
+                        var selectedBoleto by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.BoletoDto?>(null) }
+                        
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(boletos) { boleto ->
                                 Card(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .androidx.compose.foundation.clickable { selectedBoleto = boleto },
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
@@ -109,6 +113,37 @@ fun ProfileScreen(
                                     }
                                 }
                             }
+                        }
+
+                        selectedBoleto?.let { boleto ->
+                            AlertDialog(
+                                onDismissRequest = { selectedBoleto = null },
+                                title = {
+                                    Text("Boleto: ${boleto.evento?.nombre ?: "Festival"}", color = PrimaryGold, fontWeight = FontWeight.Bold)
+                                },
+                                text = {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        mx.utng.festivaltrack.app.ui.utils.DynamicQrCode(
+                                            content = boleto.codigoQR,
+                                            modifier = Modifier.size(200.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Text("Categoría: ${boleto.categoria}", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text("ID: ${boleto.id}", color = Color.Gray, fontSize = 12.sp)
+                                    }
+                                },
+                                confirmButton = {
+                                    TextButton(onClick = { selectedBoleto = null }) {
+                                        Text("Cerrar", color = PrimaryGold)
+                                    }
+                                },
+                                containerColor = Color(0xFF1E1E1E),
+                                titleContentColor = Color.White,
+                                textContentColor = Color.White
+                            )
                         }
                     }
                 }
