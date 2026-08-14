@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const register_dto_1 = require("./dto/register.dto");
+const role_update_dto_1 = require("./dto/role-update.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -31,8 +32,8 @@ let AuthController = class AuthController {
     registerAdmin(dto) {
         return this.authService.registerAdmin(dto);
     }
-    updateRole(id, rol) {
-        return this.authService.updateRole(id, rol);
+    updateRole(id, dto) {
+        return this.authService.updateRole(id, dto.rol);
     }
 };
 exports.AuthController = AuthController;
@@ -73,9 +74,9 @@ __decorate([
 __decorate([
     (0, common_1.Put)('usuarios/:id/rol'),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('rol')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, role_update_dto_1.RoleUpdateDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateRole", null);
 exports.AuthController = AuthController = __decorate([
