@@ -159,6 +159,12 @@ Para desplegar y ejecutar cada módulo paso a paso con su código documentado, c
   <img width="45%" src="https://github.com/user-attachments/assets/abf56b3c-7e0c-4974-9ec2-30d360b8ee7d" />
 </p>
 
+## Cartas de Validación Firmadas por Docente y Cliente
+
+<div align="center">
+  <img width="49%" alt="Carta Docente" src="https://github.com/user-attachments/assets/b41fd886-47af-4654-a23e-3da182a2a29b" />
+  <img width="49%" alt="Carta Cliente" src="https://github.com/user-attachments/assets/d35a5cca-0819-49d4-b265-08cf3c491a4e" />
+</div>
 
 
 
