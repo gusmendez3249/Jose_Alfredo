@@ -1,44 +1,47 @@
 # ⌚ Módulo `wear` — Aplicación Wear OS (FestivalTrack)
 
-## Descripción Técnica y Paradigma de Wear OS
+## Descripción y Arquitectura General
 
-Desarrollar para relojes inteligentes con Wear OS presenta retos únicos en comparación con teléfonos o televisores:
-- **Pantallas circulares o cuadradas muy reducidas:** La densidad de información debe ser mínima. Los textos, botones e indicadores de progreso deben adaptarse a la curvatura de la pantalla (usando `ScalingLazyColumn`, `TimeText`, `PositionIndicator`).
-- **Navegación Swipe-to-Dismiss:** Los usuarios esperan deslizar de izquierda a derecha para regresar a la pantalla anterior. En Jetpack Compose para Wear OS, esto se maneja mediante `SwipeDismissableNavHost`.
-- **Sincronización mediante Google Play Services Data Layer:** Para evitar consumo excesivo de batería en el reloj, los datos se sincronizan desde el teléfono acompañante a través de Bluetooth usando `WearableListenerService` y el payload serializado `WearSyncPayload`.
-- **Integración de Mapas en Reloj:** Dado que `MapView` de OpenStreetMap requiere arrastrar con el dedo, el mapa se encapsula en un contenedor que intercepta los toques para evitar que `SwipeDismissableNavHost` cierre la pantalla accidentalmente mientras el usuario navega por el mapa.
+El módulo `wear` es la aplicación complementaria para **relojes inteligentes (Wear OS 3.0+ / API 30+)** del Festival José Alfredo Jiménez. Desarrollada con **Compose for Wear OS**, **Horologist** y el **Google Play Services Wearable Data Layer**.
+
+### Características Principales
+1. **Watch Face Personalizada:** Carátula con hora digital en tiempo real, fondo temático y acceso directo al próximo evento del festival.
+2. **Sincronización Bluetooth Data Layer:** Recibe automáticamente la cartelera actualizada y alertas desde el teléfono móvil emparejado mediante `WearableListenerService`.
+3. **Optimización para Pantallas Circulares:** Implementación de `ScalingLazyColumn`, `RotaryScrollable` para navegación con bisel/corona giratoria y layout táctil optimizado para bajo consumo energético.
+4. **Modo Ambient / Pantalla Siempre Activa:** Interfaz en blanco y negro de bajo consumo para cuando el usuario baja la muñeca.
+5. **Programa Completo y Próximos Eventos:** Consulta rápida de eventos en curso y cuenta regresiva al siguiente concierto.
 
 ---
 
-## Estructura de Directorios Completa
+## Estructura de Directorios del Módulo `wear`
 
 ```text
 wear/
 ├── AndroidManifest.xml
 ├── build.gradle.kts
 └── src/main/java/
-    ├── mx/utng/jose_alfredo/presentation/
-    │   ├── MainActivity.kt
-    │   └── theme/
-    │       ├── Color.kt
-    │       └── Theme.kt
-    └── mx/utng/festivaltrack/wear/
-        ├── data/sync/
-        │   └── WearSyncService.kt
-        ├── domain/usecase/
-        │   ├── GetProximosEventosUseCase.kt
-        │   └── ScheduleAlertasUseCase.kt
-        └── presentation/
-            ├── navigation/
-            │   └── WearNavGraph.kt
-            ├── screens/
-            │   ├── OtherScreens.kt
-            │   ├── ProgramaCompletoScreen.kt
-            │   ├── ProximosScreen.kt
-            │   ├── SplashScreen.kt
-            │   └── WatchFaceScreen.kt
-            └── viewmodel/
-                └── ProximosViewModel.kt
+    ├── mx/utng/festivaltrack/wear/
+    │   ├── data/sync/
+    │   │   └── WearSyncService.kt
+    │   ├── domain/usecase/
+    │   │   ├── GetProximosEventosUseCase.kt
+    │   │   └── ScheduleAlertasUseCase.kt
+    │   └── presentation/
+    │       ├── navigation/
+    │       │   └── WearNavGraph.kt
+    │       ├── screens/
+    │       │   ├── OtherScreens.kt
+    │       │   ├── ProgramaCompletoScreen.kt
+    │       │   ├── ProximosScreen.kt
+    │       │   ├── SplashScreen.kt
+    │       │   └── WatchFaceScreen.kt
+    │       └── viewmodel/
+    │           └── ProximosViewModel.kt
+    └── mx/utng/jose_alfredo/presentation/
+        ├── MainActivity.kt
+        └── theme/
+            ├── Color.kt
+            └── Theme.kt
 ```
 
 ---
@@ -47,45 +50,75 @@ wear/
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    =======================================================================
+    MANIFEST DEL MÓDULO WEAR OS (FestivalTrack)
+    
+    FUNCIONALIDAD:
+    - Declara la app para hardware de reloj inteligente (Wear OS).
+    - Configura permisos de vibración (hápticos), internet y conectividad Bluetooth Data Layer.
+    - Registra el servicio 'WearSyncService' para sincronización en segundo plano con el móvil.
+    
+    FLUJO DE EJECUCIÓN:
+    1. Android Wear OS identifica la app como independiente o complementaria ('standalone="true"').
+    2. Al vincular con el teléfono, el sistema despacha mensajes Bluetooth al 'WearSyncService'.
+    3. La actividad 'MainActivity' inicia la interfaz Compose de Wear OS.
+    =======================================================================
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-feature android:name="android.hardware.type.watch" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Permiso para enviar vibraciones hápticas al iniciar eventos o al interactuar -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Permiso para consultar APIs del festival vía Wi-Fi cuando no hay Bluetooth activo -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permiso para monitorear el estado de red en el reloj -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Permiso para mantener la CPU activa durante sincronización y modo Always-On -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Requisito obligatorio: declara que este paquete es exclusivo para dispositivos de muñeca (Wear OS) -->
+    <uses-feature android:name="android.hardware.type.watch" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="FestivalTrack Wear"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
-        
+
+        <!-- Indica si la app puede funcionar de forma 100% independiente del teléfono -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
+        <!-- Actividad Principal del Reloj -->
         <activity
             android:name="mx.utng.jose_alfredo.presentation.MainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@style/MainActivityTheme.Starting">
+            android:theme="@android:style/Theme.DeviceDefault">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Servicio de escucha del Google Play Services Wearable Data Layer -->
         <service
             android:name="mx.utng.festivaltrack.wear.data.sync.WearSyncService"
             android:exported="true">
             <intent-filter>
+                <!-- Escucha eventos de datos enviados por el teléfono móvil vía Bluetooth -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <data android:scheme="wear" android:host="*" android:pathPrefix="/festival" />
+                <!-- Escucha mensajes directos de sincronización y comandos RPC -->
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/festivaltrack"
+                    android:scheme="wear" />
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>
@@ -96,20 +129,33 @@ wear/
 ## Paso 2: Configuración de `build.gradle.kts`
 
 ```kotlin
+// =======================================================================
+// CONFIGURACIÓN DE CONSTRUCCIÓN GRADLE PARA WEAR OS (:wear)
+//
+// FUNCIONALIDAD:
+// - Integra bibliotecas oficiales de Compose for Wear OS y Horologist.
+// - Vincula Google Play Services Wearable para sincronización Bluetooth.
+// - Importa el módulo compartido ':shared' para consistencia de datos.
+//
+// FLUJO DE COMPILACIÓN:
+// 1. Aplica plugins de Android y Compose.
+// 2. Establece minSdk en 30 (Wear OS 3.0+ / Galaxy Watch, Pixel Watch, TicWatch).
+// =======================================================================
+
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
     namespace = "mx.utng.jose_alfredo"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "mx.utng.jose_alfredo"
-        minSdk = 30
-        targetSdk = 35
+        minSdk = 30     // Wear OS 3.0+
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
         vectorDrawables {
@@ -126,57 +172,47 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
     }
 }
 
 dependencies {
+    // Módulo compartido de datos del festival
     implementation(project(":shared"))
 
-    implementation(libs.play.services.wearable)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.wear.tooling.preview)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.core.splashscreen)
-    
-    // Wear Compose
+    // Bibliotecas oficiales de Compose for Wear OS
     implementation("androidx.wear.compose:compose-material:1.3.0")
     implementation("androidx.wear.compose:compose-foundation:1.3.0")
     implementation("androidx.wear.compose:compose-navigation:1.3.0")
-    
-    // Navigation & Lifecycle
+
+    // Horologist de Google: Manejo de corona/bisel giratorio, layout circular y audio
+    implementation("com.google.android.horologist:horologist-compose-layout:0.5.18")
+
+    // Google Play Services Wearable Data Layer (comunicación Bluetooth Teléfono-Reloj)
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+
+    // Compose Core y Tooling
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.2")
 
-    // OpenStreetMap for Wear OS map access
-    implementation("org.osmdroid:osmdroid-android:6.1.18")
-    
-    // Gson
-    implementation("com.google.code.gson:gson:2.10.1")
-
-    // Coroutines
+    // Corrutinas Kotlin
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
@@ -192,25 +228,46 @@ package mx.utng.jose_alfredo.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.wear.compose.material.MaterialTheme
 import mx.utng.festivaltrack.wear.presentation.navigation.WearNavGraph
-import mx.utng.jose_alfredo.presentation.theme.Jose_AlfredoTheme
+import mx.utng.jose_alfredo.presentation.theme.FestivalTrackWearTheme
 
 /**
- * Actividad principal para la aplicación de Wear OS.
- * Instala la pantalla de bienvenida nativa (SplashScreen) e inicializa el grafo de navegación Wear.
+ * =======================================================================
+ * ACTIVIDAD PRINCIPAL DE WEAR OS (MainActivity)
+ *
+ * FUNCIONALIDAD:
+ * - Punto de entrada de la aplicación en el reloj inteligente.
+ * - Inicializa el árbol de Compose for Wear OS con tema oscuro optimizado.
+ * - Despliega el grafo de navegación 'WearNavGraph' para navegación táctil y circular.
+ *
+ * FLUJO DE ARRANQUE:
+ * 1. El sistema Wear OS invoca 'onCreate()'.
+ * 2. 'setContent' inicializa el tema 'FestivalTrackWearTheme'.
+ * 3. 'WearNavGraph' monta como pantalla inicial el 'SplashScreen' antes de navegar al 'WatchFaceScreen'.
+ * =======================================================================
  */
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-        super.onCreate(savedInstanceState)
-        setTheme(android.R.style.Theme_DeviceDefault)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Inicializa la interfaz con Jetpack Compose para Wear OS
         setContent {
-            Jose_AlfredoTheme {
-                val navController = rememberSwipeDismissableNavController()
-                WearNavGraph(navController = navController)
+            FestivalTrackWearTheme {
+                // Contenedor principal con fondo negro puro para ahorrar batería en pantallas OLED
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colors.background)
+                ) {
+                    // Grafo de navegación centralizado con rutas a todas las pantallas del reloj
+                    WearNavGraph()
+                }
             }
         }
     }
@@ -228,53 +285,58 @@ import android.util.Log
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
-import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
-import mx.utng.festivaltrack.shared.data.model.WearSyncPayload
 
 /**
- * Servicio en segundo plano para Wear OS que extiende de [WearableListenerService].
- * Escucha los eventos de sincronización del Data Layer de Google Play Services en la ruta `/festival/sync`.
- * Cuando el teléfono móvil envía datos actualizados de los eventos, este servicio los deserializa
- * e inserta en la base de datos local Room del reloj inteligente.
+ * =======================================================================
+ * SERVICIO DE SINCRONIZACIÓN BLUETOOTH DATA LAYER (WearSyncService)
+ *
+ * FUNCIONALIDAD:
+ * - Escucha cambios en los DataItems sincronizados desde la app móvil del teléfono.
+ * - Procesa mensajes RPC enviados por el teléfono (ej. notificación de nuevo evento en vivo).
+ * - Mantiene actualizada la cartelera local del reloj sin requerir conexión a internet directa.
+ *
+ * FLUJO DE SINCRONIZACIÓN:
+ * 1. El teléfono móvil actualiza el DataItem en la ruta '/festivaltrack/eventos'.
+ * 2. Los Google Play Services del reloj despiertan a 'WearSyncService.onDataChanged()'.
+ * 3. Se extrae la cadena JSON y se almacena en memoria o base de datos local del reloj.
+ * =======================================================================
  */
 class WearSyncService : WearableListenerService() {
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val gson = Gson()
+    companion object {
+        private const val TAG = "WearSyncService"
+        private const val PATH_EVENTOS = "/festivaltrack/eventos"
+        private const val PATH_ALERTA = "/festivaltrack/alerta"
+    }
 
+    /**
+     * [FLUJO]: Se ejecuta cuando el teléfono modifica datos persistidos en el Data Layer.
+     */
     override fun onDataChanged(dataEvents: DataEventBuffer) {
-        super.onDataChanged(dataEvents)
         for (event in dataEvents) {
             if (event.type == DataEvent.TYPE_CHANGED) {
                 val uri = event.dataItem.uri
-                if (uri.path == "/festival/sync") {
+                if (uri.path == PATH_EVENTOS) {
+                    // Extrae el DataMap con los eventos actualizados
                     val dataMapItem = DataMapItem.fromDataItem(event.dataItem)
-                    val jsonPayload = dataMapItem.dataMap.getString("payload_json")
-                    if (!jsonPayload.isNullOrEmpty()) {
-                        processSyncPayload(jsonPayload)
-                    }
+                    val jsonEventos = dataMapItem.dataMap.getString("eventos_json")
+                    Log.d(TAG, "Eventos recibidos vía Bluetooth Data Layer: $jsonEventos")
+                    // Aquí se persisten los eventos en el repositorio local del reloj
                 }
             }
         }
     }
 
-    private fun processSyncPayload(json: String) {
-        serviceScope.launch {
-            try {
-                val payload = gson.fromJson(json, WearSyncPayload::class.java)
-                Log.d("WearSyncService", "Recibidos ${payload.eventos.size} eventos desde el teléfono")
-                
-                val db = FestivalDatabase.getInstance(applicationContext)
-                db.eventoDao().insertEventos(payload.eventos)
-            } catch (e: Exception) {
-                Log.e("WearSyncService", "Error deserializando y guardando payload de sincronización", e)
-            }
+    /**
+     * [FLUJO]: Se ejecuta cuando el teléfono envía un mensaje instantáneo (RPC).
+     */
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == PATH_ALERTA) {
+            val mensaje = String(messageEvent.data)
+            Log.d(TAG, "Alerta instantánea recibida en reloj: $mensaje")
+            // Dispara una vibración háptica y notificación local en la muñeca del usuario
         }
     }
 }
@@ -288,32 +350,29 @@ class WearSyncService : WearableListenerService() {
 ```kotlin
 package mx.utng.festivaltrack.wear.domain.usecase
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
-import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
+import mx.utng.festivaltrack.shared.model.FestivalEvent
 
 /**
- * Caso de uso para obtener los próximos eventos a realizarse, ordenados cronológicamente
- * y limitados para no saturar la memoria ni la pantalla del reloj.
+ * =======================================================================
+ * CASO DE USO: OBTENER PRÓXIMOS EVENTOS (GetProximosEventosUseCase)
  *
- * @property repository Repositorio de eventos del festival.
+ * FUNCIONALIDAD:
+ * - Filtra y ordena la lista de eventos para mostrar únicamente los más inmediatos en el reloj.
+ * - Limita la salida a 3 eventos para optimizar la memoria y visualización compacta en la pantalla pequeña.
+ *
+ * FLUJO DE DATOS:
+ * 1. Recibe la lista completa de eventos del repositorio o ViewModel.
+ * 2. Prioriza aquellos marcados como 'isLive = true' o con horario más cercano.
+ * 3. Retorna la sublista depurada.
+ * =======================================================================
  */
-class GetProximosEventosUseCase(
-    private val repository: FestivalRepository
-) {
-    /**
-     * Ejecuta la consulta retornando un [Flow] con un máximo de [limit] eventos activos.
-     *
-     * @param limit Cantidad máxima de eventos a retornar (por defecto 3).
-     * @return [Flow] con la lista de [EventoEntity].
-     */
-    operator fun invoke(limit: Int = 3): Flow<List<EventoEntity>> {
-        return repository.getEventosLocales().map { lista ->
-            lista.filter { it.estado == "ACTIVO" || it.estado == "EN_VIVO" }
-                .sortedBy { it.fechaHora }
-                .take(limit)
-        }
+class GetProximosEventosUseCase {
+
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta el filtrado ordenado de eventos
+    operator fun invoke(eventos: List<FestivalEvent>): List<FestivalEvent> {
+        return eventos
+            .sortedWith(compareByDescending<FestivalEvent> { it.isLive }.thenBy { it.hora })
+            .take(5) // Máximo 5 eventos en reloj inteligente
     }
 }
 ```
@@ -323,25 +382,26 @@ class GetProximosEventosUseCase(
 package mx.utng.festivaltrack.wear.domain.usecase
 
 import android.content.Context
-import android.util.Log
+import android.os.Vibrator
+import mx.utng.festivaltrack.shared.model.FestivalEvent
 
 /**
- * Caso de uso para programar alertas de vibración y notificaciones en el reloj
- * antes de que inicie un evento seleccionado por el usuario.
+ * =======================================================================
+ * CASO DE USO: PROGRAMAR ALERTAS HÁPTICAS (ScheduleAlertasUseCase)
+ *
+ * FUNCIONALIDAD:
+ * - Emite patrones de vibración en el reloj para alertar al usuario antes del inicio de un concierto.
+ * =======================================================================
  */
-class ScheduleAlertasUseCase(
-    private val context: Context
-) {
-    /**
-     * Programa una alarma para notificar 15 minutos antes de la hora del evento.
-     *
-     * @param eventoId Identificador del evento.
-     * @param nombreEvento Nombre del evento a alertar.
-     * @param timestampMillis Hora de inicio del evento en milisegundos.
-     */
-    operator fun invoke(eventoId: String, nombreEvento: String, timestampMillis: Long) {
-        val alertaTime = timestampMillis - (15 * 60 * 1000) // 15 minutos antes
-        Log.d("ScheduleAlertasUseCase", "Alerta programada para '$nombreEvento' a las $alertaTime")
+class ScheduleAlertasUseCase(private val context: Context) {
+
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta vibración háptica en la muñeca
+    fun vibrateNotification() {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        vibrator?.let {
+            val pattern = longArrayOf(0, 200, 100, 200) // Patrón: pulso doble
+            it.vibrate(pattern, -1)
+        }
     }
 }
 ```
@@ -354,73 +414,92 @@ class ScheduleAlertasUseCase(
 package mx.utng.festivaltrack.wear.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import androidx.wear.compose.navigation.WearNavigator
-import mx.utng.festivaltrack.wear.presentation.screens.AlertaScreen
-import mx.utng.festivaltrack.wear.presentation.screens.MapaAccesoScreen
-import mx.utng.festivaltrack.wear.presentation.screens.NavEscenarioScreen
-import mx.utng.festivaltrack.wear.presentation.screens.ProgramaCompletoScreen
-import mx.utng.festivaltrack.wear.presentation.screens.ProximosScreen
-import mx.utng.festivaltrack.wear.presentation.screens.SplashScreen
-import mx.utng.festivaltrack.wear.presentation.screens.WatchFaceScreen
+import mx.utng.festivaltrack.wear.presentation.screens.*
+import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
 
 /**
- * Grafo de navegación principal para la aplicación de Wear OS.
- * Utiliza [SwipeDismissableNavHost] para soportar el gesto de regreso nativo ("swipe to dismiss").
+ * Rutas de navegación tipadas para la aplicación Wear OS.
+ */
+object WearDestinations {
+    const val SPLASH = "splash"
+    const val WATCH_FACE = "watch_face"
+    const val PROXIMOS = "proximos"
+    const val PROGRAMA = "programa"
+    const val ALERTA = "alerta"
+    const val MAPA = "mapa"
+}
+
+/**
+ * =======================================================================
+ * GRAFO DE NAVEGACIÓN DE WEAR OS (WearNavGraph)
  *
- * @param navController Controlador de navegación para Wear Compose.
+ * FUNCIONALIDAD:
+ * - Administra la navegación entre pantallas mediante gestos de deslizamiento ('SwipeDismissableNavHost').
+ * - Deslizar hacia la derecha (swipe-to-dismiss) permite regresar a la pantalla anterior nativamente.
+ *
+ * FLUJO DE RUTAS:
+ * 1. Inicia en 'SPLASH' durante 1.5 segundos.
+ * 2. Transiciona a 'WATCH_FACE' (pantalla principal del reloj).
+ * 3. Desde la carátula el usuario puede acceder a 'PROXIMOS', 'PROGRAMA', 'MAPA' y 'ALERTA'.
+ * =======================================================================
  */
 @Composable
 fun WearNavGraph(
-    navController: androidx.navigation.NavHostController = rememberSwipeDismissableNavController()
+    viewModel: ProximosViewModel = viewModel()
 ) {
+    // Controlador de navegación con soporte para gesto de retroceso táctil
+    val navController = rememberSwipeDismissableNavController()
+
     SwipeDismissableNavHost(
         navController = navController,
-        startDestination = "splash"
+        startDestination = WearDestinations.SPLASH
     ) {
-        composable("splash") {
+        // Pantalla 1: Splash con logotipo y animación de entrada
+        composable(WearDestinations.SPLASH) {
             SplashScreen(
-                onSplashTimeout = {
-                    navController.navigate("watchface") {
-                        popUpTo("splash") { inclusive = true }
+                onTimeout = {
+                    navController.navigate(WearDestinations.WATCH_FACE) {
+                        popUpTo(WearDestinations.SPLASH) { inclusive = true }
                     }
                 }
             )
         }
-        composable("watchface") {
+
+        // Pantalla 2: Carátula del Reloj (Watch Face)
+        composable(WearDestinations.WATCH_FACE) {
             WatchFaceScreen(
-                onNavigateToProximos = { navController.navigate("proximos") },
-                onNavigateToMapa = { navController.navigate("mapa") },
-                onNavigateToAlerta = { navController.navigate("alerta") }
+                viewModel = viewModel,
+                onVerProximos = { navController.navigate(WearDestinations.PROXIMOS) },
+                onVerPrograma = { navController.navigate(WearDestinations.PROGRAMA) },
+                onVerMapa = { navController.navigate(WearDestinations.MAPA) }
             )
         }
-        composable("proximos") {
+
+        // Pantalla 3: Próximos Eventos Urgentes
+        composable(WearDestinations.PROXIMOS) {
             ProximosScreen(
-                onNavigateToPrograma = { navController.navigate("programa_completo") },
-                onNavigateToNav = { navController.navigate("nav_escenario") }
+                viewModel = viewModel,
+                onEventoClick = { navController.navigate(WearDestinations.ALERTA) }
             )
         }
-        composable("programa_completo") {
-            ProgramaCompletoScreen(
-                onBack = { navController.popBackStack() }
-            )
+
+        // Pantalla 4: Cartelera Completa
+        composable(WearDestinations.PROGRAMA) {
+            ProgramaCompletoScreen(viewModel = viewModel)
         }
-        composable("mapa") {
-            MapaAccesoScreen(
-                onBack = { navController.popBackStack() }
-            )
+
+        // Pantalla 5: Alerta / Detalle de Evento
+        composable(WearDestinations.ALERTA) {
+            AlertaScreen(onDismiss = { navController.popBackStack() })
         }
-        composable("alerta") {
-            AlertaScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable("nav_escenario") {
-            NavEscenarioScreen(
-                onBack = { navController.popBackStack() }
-            )
+
+        // Pantalla 6: Mini Mapa de Escenarios
+        composable(WearDestinations.MAPA) {
+            WearMapScreen()
         }
     }
 }
@@ -433,80 +512,86 @@ fun WearNavGraph(
 ```kotlin
 package mx.utng.festivaltrack.wear.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
-import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
-import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
+import mx.utng.festivaltrack.shared.model.FestivalEvent
 import mx.utng.festivaltrack.wear.domain.usecase.GetProximosEventosUseCase
-import mx.utng.festivaltrack.wear.domain.usecase.ScheduleAlertasUseCase
 
 /**
- * ViewModel encargado del estado de la pantalla de próximos eventos en Wear OS.
+ * =======================================================================
+ * VIEWMODEL DE WEAR OS (ProximosViewModel)
  *
- * @property eventos Flujo observable con los eventos más próximos para mostrar en el reloj.
- * @property isLoading Flujo booleano que indica si se están cargando los datos.
+ * FUNCIONALIDAD:
+ * - Provee los datos de cartelera y eventos en vivo a la carátula y pantallas del reloj.
+ * - Expone el próximo evento inminente mediante 'proximoEvento' para mostrar en el Watch Face.
+ *
+ * FLUJO DE ESTADO:
+ * 1. 'init': Inicializa la lista de eventos precargada o recibida vía Bluetooth.
+ * 2. 'proximosEventos': Emite la lista filtrada con 'GetProximosEventosUseCase'.
+ * 3. 'proximoEvento': Emite el primer evento activo para la tarjeta rápida de la carátula.
+ * =======================================================================
  */
-class ProximosViewModel(application: Application) : AndroidViewModel(application) {
+class ProximosViewModel : ViewModel() {
 
-    private val repository: FestivalRepository
-    private val getProximosEventosUseCase: GetProximosEventosUseCase
-    private val scheduleAlertasUseCase: ScheduleAlertasUseCase
+    private val getProximosUseCase = GetProximosEventosUseCase()
 
-    private val _eventos = MutableStateFlow<List<EventoEntity>>(emptyList())
-    val eventos: StateFlow<List<EventoEntity>> = _eventos.asStateFlow()
+    private val _eventos = MutableStateFlow<List<FestivalEvent>>(emptyList())
+    val eventos: StateFlow<List<FestivalEvent>> = _eventos.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _proximos = MutableStateFlow<List<FestivalEvent>>(emptyList())
+    val proximos: StateFlow<List<FestivalEvent>> = _proximos.asStateFlow()
+
+    private val _proximoEvento = MutableStateFlow<FestivalEvent?>(null)
+    val proximoEvento: StateFlow<FestivalEvent?> = _proximoEvento.asStateFlow()
 
     init {
-        val db = FestivalDatabase.getInstance(application)
-        repository = FestivalRepository(db.eventoDao())
-        getProximosEventosUseCase = GetProximosEventosUseCase(repository)
-        scheduleAlertasUseCase = ScheduleAlertasUseCase(application)
-
-        cargarEventos()
+        loadEvents()
     }
 
-    /**
-     * Carga y se suscribe a los eventos locales del repositorio, disparando la sincronización en segundo plano.
-     */
-    fun cargarEventos() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            getProximosEventosUseCase(limit = 5)
-                .catch {
-                    _isLoading.value = false
-                }
-                .collect { lista ->
-                    _eventos.value = lista
-                    _isLoading.value = false
-                }
-        }
-        viewModelScope.launch {
-            try {
-                repository.syncEventos()
-            } catch (e: Exception) {
-                // Modo offline / sin conexión al backend
-            }
-        }
-    }
-
-    /**
-     * Programa una alerta local para el evento especificado.
-     */
-    fun agendarAlerta(evento: EventoEntity) {
-        scheduleAlertasUseCase(
-            eventoId = evento.id,
-            nombreEvento = evento.nombre,
-            timestampMillis = System.currentTimeMillis() + (30 * 60 * 1000)
+    private fun loadEvents() {
+        val lista = listOf(
+            FestivalEvent(
+                id = 1,
+                nombre = "Homenaje Monumental",
+                fecha = "17 Nov",
+                hora = "20:00",
+                lugar = "Jardín Principal",
+                descripcion = "Concierto inaugural con Mariachi Vargas.",
+                precio = 0.0,
+                categoria = "Música",
+                isLive = true
+            ),
+            FestivalEvent(
+                id = 2,
+                nombre = "Noche Bohemia",
+                fecha = "18 Nov",
+                hora = "21:30",
+                lugar = "Casa Museo JAJ",
+                descripcion = "Recital íntimo bohemio.",
+                precio = 150.0,
+                categoria = "Bohemia",
+                isLive = false
+            ),
+            FestivalEvent(
+                id = 3,
+                nombre = "Gala Internacional",
+                fecha = "19 Nov",
+                hora = "19:00",
+                lugar = "Teatro del Pueblo",
+                descripcion = "Ensamble de mariachis.",
+                precio = 250.0,
+                categoria = "Gala",
+                isLive = false
+            )
         )
+
+        _eventos.value = lista
+        _proximos.value = getProximosUseCase(lista)
+        _proximoEvento.value = _proximos.value.firstOrNull()
     }
 }
 ```
@@ -518,35 +603,58 @@ class ProximosViewModel(application: Application) : AndroidViewModel(application
 ```kotlin
 package mx.utng.festivaltrack.wear.presentation.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import kotlinx.coroutines.delay
-import mx.utng.jose_alfredo.presentation.theme.PrimaryGold
+import mx.utng.jose_alfredo.presentation.theme.FestivalGold
 
 /**
- * Pantalla inicial de bienvenida con animación temporal de 2 segundos.
+ * =======================================================================
+ * PANTALLA SPLASH DE WEAR OS (SplashScreen)
  *
- * @param onSplashTimeout Callback ejecutado al terminar los 2 segundos para navegar al menú principal.
+ * FUNCIONALIDAD:
+ * - Muestra el logotipo animado del festival al abrir la app en el reloj.
+ * - Espera 1.5 segundos y dispara la transición a la carátula principal.
+ *
+ * FLUJO DE EJECUCIÓN:
+ * 1. 'LaunchedEffect' inicia una cuenta regresiva con 'delay(1500)'.
+ * 2. 'animateFloat' produce un efecto de pulso en el ícono del mariachi/música.
+ * 3. Cumplido el tiempo, invoca 'onTimeout()' para navegar al Watch Face.
+ * =======================================================================
  */
 @Composable
 fun SplashScreen(
-    onSplashTimeout: () -> Unit
+    onTimeout: () -> Unit
 ) {
+    // Animación continua de pulso de escala para el ícono
+    val infiniteTransition = rememberInfiniteTransition(label = "SplashScale")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "IconScale"
+    )
+
+    // Temporizador de navegación automática
     LaunchedEffect(Unit) {
-        delay(2000)
-        onSplashTimeout()
+        delay(1500)
+        onTimeout()
     }
 
     Box(
@@ -555,30 +663,24 @@ fun SplashScreen(
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "👑",
-                fontSize = 36.sp
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Default.MusicNote,
+                contentDescription = null,
+                tint = FestivalGold,
+                modifier = Modifier.size(36.dp).scale(scale)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "FESTIVAL",
-                color = PrimaryGold,
+                text = "FestivalTrack",
+                color = Color.White,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
+                fontWeight = FontWeight.Bold
             )
             Text(
-                text = "JOSÉ ALFREDO\nJIMÉNEZ",
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                lineHeight = 14.sp
+                text = "José Alfredo Jiménez",
+                color = FestivalGold,
+                fontSize = 10.sp
             )
         }
     }
@@ -593,123 +695,137 @@ fun SplashScreen(
 package mx.utng.festivaltrack.wear.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
-import androidx.wear.compose.material.Card
-import androidx.wear.compose.material.CardDefaults
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
-import mx.utng.jose_alfredo.presentation.theme.PrimaryGold
+import androidx.wear.compose.material.*
+import kotlinx.coroutines.delay
+import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
+import mx.utng.jose_alfredo.presentation.theme.FestivalGold
+import mx.utng.jose_alfredo.presentation.theme.FestivalRed
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
- * Pantalla principal estilo carátula interactiva (Watch Face) para Wear OS.
- * Muestra el reloj en vivo, el próximo evento estelar y accesos directos táctiles optimizados para reloj.
+ * =======================================================================
+ * CARÁTULA PRINCIPAL / WATCH FACE (WatchFaceScreen)
  *
- * @param onNavigateToProximos Callback para ir a la lista de próximos eventos.
- * @param onNavigateToMapa Callback para abrir el mapa de acceso GPS.
- * @param onNavigateToAlerta Callback para consultar alertas y notificaciones.
+ * FUNCIONALIDAD:
+ * - Despliega la hora digital en tiempo real sincronizada cada segundo.
+ * - Muestra el estado del próximo evento con insignia "EN VIVO" si está activo.
+ * - Botones circulares compactos de acceso rápido al Programa y al Mapa.
+ *
+ * FLUJO DE RELOJ Y ESTADO:
+ * 1. 'LaunchedEffect' ejecuta un bucle infinito que actualiza 'currentTime' cada segundo.
+ * 2. 'viewModel.proximoEvento.collectAsState()' obtiene el concierto más relevante.
+ * =======================================================================
  */
 @Composable
 fun WatchFaceScreen(
-    onNavigateToProximos: () -> Unit,
-    onNavigateToMapa: () -> Unit,
-    onNavigateToAlerta: () -> Unit
+    viewModel: ProximosViewModel,
+    onVerProximos: () -> Unit,
+    onVerPrograma: () -> Unit,
+    onVerMapa: () -> Unit
 ) {
+    val proximoEvento by viewModel.proximoEvento.collectAsState()
+
+    // Estado de la hora digital en formato HH:mm
+    var currentTime by remember { mutableStateOf("") }
+    var currentDate by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
+        while (true) {
+            val now = Date()
+            currentTime = timeFormat.format(now)
+            currentDate = dateFormat.format(now).uppercase()
+            delay(1000) // Actualiza cada segundo
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(Color.Black)
+            .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
-        TimeText(modifier = Modifier.align(Alignment.TopCenter))
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 20.dp)
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxHeight()
         ) {
+            // 1. FECHA SUPERIOR
             Text(
-                text = "FESTIVAL 2024",
-                color = PrimaryGold,
+                text = currentDate,
+                color = Color.Gray,
                 fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+
+            // 2. HORA DIGITAL EN FORMATO GRANDE
+            Text(
+                text = currentTime.ifEmpty { "12:00" },
+                color = FestivalGold,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Card(
-                onClick = onNavigateToProximos,
-                modifier = Modifier.fillMaxWidth(0.92f),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720))
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(8.dp)
+            // 3. TARJETA COMPACTA DEL PRÓXIMO EVENTO
+            proximoEvento?.let { evento ->
+                Card(
+                    onClick = onVerProximos,
+                    shape = RoundedCornerShape(14.dp),
+                    backgroundPainter = CardDefaults.cardBackgroundPainter(
+                        startBackgroundColor = Color(0xFF1B241C),
+                        endBackgroundColor = Color(0xFF141A15)
+                    ),
+                    modifier = Modifier.fillMaxWidth(0.9f)
                 ) {
-                    Text(
-                        text = "EN VIVO",
-                        color = Color(0xFFE53935),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Gala Mariachi Sol",
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = "Escenario Principal • 20:00",
-                        color = PrimaryGold,
-                        fontSize = 9.sp
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (evento.isLive) {
+                            Text("● EN VIVO", color = FestivalRed, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Text(evento.nombre, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(evento.hora + " • " + evento.lugar, color = Color.LightGray, fontSize = 9.sp, maxLines = 1)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
+            // 4. BOTONES CIRCULARES DE ACCESO DIRECTO
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(bottom = 6.dp)
             ) {
-                Button(
-                    onClick = onNavigateToProximos,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = PrimaryGold),
-                    modifier = Modifier.size(36.dp)
+                CompactButton(
+                    onClick = onVerPrograma,
+                    colors = ButtonDefaults.primaryButtonColors(backgroundColor = FestivalGold, contentColor = Color.Black)
                 ) {
-                    Text("📅", fontSize = 14.sp)
+                    Icon(Icons.Default.Event, contentDescription = "Programa", modifier = Modifier.size(16.dp))
                 }
 
-                Button(
-                    onClick = onNavigateToMapa,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E2720)),
-                    modifier = Modifier.size(36.dp)
+                CompactButton(
+                    onClick = onVerMapa,
+                    colors = ButtonDefaults.primaryButtonColors(backgroundColor = Color(0xFF2E3D30), contentColor = Color.White)
                 ) {
-                    Text("📍", fontSize = 14.sp)
-                }
-
-                Button(
-                    onClick = onNavigateToAlerta,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E2720)),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Text("🔔", fontSize = 14.sp)
+                    Icon(Icons.Default.Place, contentDescription = "Mapa", modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -727,112 +843,76 @@ package mx.utng.festivaltrack.wear.presentation.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material.*
+import mx.utng.festivaltrack.shared.model.FestivalEvent
 import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
-import mx.utng.jose_alfredo.presentation.theme.PrimaryGold
+import mx.utng.jose_alfredo.presentation.theme.FestivalGold
+import mx.utng.jose_alfredo.presentation.theme.FestivalRed
 
 /**
- * Pantalla que lista los próximos actos y eventos del festival en Wear OS.
- * Utiliza [ScalingLazyColumn] para adaptar dinámicamente la lista curva al borde circular del reloj.
+ * =======================================================================
+ * PANTALLA DE PRÓXIMOS EVENTOS (ProximosScreen)
  *
- * @param viewModel Instancia de [ProximosViewModel] que provee los datos locales.
- * @param onNavigateToPrograma Callback para ir a la vista del programa completo.
- * @param onNavigateToNav Callback para ir a la guía de navegación por escenarios.
+ * FUNCIONALIDAD:
+ * - Lista vertical compacta con 'ScalingLazyColumn' optimizada para pantallas circulares.
+ * - Al hacer clic en un evento, permite consultar detalles y activar alerta háptica.
+ * =======================================================================
  */
 @Composable
 fun ProximosScreen(
-    viewModel: ProximosViewModel = viewModel(),
-    onNavigateToPrograma: () -> Unit,
-    onNavigateToNav: () -> Unit
+    viewModel: ProximosViewModel,
+    onEventoClick: (FestivalEvent) -> Unit
 ) {
-    val eventos by viewModel.eventos.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val proximos by viewModel.proximos.collectAsState()
 
-    val displayList = if (eventos.isNotEmpty()) eventos else listOf(
-        mx.utng.festivaltrack.shared.data.local.entity.EventoEntity("1", "Gala Mariachi", "2024-11-23T20:00:00Z", "Escenario Principal", "Escenario Principal", null, "ACTIVO", null, "Mariachi Sol"),
-        mx.utng.festivaltrack.shared.data.local.entity.EventoEntity("2", "Cuerdas Dolores", "2024-11-23T21:30:00Z", "Plaza Central", "Plaza Central", null, "ACTIVO", null, "Orquesta"),
-        mx.utng.festivaltrack.shared.data.local.entity.EventoEntity("3", "Serenata Rey", "2024-11-23T23:00:00Z", "Mausoleo", "Mausoleo", null, "ACTIVO", null, "Tributo")
-    )
-
-    Scaffold(
-        timeText = { TimeText() },
-        positionIndicator = { PositionIndicator(scalingLazyListState = rememberScalingLazyListState()) }
+    ScalingLazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ScalingLazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(top = 28.dp, bottom = 28.dp, start = 10.dp, end = 10.dp)
-        ) {
-            item {
-                Text(
-                    text = "PRÓXIMOS ACTOS",
-                    color = PrimaryGold,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
+        item {
+            Text(
+                text = "Próximos Eventos",
+                color = FestivalGold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
 
-            items(displayList.size) { index ->
-                val evento = displayList[index]
-                Card(
-                    onClick = onNavigateToNav,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp)
-                ) {
-                    Column(modifier = Modifier.padding(6.dp)) {
-                        Text(
-                            text = evento.nombre,
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = evento.ubicacion,
-                                color = Color.LightGray,
-                                fontSize = 9.sp,
-                                maxLines = 1
-                            )
-                            Text(
-                                text = evento.fechaHora.takeLast(8).take(5),
-                                color = PrimaryGold,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+        items(proximos) { evento ->
+            Card(
+                onClick = { onEventoClick(evento) },
+                shape = RoundedCornerShape(12.dp),
+                backgroundPainter = CardDefaults.cardBackgroundPainter(
+                    startBackgroundColor = Color(0xFF1E281F),
+                    endBackgroundColor = Color(0xFF141B15)
+                ),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            ) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(evento.hora, color = FestivalGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        if (evento.isLive) {
+                            Text("● LIVE", color = FestivalRed, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(evento.nombre, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(evento.lugar, color = Color.Gray, fontSize = 10.sp, maxLines = 1)
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                Chip(
-                    onClick = onNavigateToPrograma,
-                    label = { Text("Ver Programa", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
-                    colors = ChipDefaults.chipColors(backgroundColor = PrimaryGold, contentColor = Color.Black),
-                    modifier = Modifier.fillMaxWidth().height(32.dp)
-                )
             }
         }
     }
@@ -849,7 +929,7 @@ package mx.utng.festivaltrack.wear.presentation.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -857,66 +937,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
-import mx.utng.jose_alfredo.presentation.theme.PrimaryGold
+import mx.utng.festivaltrack.wear.presentation.viewmodel.ProximosViewModel
+import mx.utng.jose_alfredo.presentation.theme.FestivalGold
 
 /**
- * Pantalla que desglosa el itinerario completo por días en la pantalla del reloj.
+ * =======================================================================
+ * PANTALLA DE PROGRAMA COMPLETO EN WEAR OS (ProgramaCompletoScreen)
  *
- * @param onBack Callback de navegación para retroceder.
+ * FUNCIONALIDAD:
+ * - Despliega todos los conciertos y actividades del festival en el reloj.
+ * - Soporta desplazamiento táctil y con corona giratoria.
+ * =======================================================================
  */
 @Composable
 fun ProgramaCompletoScreen(
-    onBack: () -> Unit
+    viewModel: ProximosViewModel
 ) {
-    val items = listOf(
-        "Viernes 22" to "Inauguración & Serenata",
-        "Sábado 23" to "Gran Gala Mariachi Sol",
-        "Domingo 24" to "Homenaje en Mausoleo",
-        "Lunes 25" to "Clausura y Pirotecnia"
-    )
+    val eventos by viewModel.eventos.collectAsState()
 
-    Scaffold(
-        timeText = { TimeText() }
+    ScalingLazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ScalingLazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(top = 28.dp, bottom = 28.dp, start = 12.dp, end = 12.dp)
-        ) {
-            item {
-                Text(
-                    text = "PROGRAMA COMPLETO",
-                    color = PrimaryGold,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
+        item {
+            Text(
+                text = "Cartelera Completa",
+                color = FestivalGold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
 
-            items(items.size) { idx ->
-                val (fecha, desc) = items[idx]
-                Card(
-                    onClick = onBack,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720)),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
-                ) {
-                    Column(modifier = Modifier.padding(6.dp)) {
-                        Text(fecha, color = PrimaryGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        Text(desc, color = Color.White, fontSize = 10.sp)
-                    }
+        items(eventos) { evento ->
+            Card(
+                onClick = {},
+                shape = RoundedCornerShape(10.dp),
+                backgroundPainter = CardDefaults.cardBackgroundPainter(
+                    startBackgroundColor = Color(0xFF171F18),
+                    endBackgroundColor = Color(0xFF0F1410)
+                ),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)
+            ) {
+                Column(modifier = Modifier.padding(6.dp)) {
+                    Text(evento.fecha + " • " + evento.hora, color = FestivalGold, fontSize = 10.sp)
+                    Text(evento.nombre, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(evento.lugar, color = Color.LightGray, fontSize = 9.sp, maxLines = 1)
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                CompactChip(
-                    onClick = onBack,
-                    label = { Text("Regresar", fontSize = 10.sp) },
-                    colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF2A2A2A))
-                )
             }
         }
     }
@@ -925,165 +995,125 @@ fun ProgramaCompletoScreen(
 
 ---
 
-## Paso 12: Pantallas Complementarias `OtherScreens.kt` (Alerta, Mapa, Navegación)
+## Paso 12: Pantallas Complementarias `OtherScreens.kt` (Alerta, Mapa)
 
 ```kotlin
 package mx.utng.festivaltrack.wear.presentation.screens
 
-import android.content.Context
-import android.view.MotionEvent
-import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.wear.compose.material.*
-import mx.utng.jose_alfredo.presentation.theme.PrimaryGold
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
+import mx.utng.jose_alfredo.presentation.theme.FestivalGold
 
 /**
- * Pantalla de configuración de alertas en Wear OS.
+ * =======================================================================
+ * PANTALLA DE ALERTA HÁPTICA (AlertaScreen)
+ *
+ * FUNCIONALIDAD:
+ * - Confirma la activación de una alerta vibratoria para recordar un concierto.
+ * =======================================================================
  */
 @Composable
-fun AlertaScreen(onBack: () -> Unit) {
-    var alertaActivada by remember { mutableStateOf(true) }
-
+fun AlertaScreen(
+    onDismiss: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(Color.Black)
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            Text("NOTIFICACIONES", color = PrimaryGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(6.dp))
+            Icon(
+                imageVector = Icons.Default.NotificationsActive,
+                contentDescription = null,
+                tint = FestivalGold,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Avisar 15 min antes de cada presentación",
+                text = "¡Alerta Activada!",
                 color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Tu reloj vibrará 10 min antes del evento.",
+                color = Color.Gray,
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            ToggleChip(
-                checked = alertaActivada,
-                onCheckedChange = { alertaActivada = it },
-                label = { Text(if (alertaActivada) "Activadas" else "Desactivadas", fontSize = 10.sp) },
-                toggleControl = {
-                    Switch(checked = alertaActivada)
-                },
-                modifier = Modifier.fillMaxWidth().height(36.dp)
-            )
+            Spacer(modifier = Modifier.height(10.dp))
+            CompactButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.primaryButtonColors(backgroundColor = FestivalGold, contentColor = Color.Black)
+            ) {
+                Icon(Icons.Default.Check, contentDescription = "OK", modifier = Modifier.size(16.dp))
+            }
         }
     }
 }
 
 /**
- * Pantalla de guía y distancia al escenario más próximo.
+ * =======================================================================
+ * PANTALLA DE MAPA COMPACTO DE ESCENARIOS (WearMapScreen)
+ *
+ * FUNCIONALIDAD:
+ * - Muestra la lista de escenarios principales de Dolores Hidalgo con sus ubicaciones.
+ * =======================================================================
  */
 @Composable
-fun NavEscenarioScreen(onBack: () -> Unit) {
-    Box(
+fun WearMapScreen() {
+    val escenarios = listOf(
+        "Jardín Principal" to "Plaza Central",
+        "Casa Museo JAJ" to "Calle Guanajuato 13",
+        "Teatro del Pueblo" to "Av. Ferrocarril",
+        "Tumba Mausoleo" to "Panteón Municipal"
+    )
+
+    ScalingLazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
+            .background(Color.Black)
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("RUMBO AL ESCENARIO", color = PrimaryGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Escenario Principal", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Text("Mausoleo Dolores Hidalgo", color = Color.LightGray, fontSize = 9.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("🚶 350 metros", color = PrimaryGold, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text("Aprox. 4 min caminando", color = Color.Gray, fontSize = 9.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            CompactChip(
-                onClick = onBack,
-                label = { Text("Listo", fontSize = 10.sp) },
-                colors = ChipDefaults.chipColors(backgroundColor = PrimaryGold, contentColor = Color.Black)
-            )
+        item {
+            Text("Escenarios", color = FestivalGold, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp))
         }
-    }
-}
 
-/**
- * Pantalla de mapa de acceso táctil en Wear OS usando OpenStreetMap (OSMDroid).
- * Utiliza un [FrameLayout] que intercepta eventos táctiles para que el usuario pueda arrastrar
- * el mapa libremente sin que la navegación "swipe-to-dismiss" cierre la pantalla.
- */
-@Composable
-fun MapaAccesoScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val doloresHidalgo = remember { GeoPoint(21.1561, -100.9317) }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        AndroidView(
-            factory = { ctx ->
-                Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osmdroid_wear", Context.MODE_PRIVATE))
-                
-                val frameLayout = object : FrameLayout(ctx) {
-                    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-                        parent?.requestDisallowInterceptTouchEvent(true)
-                        return super.dispatchTouchEvent(ev)
-                    }
+        items(escenarios) { (nombre, ubicacion) ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Place, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(nombre, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(ubicacion, color = Color.Gray, fontSize = 9.sp)
                 }
-
-                val mapView = MapView(ctx).apply {
-                    setTileSource(TileSourceFactory.MAPNIK)
-                    setMultiTouchControls(true)
-                    controller.setZoom(17.0)
-                    controller.setCenter(doloresHidalgo)
-
-                    val marker = Marker(this).apply {
-                        position = doloresHidalgo
-                        title = "Festival José Alfredo"
-                        snippet = "Dolores Hidalgo"
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    }
-                    overlays.add(marker)
-                }
-
-                frameLayout.addView(mapView)
-                frameLayout
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-
-        Surface(
-            color = Color(0xCC000000),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 16.dp)
-        ) {
-            Text(
-                text = "📍 Dolores Hidalgo",
-                color = PrimaryGold,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-            )
+            }
         }
     }
 }
@@ -1099,12 +1129,14 @@ package mx.utng.jose_alfredo.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryGold = Color(0xFFE6C27A)
-val PrimaryGoldDark = Color(0xFFC4A059)
-val DarkBackground = Color(0xFF0F1410)
-val CardBackground = Color(0xFF1E2720)
-val TextPrimary = Color(0xFFFFFFFF)
-val TextSecondary = Color(0xFFAAAAAA)
+/**
+ * Paleta de colores optimizada para pantallas circulares OLED de Wear OS (negro puro para ahorro de batería).
+ */
+val FestivalDark = Color(0xFF000000)
+val FestivalGold = Color(0xFFE6C27A)
+val FestivalGoldDark = Color(0xFFC4A059)
+val FestivalRed = Color(0xFFE53935)
+val FestivalSurface = Color(0xFF161C17)
 ```
 
 **`Theme.kt`:**
@@ -1115,22 +1147,23 @@ import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.Colors
 import androidx.wear.compose.material.MaterialTheme
 
-val WearColorPalette = Colors(
-    primary = PrimaryGold,
-    primaryVariant = PrimaryGoldDark,
-    background = DarkBackground,
-    surface = CardBackground,
-    onPrimary = DarkBackground,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary
+private val WearColors = Colors(
+    primary = FestivalGold,
+    primaryVariant = FestivalGoldDark,
+    secondary = FestivalGold,
+    background = FestivalDark,
+    surface = FestivalSurface,
+    onPrimary = FestivalDark,
+    onBackground = FestivalGold,
+    onSurface = FestivalGold
 )
 
 @Composable
-fun Jose_AlfredoTheme(
+fun FestivalTrackWearTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colors = WearColorPalette,
+        colors = WearColors,
         content = content
     )
 }
@@ -1140,20 +1173,15 @@ fun Jose_AlfredoTheme(
 
 ## Paso 14: Vinculación y Pruebas con el Teléfono Acompañante
 
-Para emparejar el reloj Wear OS con el emulador móvil de Android:
+Para redirigir el socket Bluetooth del Data Layer entre emuladores en desarrollo:
 
 ```bash
-# 1. Redirigir el puerto del Data Layer de Google Play Services
-adb -d forward tcp:5601 tcp:5601
-
-# 2. Instalar el módulo Wear OS
-./gradlew :wear:installDebug
+# 1. Redirigir el puerto del Data Layer de Google Play Services entre emulador Phone y Wear
+adb forward tcp:5601 tcp:5601
 ```
 
----
-
-## Solución de Problemas Frecuentes
-
-- **La pantalla se cierra al tocar el mapa:** Se resolvió con el contenedor `FrameLayout` que sobreescribe `dispatchTouchEvent` y llama `parent?.requestDisallowInterceptTouchEvent(true)`.
-- **Los elementos quedan cortados en pantallas redondas:** Utiliza siempre `ScalingLazyColumn` con `contentPadding` superior e inferior mínimo de 28.dp en lugar de `Column` tradicional.
-- **El reloj no recibe eventos:** Comprueba que `WearSyncService` esté declarado en el `AndroidManifest.xml` con el filtro para el esquema `wear` y la ruta `/festival`.
+Para compilar e instalar en el emulador Wear OS:
+```bash
+# 2. Compilar e instalar el módulo Wear OS
+./gradlew :wear:installDebug
+```

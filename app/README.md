@@ -73,6 +73,13 @@ app/
 ## Paso 1: Configuración de `AndroidManifest.xml`
 
 ```xml
+<!-- 
+    =======================================================================
+    MÓDULO MÓVIL (app) - CONFIGURACIÓN XML
+    FUNCIONALIDAD: Declara permisos de red, cámara (RTSP streaming), audio, GPS y actividades.
+    FLUJO: El sistema Android inicializa la aplicación y otorga los permisos en tiempo de ejecución.
+    =======================================================================
+-->
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -108,6 +115,7 @@ app/
     </application>
 
 </manifest>
+
 ```
 
 ---
@@ -115,6 +123,21 @@ app/
 ## Paso 2: Configuración de `build.gradle.kts`
 
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -207,6 +230,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
 ```
 
 ---
@@ -215,6 +239,21 @@ dependencies {
 
 ### `FestivalTrackApplication.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app
 
 import android.app.Application
@@ -229,10 +268,26 @@ class FestivalTrackApplication : Application() {
         container = DefaultAppContainer(this)
     }
 }
+
 ```
 
 ### `AppContainer.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.di
 
 import android.content.Context
@@ -252,10 +307,26 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
         FestivalRepository(database.eventoDao())
     }
 }
+
 ```
 
 ### `TokenManager.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.data
 
 import android.content.Context
@@ -264,30 +335,37 @@ import android.content.SharedPreferences
 class TokenManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun saveToken(token: String) {
         prefs.edit().putString("auth_token", token).apply()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun getToken(): String? {
         return prefs.getString("auth_token", null)
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun saveRole(role: String) {
         prefs.edit().putString("user_role", role).apply()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun getRole(): String? {
         return prefs.getString("user_role", null)
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun getUserName(): String? {
         return prefs.getString("user_name", "Usuario")
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun clear() {
         prefs.edit().clear().apply()
     }
 }
+
 ```
 
 ---
@@ -296,6 +374,21 @@ class TokenManager(context: Context) {
 
 ### `Color.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
@@ -307,10 +400,26 @@ val PrimaryGoldDark = Color(0xFFC4A059)
 val TextPrimary = Color(0xFFFFFFFF)
 val TextSecondary = Color(0xFFAAAAAA)
 val ErrorRed = Color(0xFFCF6679)
+
 ```
 
 ### `Theme.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.theme
 
 import android.app.Activity
@@ -340,6 +449,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun FestivalTrackTheme(
     content: @Composable () -> Unit
 ) {
@@ -360,15 +470,32 @@ fun FestivalTrackTheme(
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun Jose_AlfredoTheme(
     content: @Composable () -> Unit
 ) {
     FestivalTrackTheme(content = content)
 }
+
 ```
 
 ### `QrCodeGenerator.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.utils
 
 import androidx.compose.foundation.Canvas
@@ -387,6 +514,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun DynamicQrCode(
     content: String,
     modifier: Modifier = Modifier,
@@ -407,6 +535,7 @@ fun DynamicQrCode(
 
             val hash = content.hashCode()
             
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
             fun isFinderPattern(r: Int, c: Int): Boolean {
                 if (r < 7 && c < 7) return true
                 if (r < 7 && c >= sizeCount - 7) return true
@@ -445,6 +574,7 @@ fun DynamicQrCode(
         }
     }
 }
+
 ```
 
 ---
@@ -453,11 +583,27 @@ fun DynamicQrCode(
 
 ### `AuthViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -478,14 +624,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val apiService = FestivalApiService.create()
     private val tokenManager = TokenManager(application)
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun login(correo: String, contrasena: String) {
         if (correo.isBlank() || contrasena.isBlank()) {
             _authState.value = AuthState.Error("Por favor llena todos los campos.")
             return
         }
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -499,11 +648,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun register(nombre: String, correo: String, contrasena: String) {
         if (nombre.isBlank() || correo.isBlank() || contrasena.isBlank()) {
             _authState.value = AuthState.Error("Por favor llena todos los campos.")
             return
         }
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -517,14 +668,31 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun resetState() {
         _authState.value = AuthState.Idle
     }
 }
+
 ```
 
 ### `EventosViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
@@ -543,7 +711,9 @@ class EventosViewModel(private val repository: FestivalRepository) : ViewModel()
         sync()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun sync() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 repository.syncEventos()
@@ -563,15 +733,32 @@ class EventosViewModelFactory(private val repository: FestivalRepository) : View
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
 ```
 
 ### `CheckoutViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -591,9 +778,11 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     private val api = FestivalApiService.create()
     private val tokenManager = TokenManager(application)
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _checkoutState = MutableStateFlow<CheckoutState>(CheckoutState.Idle)
     val checkoutState: StateFlow<CheckoutState> = _checkoutState.asStateFlow()
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun procesarPago(
         eventoId: String,
         categoria: String,
@@ -608,6 +797,7 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
             return
         }
 
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _checkoutState.value = CheckoutState.Processing
             try {
@@ -631,14 +821,31 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun resetState() {
         _checkoutState.value = CheckoutState.Idle
     }
 }
+
 ```
 
 ### `AdminManageViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
@@ -666,6 +873,7 @@ class AdminManageViewModel(
             initialValue = emptyList()
         )
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun saveEvent(
         token: String?,
         id: String?,
@@ -674,6 +882,7 @@ class AdminManageViewModel(
         location: String,
         price: String
     ) {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 val authHeader = if (!token.isNullOrBlank()) "Bearer $token" else null
@@ -697,7 +906,9 @@ class AdminManageViewModel(
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun deleteEvent(token: String?, id: String) {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 val authHeader = if (!token.isNullOrBlank()) "Bearer $token" else null
@@ -719,15 +930,32 @@ class AdminManageViewModelFactory(private val repository: FestivalRepository) : 
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
 ```
 
 ### `AdminUsersViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -748,9 +976,11 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
     private val api = FestivalApiService.create()
     private val tokenManager = TokenManager(application)
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _uiState = MutableStateFlow<AdminUsersState>(AdminUsersState.Loading)
     val uiState: StateFlow<AdminUsersState> = _uiState.asStateFlow()
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _actionMessage = MutableStateFlow<String?>(null)
     val actionMessage: StateFlow<String?> = _actionMessage.asStateFlow()
 
@@ -758,7 +988,9 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
         loadUsers()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun loadUsers() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _uiState.value = AdminUsersState.Loading
             try {
@@ -772,8 +1004,10 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun toggleRole(userId: String, currentRole: String) {
         val newRole = if (currentRole == "ADMINISTRADOR") "CLIENTE" else "ADMINISTRADOR"
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 val token = tokenManager.getToken()
@@ -787,7 +1021,9 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun registerAdmin(nombre: String, correo: String, contrasena: String) {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 api.registrar(RegistroRequestDto(nombre, correo, contrasena, "ADMINISTRADOR"))
@@ -799,18 +1035,36 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun clearActionMessage() {
         _actionMessage.value = null
     }
 }
+
 ```
 
 ### `ArtistViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -820,8 +1074,10 @@ import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
 class ArtistViewModel : ViewModel() {
     private val api = FestivalApiService.create()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _biografia = MutableStateFlow<ArtistaDto?>(null)
     val biografia: StateFlow<ArtistaDto?> = _biografia.asStateFlow()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -829,7 +1085,9 @@ class ArtistViewModel : ViewModel() {
         loadData()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun loadData() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -847,14 +1105,31 @@ class ArtistViewModel : ViewModel() {
         }
     }
 }
+
 ```
 
 ### `AudioViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -864,8 +1139,10 @@ import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
 class AudioViewModel : ViewModel() {
     private val api = FestivalApiService.create()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _canciones = MutableStateFlow<List<CancionDto>>(emptyList())
     val canciones: StateFlow<List<CancionDto>> = _canciones.asStateFlow()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -873,7 +1150,9 @@ class AudioViewModel : ViewModel() {
         refresh()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun refresh() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -891,14 +1170,31 @@ class AudioViewModel : ViewModel() {
         }
     }
 }
+
 ```
 
 ### `GalleryViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -908,12 +1204,15 @@ import mx.utng.festivaltrack.shared.data.remote.GaleriaDto
 class GalleryViewModel : ViewModel() {
     private val api = FestivalApiService.create()
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _galerias = MutableStateFlow<List<GaleriaDto>>(emptyList())
     val galerias: StateFlow<List<GaleriaDto>> = _galerias
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -921,7 +1220,9 @@ class GalleryViewModel : ViewModel() {
         refresh()
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun refresh() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 _isLoading.value = true
@@ -934,16 +1235,33 @@ class GalleryViewModel : ViewModel() {
         }
     }
 }
+
 ```
 
 ### `LiveViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -955,16 +1273,20 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
     private val api = FestivalApiService.create()
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _messages = MutableStateFlow<List<ChatMessageDto>>(emptyList())
     val messages: StateFlow<List<ChatMessageDto>> = _messages
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _streamUrl = MutableStateFlow<String?>(null)
     val streamUrl: StateFlow<String?> = _streamUrl
 
     private var isPolling = false
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun startLiveStream(eventoId: String) {
         isPolling = true
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 val eventos = api.getEventos()
@@ -976,6 +1298,7 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {}
         }
 
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             while (isPolling) {
                 try {
@@ -987,14 +1310,17 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun stopLiveStream() {
         isPolling = false
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun sendMessage(eventoId: String, text: String) {
         if (text.isBlank()) return
         val nombre = tokenManager.getUserName() ?: "Usuario"
 
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             try {
                 api.sendChatMessage(
@@ -1022,15 +1348,32 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
         isPolling = false
     }
 }
+
 ```
 
 ### `ProfileViewModel.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -1049,10 +1392,13 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val api = FestivalApiService.create()
     private val tokenManager = TokenManager(application)
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     private val _profileState = MutableStateFlow<ProfileState>(ProfileState.Loading)
     val profileState: StateFlow<ProfileState> = _profileState.asStateFlow()
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun loadProfile() {
+        // [FLUJO ASÍNCRONO]: Lanza corrutina atada al ciclo de vida del ViewModel
         viewModelScope.launch {
             _profileState.value = ProfileState.Loading
             try {
@@ -1066,6 +1412,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 }
+
 ```
 
 ---
@@ -1074,6 +1421,21 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
 ### 1. `WelcomeScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -1095,6 +1457,7 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun WelcomeScreen(
     onNavigateToLogin: () -> Unit = {}
 ) {
@@ -1163,10 +1526,26 @@ fun WelcomeScreen(
         }
     }
 }
+
 ```
 
 ### 2. `LoginScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -1193,21 +1572,26 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun LoginScreen(
     onNavigateToRegister: () -> Unit = {},
     onNavigateToDashboard: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var email by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var password by remember { mutableStateOf("") }
     
     val authState by viewModel.authState.collectAsState()
     
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(Unit) {
         viewModel.resetState()
     }
     
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             val role = (authState as AuthState.Success).role
@@ -1372,10 +1756,26 @@ fun LoginScreen(
         }
     }
 }
+
 ```
 
 ### 3. `RegisterScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -1402,22 +1802,28 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToDashboard: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var name by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var email by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var password by remember { mutableStateOf("") }
 
     val authState by viewModel.authState.collectAsState()
     
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(Unit) {
         viewModel.resetState()
     }
     
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             val role = (authState as AuthState.Success).role
@@ -1578,10 +1984,26 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
 ```
 
 ### 4. `MainScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.layout.Box
@@ -1618,6 +2040,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun MainScreen(
     eventosViewModel: EventosViewModel? = null,
     onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> },
@@ -1714,10 +2137,26 @@ fun MainScreen(
         }
     }
 }
+
 ```
 
 ### 5. `DashboardScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.Image
@@ -1744,14 +2183,17 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun DashboardScreen(
     eventosViewModel: EventosViewModel? = null,
     onNavigateToTickets: () -> Unit = {},
     onNavigateToLive: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
     
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     val eventos by eventosViewModel?.eventosLocales?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
 
     Column(
@@ -2002,10 +2444,26 @@ fun DashboardScreen(
         )
     }
 }
+
 ```
 
 ### 6. `BiographyScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.Image
@@ -2035,6 +2493,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
     val scrollState = rememberScrollState()
     val biografia by viewModel.biografia.collectAsState()
@@ -2190,6 +2649,7 @@ fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun TimelineItem(year: String, title: String, description: String) {
     Row(
         modifier = Modifier
@@ -2220,6 +2680,7 @@ fun TimelineItem(year: String, title: String, description: String) {
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun DiscographyCard(title: String, subtitle: String, drawableId: Int, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Box(
@@ -2240,10 +2701,26 @@ fun DiscographyCard(title: String, subtitle: String, drawableId: Int, modifier: 
         Text(subtitle, color = Color.Gray, fontSize = 10.sp)
     }
 }
+
 ```
 
 ### 7. `AudioScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.media.MediaPlayer
@@ -2276,29 +2753,37 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AudioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AudioScreen(viewModel: AudioViewModel = viewModel()) {
     val context = LocalContext.current
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var isPlaying by remember { mutableStateOf(false) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var sliderPosition by remember { mutableStateOf(0.35f) }
     val scrollState = rememberScrollState()
 
     val canciones by viewModel.canciones.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var currentTrack by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.CancionDto?>(null) }
     
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(Unit) {
         viewModel.refresh()
     }
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(canciones) {
         if (canciones.isNotEmpty() && currentTrack == null) {
             currentTrack = canciones.first()
         }
     }
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
+    // [CICLO DE VIDA]: Inicializa y libera recursos (cámara/reproductores) al salir
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
@@ -2487,6 +2972,7 @@ fun AudioScreen(viewModel: AudioViewModel = viewModel()) {
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun EpisodeItem(number: String, title: String, duration: String, isPlaying: Boolean, onClick: () -> Unit) {
     Card(
         modifier = Modifier
@@ -2520,10 +3006,26 @@ fun EpisodeItem(number: String, title: String, duration: String, isPlaying: Bool
         }
     }
 }
+
 ```
 
 ### 8. `GalleryScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -2555,10 +3057,12 @@ import mx.utng.festivaltrack.app.ui.viewmodels.GalleryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
     val galerias by viewModel.galerias.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.refresh()
     }
@@ -2631,10 +3135,26 @@ fun GalleryScreen(viewModel: GalleryViewModel = viewModel()) {
         }
     }
 }
+
 ```
 
 ### 9. `TicketsScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -2664,12 +3184,16 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun TicketsScreen(
     eventosViewModel: EventosViewModel? = null,
     onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedDate by remember { mutableStateOf("21") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var vipTickets by remember { mutableStateOf(1) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var generalTickets by remember { mutableStateOf(0) }
 
     val vipPrice = 4500
@@ -2879,10 +3403,26 @@ fun TicketsScreen(
         }
     }
 }
+
 ```
 
 ### 10. `CheckoutScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -2911,6 +3451,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun CheckoutScreen(
     eventoId: String = "",
     totalPrice: Int = 4500,
@@ -2919,13 +3460,18 @@ fun CheckoutScreen(
     onPaymentSuccess: () -> Unit = {},
     viewModel: CheckoutViewModel = viewModel()
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var cardNumber by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var expiryDate by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var cvv by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var cardHolder by remember { mutableStateOf("") }
 
     val checkoutState by viewModel.checkoutState.collectAsState()
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(checkoutState) {
         if (checkoutState is CheckoutState.Success) {
             viewModel.resetState()
@@ -3127,10 +3673,26 @@ fun CheckoutScreen(
         }
     }
 }
+
 ```
 
 ### 11. `TicketSuccessScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -3151,6 +3713,7 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.utils.DynamicQrCode
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun TicketSuccessScreen(
     onNavigateHome: () -> Unit = {}
 ) {
@@ -3221,10 +3784,26 @@ fun TicketSuccessScreen(
         }
     }
 }
+
 ```
 
 ### 12. `ProfileScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -3251,6 +3830,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onLogout: () -> Unit = {},
@@ -3258,6 +3838,7 @@ fun ProfileScreen(
 ) {
     val profileState by viewModel.profileState.collectAsState()
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
@@ -3311,6 +3892,7 @@ fun ProfileScreen(
                     if (boletos.isEmpty()) {
                         Text("No has comprado ningún boleto aún.", color = Color.Gray)
                     } else {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
                         var selectedBoleto by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.BoletoDto?>(null) }
                         
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -3379,10 +3961,26 @@ fun ProfileScreen(
         }
     }
 }
+
 ```
 
 ### 13. `MapScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.content.Context
@@ -3414,11 +4012,14 @@ import org.osmdroid.views.overlay.Polyline
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun MapScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedDestinationIndex by remember { mutableStateOf(0) }
 
     val userStartPoint = remember { GeoPoint(21.1530, -100.9340) }
@@ -3431,6 +4032,7 @@ fun MapScreen(
         )
     }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
     fun updateMapRoute(mapView: MapView, selectedIdx: Int) {
         mapView.overlays.clear()
 
@@ -3553,10 +4155,26 @@ fun MapScreen(
         }
     }
 }
+
 ```
 
 ### 14. `UserLiveStreamScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.net.Uri
@@ -3590,6 +4208,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.LiveViewModel
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun UserLiveStreamScreen(
     eventoId: String,
     onNavigateBack: () -> Unit,
@@ -3597,15 +4216,19 @@ fun UserLiveStreamScreen(
 ) {
     val messages by viewModel.messages.collectAsState()
     val streamUrl by viewModel.streamUrl.collectAsState()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var inputText by remember { mutableStateOf("") }
     
     val context = LocalContext.current
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var exoPlayer by remember { mutableStateOf<ExoPlayer?>(null) }
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(eventoId) {
         viewModel.startLiveStream(eventoId)
     }
 
+    // [CICLO DE VIDA]: Inicializa y libera recursos (cámara/reproductores) al salir
     DisposableEffect(streamUrl) {
         val targetUrl = streamUrl ?: "rtsp://10.0.2.2:1935"
         try {
@@ -3737,10 +4360,26 @@ fun UserLiveStreamScreen(
         }
     }
 }
+
 ```
 
 ### 15. `AdminMainScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -3780,6 +4419,7 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminMainScreen(
     adminManageViewModel: mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel,
     onNavigateToCreateEvent: () -> Unit = {},
@@ -3870,7 +4510,9 @@ fun AdminMainScreen(
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminProfileTab(onLogout: () -> Unit) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (showLogoutDialog) {
@@ -3984,10 +4626,26 @@ private fun AdminInfoCard(
         }
     }
 }
+
 ```
 
 ### 16. `AdminDashboardScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -4018,6 +4676,7 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminDashboardScreen(
     onNavigateToLivePanel: () -> Unit = {},
     onNavigateToUsers: () -> Unit = {}
@@ -4184,6 +4843,7 @@ fun AdminDashboardScreen(
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun MetricBox(icon: ImageVector, count: String, label: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
@@ -4209,6 +4869,7 @@ fun MetricBox(icon: ImageVector, count: String, label: String, modifier: Modifie
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun ManagementCard(title: String, desc: String, btn: String, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
@@ -4237,6 +4898,7 @@ fun ManagementCard(title: String, desc: String, btn: String, onClick: () -> Unit
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun ActivityItem(icon: ImageVector, iconColor: Color, title: String, time: String, hideLine: Boolean = false) {
     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -4258,10 +4920,26 @@ fun ActivityItem(icon: ImageVector, iconColor: Color, title: String, time: Strin
         }
     }
 }
+
 ```
 
 ### 17. `AdminUploadScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.net.Uri
@@ -4297,14 +4975,21 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminUploadScreen() {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var title by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var artist by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedAudioUri by remember { mutableStateOf<Uri?>(null) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var uploadProgress by remember { mutableStateOf(0f) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var isUploading by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -4575,10 +5260,26 @@ fun AdminUploadScreen() {
         }
     }
 }
+
 ```
 
 ### 18. `AdminManageScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -4614,13 +5315,16 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminManageScreen(
     viewModel: AdminManageViewModel,
     onNavigateToCreateEvent: () -> Unit = {},
     onEditEvent: (mx.utng.festivaltrack.shared.data.local.entity.EventoEntity) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var searchQuery by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var selectedFilter by remember { mutableStateOf("Eventos") }
     
     val eventos by viewModel.eventos.collectAsState()
@@ -4704,9 +5408,12 @@ fun AdminManageScreen(
             val context = androidx.compose.ui.platform.LocalContext.current
             val coroutineScope = rememberCoroutineScope()
             val api = remember { mx.utng.festivaltrack.shared.data.remote.FestivalApiService.create() }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
             var cancionesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.CancionDto>>(emptyList()) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
             var imagenesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.ImagenDto>>(emptyList()) }
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
             fun reloadData() {
                 coroutineScope.launch {
                     try {
@@ -4717,6 +5424,7 @@ fun AdminManageScreen(
                 }
             }
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
             LaunchedEffect(Unit) {
                 reloadData()
             }
@@ -4852,6 +5560,7 @@ fun AdminManageScreen(
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun FilterChipItem(label: String, isSelected: Boolean, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
@@ -4872,6 +5581,7 @@ fun FilterChipItem(label: String, isSelected: Boolean, onClick: () -> Unit = {})
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun ManageItemCard(
     status: String,
     isDraft: Boolean,
@@ -4963,10 +5673,26 @@ fun ManageItemCard(
         }
     }
 }
+
 ```
 
 ### 19. `AdminCreateEventScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -4992,6 +5718,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminCreateEventScreen(
     eventId: String? = null,
     initialTitle: String = "",
@@ -5001,9 +5728,13 @@ fun AdminCreateEventScreen(
     viewModel: AdminManageViewModel? = null,
     onNavigateBack: () -> Unit = {}
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var title by remember { mutableStateOf(initialTitle) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var date by remember { mutableStateOf(initialDate) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var location by remember { mutableStateOf(initialLocation) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var price by remember { mutableStateOf(initialPrice) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -5154,10 +5885,26 @@ fun AdminCreateEventScreen(
         }
     }
 }
+
 ```
 
 ### 20. `AdminScannerScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.background
@@ -5184,10 +5931,12 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminScannerScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var scanResultMode by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
@@ -5306,10 +6055,26 @@ fun AdminScannerScreen(
         }
     }
 }
+
 ```
 
 ### 21. `AdminUsersScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.app.Application
@@ -5345,6 +6110,7 @@ import mx.utng.festivaltrack.shared.data.remote.UsuarioDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminUsersScreen(
     onNavigateBack: () -> Unit,
 ) {
@@ -5356,8 +6122,10 @@ fun AdminUsersScreen(
     val uiState by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var showCreateDialog by remember { mutableStateOf(false) }
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(actionMessage) {
         if (actionMessage != null) {
             kotlinx.coroutines.delay(3000)
@@ -5440,6 +6208,7 @@ fun AdminUsersScreen(
 }
 
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -5483,12 +6252,16 @@ fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun CreateAdminDialog(
     onDismiss: () -> Unit,
     onCreate: (String, String, String) -> Unit
 ) {
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var nombre by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var correo by remember { mutableStateOf("") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var contrasena by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -5550,10 +6323,26 @@ fun CreateAdminDialog(
         }
     )
 }
+
 ```
 
 ### 22. `AdminLiveStreamScreen.kt`
 ```kotlin
+/**
+ * =======================================================================
+ * MÓDULO MÓVIL (app) — FESTIVAL JOSÉ ALFREDO JIMÉNEZ
+ * 
+ * FUNCIONALIDAD:
+ * - Implementa componentes de interfaz gráfica (Jetpack Compose), ViewModels,
+ *   servicios de streaming RTSP, persistencia local y lógica de negocio.
+ *
+ * FLUJO DE DATOS Y EJECUCIÓN:
+ * 1. Inicialización y suscripción a estados reactivos (StateFlow / MutableState).
+ * 2. Recepción de eventos del usuario (toques, compras, escaneo de QR, streaming).
+ * 3. Ejecución de corrutinas asíncronas hacia el repositorio o backend REST.
+ * 4. Recomposición automática de la interfaz ante cualquier cambio de estado.
+ * =======================================================================
+ */
 package mx.utng.festivaltrack.app.ui.screens
 
 import android.Manifest
@@ -5588,6 +6377,7 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun getLocalIpAddress(context: Context): String {
     return try {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
@@ -5610,6 +6400,7 @@ fun getLocalIpAddress(context: Context): String {
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
+    // [FUNCIONALIDAD Y FLUJO]: Ejecuta la acción y despacha cambios de estado
 fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -5622,11 +6413,16 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         )
     )
 
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var isStreaming by remember { mutableStateOf(false) }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
+    // [ESTADO]: Variable reactiva observable que notifica modificaciones a la UI
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
+    // [EFECTO SECUNDARIO]: Ejecuta lógica asíncrona al montar o actualizar dependencias
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
@@ -5635,6 +6431,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         streamUrl = "rtsp://$wifiIp:1935"
     }
 
+    // [CICLO DE VIDA]: Inicializa y libera recursos (cámara/reproductores) al salir
     DisposableEffect(Unit) {
         onDispose {
             try {
@@ -5783,6 +6580,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         }
     }
 }
+
 ```
 
 ---
@@ -5790,5 +6588,11 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
 ## Paso 7: Compilación y Ejecución
 
 ```bash
+# =======================================================================
+# COMANDOS DE CONSTRUCCIÓN E INSTALACIÓN
+# FUNCIONALIDAD: Compila e instala el APK móvil en el emulador o dispositivo físico.
+# FLUJO: Ejecuta la tarea Gradle :app:installDebug.
+# =======================================================================
 ./gradlew :app:installDebug
+
 ```
