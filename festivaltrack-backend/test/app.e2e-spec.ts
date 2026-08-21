@@ -20,6 +20,10 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
   let authToken: string;
   const correoTest = `test.e2e.${Date.now()}@festivaltrack.com`;
 
+  // Aumentamos el timeout a 30s porque las bases de datos gratuitas de Neon
+  // se "duermen" (Scale to Zero) y tardan unos segundos en despertar al primer request.
+  jest.setTimeout(30000);
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
