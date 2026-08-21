@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 interface Evento {
   id: string;
@@ -19,13 +20,9 @@ export default function Events() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/v1/eventos')
+    api.get('/eventos')
       .then(res => {
-        if (!res.ok) throw new Error('Error al obtener eventos');
-        return res.json();
-      })
-      .then(data => {
-        setEventos(data);
+        setEventos(res.data);
         setLoading(false);
       })
       .catch(err => {
