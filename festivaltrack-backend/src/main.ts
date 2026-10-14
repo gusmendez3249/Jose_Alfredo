@@ -5,14 +5,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS: permite localhost en desarrollo y dominios .railway.app en producción
+  // CORS: permite localhost en desarrollo y el/los frontends de FRONTEND_URL (separados por coma).
+  // Las apps Android no envían Origin, así que no se ven afectadas.
+  const allowedOrigins = (process.env.FRONTEND_URL ?? 'https://festivaltrack-web.up.railway.app')
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (!origin || origin.endsWith('.railway.app') || origin.startsWith('http://localhost')) {
+      if (!origin || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(null, false);
     },
     credentials: true,
   });

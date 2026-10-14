@@ -117,19 +117,17 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
   // ─── Grupo 3: Endpoints Protegidos con JWT ────────────────────────────────
 
   describe('GET /api/v1/auth/usuarios', () => {
-    it('debe retornar la lista de usuarios incluso sin token (endpoint público por ahora)', async () => {
+    it('debe rechazar la petición sin token (401)', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/auth/usuarios')
-        .expect(200);
+        .expect(401);
     });
 
-    it('debe retornar la lista de usuarios con JWT válido (200)', async () => {
-      const response = await request(app.getHttpServer())
+    it('debe rechazar a un usuario sin rol ADMINISTRADOR (403)', async () => {
+      await request(app.getHttpServer())
         .get('/api/v1/auth/usuarios')
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
-
-      expect(Array.isArray(response.body)).toBe(true);
+        .expect(403);
     });
   });
 

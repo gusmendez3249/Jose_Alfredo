@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Delete, Body, Param, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseInterceptors, UploadedFile, BadRequestException, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { GaleriaService } from './galeria.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('galeria')
 export class GaleriaController {
@@ -13,11 +16,13 @@ export class GaleriaController {
     return this.galeriaService.getGaleria();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post('imagen')
   addImagen(@Body() body: any) {
     return this.galeriaService.addImagen(body);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Delete('imagen/:id')
   removeImagen(@Param('id') id: string) {
     return this.galeriaService.removeImagen(id);
@@ -30,6 +35,7 @@ export class GaleriaController {
 @Controller('upload')
 export class UploadController {
   
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post()
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
