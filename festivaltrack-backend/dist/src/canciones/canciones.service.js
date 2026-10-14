@@ -22,6 +22,27 @@ let CancionesService = class CancionesService {
             orderBy: { createdAt: 'desc' },
         });
     }
+    async findByEvento(eventoId) {
+        const ligadas = await this.prisma.cancionTransmision.findMany({
+            where: { transmision: { eventoId }, cancion: { estado: 'PUBLICADA' } },
+            orderBy: { orden: 'asc' },
+            include: { cancion: true },
+        });
+        if (ligadas.length > 0)
+            return ligadas.map((l) => l.cancion);
+        const catalogo = await this.prisma.cancion.findMany({
+            where: { estado: 'PUBLICADA' },
+            orderBy: { createdAt: 'asc' },
+        });
+        const vistas = new Set();
+        return catalogo.filter((c) => {
+            const clave = `${c.titulo.trim().toLowerCase()}|${c.artista.trim().toLowerCase()}`;
+            if (vistas.has(clave))
+                return false;
+            vistas.add(clave);
+            return true;
+        });
+    }
     async create(dto) {
         let admin = await this.prisma.administrador.findFirst();
         if (!admin) {

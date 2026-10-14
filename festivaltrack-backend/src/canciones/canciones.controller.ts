@@ -10,6 +10,11 @@ export class CancionesController {
     return this.cancionesService.findAll();
   }
 
+  @Get('evento/:eventoId')
+  findByEvento(@Param('eventoId') eventoId: string) {
+    return this.cancionesService.findByEvento(eventoId);
+  }
+
   @Post()
   create(@Body() body: any) {
     return this.cancionesService.create(body);

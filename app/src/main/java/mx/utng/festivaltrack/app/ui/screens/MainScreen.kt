@@ -12,6 +12,9 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,10 +39,12 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun MainScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> },
+    onNavigateToCheckout: (Int, Int, String) -> Unit = { _, _, _ -> },
     onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
+    // Concierto elegido desde su detalle; la compra se hace para ese evento.
+    var ticketsEventId by remember { mutableStateOf<String?>(null) }
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Biography,
@@ -65,6 +70,7 @@ fun MainScreen(
                         label = { Text(item.label) },
                         selected = currentRoute == item.route,
                         onClick = {
+                            if (item == BottomNavItem.Tickets) ticketsEventId = null
                             navController.navigate(item.route) {
                                 popUpTo(navController.graph.startDestinationId)
                                 launchSingleTop = true
@@ -90,6 +96,9 @@ fun MainScreen(
                         },
                         onNavigateToLive = { eventoId ->
                             navController.navigate("live/$eventoId")
+                        },
+                        onNavigateToEvent = { eventoId ->
+                            navController.navigate("event/$eventoId")
                         }
                     )
                 }
@@ -107,7 +116,19 @@ fun MainScreen(
                 composable(BottomNavItem.Tickets.route) {
                     TicketsScreen(
                         eventosViewModel = eventosViewModel,
-                        onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
+                        onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count, ticketsEventId.orEmpty()) }
+                    )
+                }
+                composable("event/{eventoId}") { backStackEntry ->
+                    val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                    EventDetailScreen(
+                        eventoId = eventoId,
+                        eventosViewModel = eventosViewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onBuyTickets = { id ->
+                            ticketsEventId = id
+                            navController.navigate(BottomNavItem.Tickets.route) { launchSingleTop = true }
+                        }
                     )
                 }
                 composable(BottomNavItem.Gallery.route) {

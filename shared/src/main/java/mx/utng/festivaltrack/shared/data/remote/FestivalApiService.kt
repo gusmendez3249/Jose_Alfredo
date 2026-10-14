@@ -141,6 +141,13 @@ interface FestivalApiService {
     suspend fun getCanciones(): List<CancionDto>
 
     /**
+     * Obtiene las canciones (demos) de un concierto, en el orden del repertorio.
+     * @param eventoId ID del evento.
+     */
+    @retrofit2.http.GET("canciones/evento/{eventoId}")
+    suspend fun getCancionesEvento(@retrofit2.http.Path("eventoId") eventoId: String): List<CancionDto>
+
+    /**
      * Obtiene las galerías de fotos del festival.
      * @return Lista de [GaleriaDto] con sus colecciones de imágenes.
      */

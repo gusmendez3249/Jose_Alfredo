@@ -114,9 +114,9 @@ class MainActivity : ComponentActivity() {
                         composable("main") {
                             mx.utng.festivaltrack.app.ui.screens.MainScreen(
                                 eventosViewModel = eventosViewModel,
-                                onNavigateToCheckout = { total, count ->
-                                    // Pasa el total en pesos y cantidad de boletos como argumentos de ruta
-                                    navController.navigate("checkout/$total/$count")
+                                onNavigateToCheckout = { total, count, eventoId ->
+                                    // Pasa el total en pesos, la cantidad y (opcional) el evento elegido
+                                    navController.navigate("checkout/$total/$count?eventoId=${android.net.Uri.encode(eventoId)}")
                                 },
                                 onLogout = {
                                     // Borra el token JWT antes de navegar para invalidar la sesión
@@ -130,10 +130,19 @@ class MainActivity : ComponentActivity() {
 
                         // ─── CHECKOUT (COMPRA DE BOLETOS) ────────────────────────────────
                         // Recibe argumentos: total (precio total en MXN) y count (cantidad)
-                        composable("checkout/{total}/{count}") { backStackEntry ->
+                        composable(
+                            "checkout/{total}/{count}?eventoId={eventoId}",
+                            arguments = listOf(
+                                androidx.navigation.navArgument("eventoId") {
+                                    type = androidx.navigation.NavType.StringType
+                                    defaultValue = ""
+                                }
+                            )
+                        ) { backStackEntry ->
                             val total = backStackEntry.arguments?.getString("total")?.toIntOrNull() ?: 0
                             val count = backStackEntry.arguments?.getString("count")?.toIntOrNull() ?: 0
                             mx.utng.festivaltrack.app.ui.screens.CheckoutScreen(
+                                eventoId = backStackEntry.arguments?.getString("eventoId").orEmpty(),
                                 totalPrice = total,
                                 totalTickets = count,
                                 onNavigateBack = { navController.popBackStack() },

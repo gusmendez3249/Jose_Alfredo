@@ -23,6 +23,9 @@ let CancionesController = class CancionesController {
     findAll() {
         return this.cancionesService.findAll();
     }
+    findByEvento(eventoId) {
+        return this.cancionesService.findByEvento(eventoId);
+    }
     create(body) {
         return this.cancionesService.create(body);
     }
@@ -37,6 +40,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CancionesController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('evento/:eventoId'),
+    __param(0, (0, common_1.Param)('eventoId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CancionesController.prototype, "findByEvento", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
