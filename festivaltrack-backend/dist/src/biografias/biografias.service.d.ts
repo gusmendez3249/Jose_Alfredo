@@ -1,4 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { BiografiaAltaDto } from './factories/biografia.factory';
 export declare class BiografiasService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -40,4 +41,23 @@ export declare class BiografiasService {
         discografia: import("@prisma/client/runtime/library").JsonValue;
         artistaId: string;
     }) | null>;
+    altaConFactory(dto: BiografiaAltaDto): Promise<{
+        artista: {
+            id: string;
+            nombre: string;
+            imagenUrl: string | null;
+            activo: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        descripcion: string;
+        citaCelebre: string | null;
+        hitos: import("@prisma/client/runtime/library").JsonValue;
+        discografia: import("@prisma/client/runtime/library").JsonValue;
+        artistaId: string;
+    }>;
 }

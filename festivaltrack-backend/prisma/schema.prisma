@@ -9,19 +9,22 @@ datasource db {
 }
 
 model Usuario {
-  id             String               @id @default(cuid())
+  id             String                  @id @default(cuid())
   nombre         String
-  correo         String               @unique
+  correo         String                  @unique
   contrasena     String
-  rol            Rol                  @default(USUARIO)
-  fechaRegistro  DateTime             @default(now())
-  activo         Boolean              @default(true)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  rol            Rol                     @default(USUARIO)
+  fechaRegistro  DateTime                @default(now())
+  activo         Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
   boletos        Boleto[]
   notificaciones Notificacion[]
   transmisiones  UsuarioTransmision[]
   visitasSitio   VisitaSitio[]
+  publicaciones  Publicacion[]
+  comentarios    ComentarioPublicacion[]
+  likesForo      LikePublicacion[]
 
   @@map("usuarios")
 }
@@ -289,6 +292,56 @@ model VisitaSitio {
 
   @@index([usuarioId, fechaVisita])
   @@map("visitas_sitio")
+}
+
+/// Publicación del foro de la Galería Interactiva (experiencias, recomendaciones y fotos).
+model Publicacion {
+  id          String                  @id @default(cuid())
+  autorId     String
+  tipo        TipoPublicacion         @default(EXPERIENCIA)
+  titulo      String?
+  contenido   String
+  imagenUrl   String?
+  lugar       String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  autor       Usuario                 @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  comentarios ComentarioPublicacion[]
+  likes       LikePublicacion[]
+
+  @@index([createdAt])
+  @@index([tipo, createdAt])
+  @@map("publicaciones")
+}
+
+model ComentarioPublicacion {
+  id            String      @id @default(cuid())
+  publicacionId String
+  autorId       String
+  texto         String
+  createdAt     DateTime    @default(now())
+  publicacion   Publicacion @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
+  autor         Usuario     @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([publicacionId, createdAt])
+  @@map("comentarios_publicacion")
+}
+
+model LikePublicacion {
+  publicacionId String
+  usuarioId     String
+  createdAt     DateTime    @default(now())
+  publicacion   Publicacion @relation(fields: [publicacionId], references: [id], onDelete: Cascade)
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([publicacionId, usuarioId])
+  @@map("likes_publicacion")
+}
+
+enum TipoPublicacion {
+  EXPERIENCIA
+  RECOMENDACION
+  FOTO
 }
 
 enum Rol {

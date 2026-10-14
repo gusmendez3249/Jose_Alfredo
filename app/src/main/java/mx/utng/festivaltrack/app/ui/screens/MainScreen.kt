@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,7 +31,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
     object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
-    object Gallery : BottomNavItem("gallery", Icons.Default.Person, "Galería")
+    object Gallery : BottomNavItem("gallery", Icons.Default.PhotoLibrary, "Galería")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
 }
 
@@ -105,6 +106,12 @@ fun MainScreen(
                         },
                         onNavigateToLive = { eventoId ->
                             navController.navigate("live/$eventoId")
+                        },
+                        onNavigateToBiography = {
+                            navController.navigate(BottomNavItem.Biography.route)
+                        },
+                        onNavigateToGallery = {
+                            navController.navigate(BottomNavItem.Gallery.route)
                         }
                     )
                 }

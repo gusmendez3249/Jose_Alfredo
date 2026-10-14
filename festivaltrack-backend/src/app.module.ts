@@ -10,8 +10,9 @@ import { BiografiasModule } from './biografias/biografias.module';
 import { CancionesModule } from './canciones/canciones.module';
 import { StreamModule } from './stream/stream.module';
 import { ArModule } from './ar/ar.module';
+import { ForoModule } from './foro/foro.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, EventosModule, SyncModule, BoletosModule, GaleriaModule, ChatModule, BiografiasModule, CancionesModule, StreamModule, ArModule],
+  imports: [PrismaModule, AuthModule, EventosModule, SyncModule, BoletosModule, GaleriaModule, ChatModule, BiografiasModule, CancionesModule, StreamModule, ArModule, ForoModule],
 })
 export class AppModule {}

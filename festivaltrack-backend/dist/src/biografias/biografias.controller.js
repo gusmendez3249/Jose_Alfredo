@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BiografiasController = void 0;
 const common_1 = require("@nestjs/common");
 const biografias_service_1 = require("./biografias.service");
+const biografia_factory_1 = require("./factories/biografia.factory");
 let BiografiasController = class BiografiasController {
     biografiasService;
     constructor(biografiasService) {
@@ -22,6 +23,9 @@ let BiografiasController = class BiografiasController {
     }
     findAll() {
         return this.biografiasService.findAll();
+    }
+    altaBiografia(body) {
+        return this.biografiasService.altaConFactory(body);
     }
     findOne(id) {
         return this.biografiasService.findOne(id);
@@ -34,6 +38,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BiografiasController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)('alta'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [biografia_factory_1.BiografiaAltaDto]),
+    __metadata("design:returntype", void 0)
+], BiografiasController.prototype, "altaBiografia", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),

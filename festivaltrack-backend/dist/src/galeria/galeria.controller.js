@@ -14,9 +14,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadController = exports.GaleriaController = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
-const path_1 = require("path");
+const IMAGE_EXT = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+};
 const galeria_service_1 = require("./galeria.service");
 let GaleriaController = class GaleriaController {
     galeriaService;
@@ -68,13 +73,20 @@ let UploadController = class UploadController {
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        limits: { fileSize: 8 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+            if (!IMAGE_EXT[file.mimetype]) {
+                return cb(new common_1.BadRequestException('Solo se permiten imágenes JPG, PNG o WEBP'), false);
+            }
+            cb(null, true);
+        },
         storage: (0, multer_1.diskStorage)({
             destination: './uploads',
             filename: (req, file, cb) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                const ext = (0, path_1.extname)(file.originalname);
-                cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+                cb(null, `${file.fieldname}-${uniqueSuffix}${IMAGE_EXT[file.mimetype]}`);
             }
         })
     })),

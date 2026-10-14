@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BiografiasService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const biografia_factory_1 = require("./factories/biografia.factory");
 let BiografiasService = class BiografiasService {
     prisma;
     constructor(prisma) {
@@ -31,6 +32,49 @@ let BiografiasService = class BiografiasService {
                 artista: true,
             },
         });
+    }
+    async altaConFactory(dto) {
+        const generada = biografia_factory_1.BiografiaFactoryProducer.crear(dto);
+        let artista = await this.prisma.artista.findFirst({
+            where: { nombre: { contains: 'José Alfredo' } },
+        });
+        if (!artista) {
+            artista = await this.prisma.artista.create({
+                data: {
+                    nombre: dto.artistaNombre || 'José Alfredo Jiménez',
+                    imagenUrl: dto.imagenUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4',
+                    activo: true,
+                },
+            });
+        }
+        const biografiaExistente = await this.prisma.biografia.findUnique({
+            where: { artistaId: artista.id },
+        });
+        if (biografiaExistente) {
+            const hitosActuales = Array.isArray(biografiaExistente.hitos) ? biografiaExistente.hitos : [];
+            const nuevosHitos = [...hitosActuales, ...generada.hitos];
+            return this.prisma.biografia.update({
+                where: { id: biografiaExistente.id },
+                data: {
+                    descripcion: dto.descripcion || biografiaExistente.descripcion,
+                    citaCelebre: dto.citaCelebre || biografiaExistente.citaCelebre,
+                    hitos: nuevosHitos,
+                },
+                include: { artista: true },
+            });
+        }
+        else {
+            return this.prisma.biografia.create({
+                data: {
+                    artistaId: artista.id,
+                    descripcion: generada.descripcion,
+                    citaCelebre: generada.citaCelebre,
+                    hitos: generada.hitos,
+                    discografia: generada.discografia,
+                },
+                include: { artista: true },
+            });
+        }
     }
 };
 exports.BiografiasService = BiografiasService;

@@ -18,12 +18,13 @@ const chat_module_1 = require("./chat/chat.module");
 const biografias_module_1 = require("./biografias/biografias.module");
 const canciones_module_1 = require("./canciones/canciones.module");
 const stream_module_1 = require("./stream/stream.module");
+const foro_module_1 = require("./foro/foro.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, eventos_module_1.EventosModule, sync_module_1.SyncModule, boletos_module_1.BoletosModule, galeria_module_1.GaleriaModule, chat_module_1.ChatModule, biografias_module_1.BiografiasModule, canciones_module_1.CancionesModule, stream_module_1.StreamModule],
+        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, eventos_module_1.EventosModule, sync_module_1.SyncModule, boletos_module_1.BoletosModule, galeria_module_1.GaleriaModule, chat_module_1.ChatModule, biografias_module_1.BiografiasModule, canciones_module_1.CancionesModule, stream_module_1.StreamModule, foro_module_1.ForoModule],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
