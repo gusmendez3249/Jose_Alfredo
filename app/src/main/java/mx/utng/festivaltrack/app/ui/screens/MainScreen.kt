@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Home
@@ -50,15 +51,29 @@ fun MainScreen(
         BottomNavItem.Profile
     )
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
+        floatingActionButton = {
+            // Acceso al módulo AR desde Inicio
+            if (currentRoute == BottomNavItem.Home.route) {
+                ExtendedFloatingActionButton(
+                    onClick = { navController.navigate("ar") },
+                    icon = { Icon(Icons.Default.CenterFocusStrong, contentDescription = null) },
+                    text = { Text("Explorar AR") },
+                    containerColor = PrimaryGold,
+                    contentColor = Color.Black
+                )
+            }
+        },
         bottomBar = {
+            // La cámara AR usa pantalla completa
+            if (currentRoute?.startsWith("ar") == true) return@Scaffold
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = Color.White
             ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
                 items.forEach { item ->
                     NavigationBarItem(
                         icon = { Icon(item.icon, contentDescription = item.label) },
@@ -118,6 +133,16 @@ fun MainScreen(
                         onNavigateBack = { navController.navigate(BottomNavItem.Home.route) },
                         onLogout = onLogout
                     )
+                }
+                composable("ar") {
+                    ArScannerScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onVerHistorial = { navController.navigate("ar/historial") },
+                        onVerGaleria = { navController.navigate(BottomNavItem.Gallery.route) }
+                    )
+                }
+                composable("ar/historial") {
+                    ArHistoryScreen(onNavigateBack = { navController.popBackStack() })
                 }
                 composable("live/{eventoId}") { backStackEntry ->
                     val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""

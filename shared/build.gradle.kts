@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// IP de la PC (backend) vista desde un celular físico. Se define en local.properties
+// (ignorado por git):  festivaltrack.deviceHost=192.168.X.X
+// Si no se define, un celular físico usará 10.0.2.2 (solo válido en emulador).
+val deviceHost: String = Properties().also { props ->
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { props.load(it) }
+}.getProperty("festivaltrack.deviceHost") ?: "10.0.2.2"
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -11,7 +20,10 @@ android {
 
     defaultConfig {
         minSdk = 30
+        buildConfigField("String", "DEVICE_HOST", "\"$deviceHost\"")
     }
+
+    buildFeatures { buildConfig = true }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

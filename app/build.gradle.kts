@@ -70,4 +70,11 @@ dependencies {
     implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
     implementation("com.github.pedroSG94:RTSP-Server:1.4.1")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // Módulo AR: CameraX para la vista previa y captura de la foto del monumento
+    val camerax_version = "1.3.4"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
 }
