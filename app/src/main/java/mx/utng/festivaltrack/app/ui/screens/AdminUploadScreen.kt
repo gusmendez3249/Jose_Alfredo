@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
@@ -142,7 +144,7 @@ fun AdminUploadScreen() {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    if (selectedImageUri != null) "Imagen Lista ✓" else "Portada del Álbum",
+                    if (selectedImageUri != null) "Portada lista ✓" else "Portada de la canción",
                     color = Color.LightGray,
                     fontSize = 12.sp
                 )
@@ -226,7 +228,7 @@ fun AdminUploadScreen() {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            selectedAudioUri?.lastPathSegment ?: "MP3 / WAV (Max 50MB)",
+                            selectedAudioUri?.lastPathSegment ?: "MP3 / M4A / WAV (máx. 30 MB)",
                             color = Color.LightGray,
                             fontSize = 11.sp,
                             maxLines = 1
@@ -266,45 +268,56 @@ fun AdminUploadScreen() {
             // Publish Action Button
             Button(
                 onClick = {
-                    if (selectedImageUri == null && selectedAudioUri == null && title.isBlank()) {
-                        Toast.makeText(context, "Por favor selecciona una imagen, audio o ingresa un título", Toast.LENGTH_SHORT).show()
+                    if (title.isBlank()) {
+                        Toast.makeText(context, "Escribe el título de la canción", Toast.LENGTH_SHORT).show()
+                    } else if (isUploading) {
+                        // Ya hay una subida en curso
                     } else {
                         isUploading = true
                         uploadProgress = 0.5f
                         coroutineScope.launch {
                             try {
-                                val finalTitle = if (title.isNotBlank()) title else "Nueva Publicación"
-                                
-                                // 1. Si hay audio o título, guardar Canción en Backend
-                                if (selectedAudioUri != null || title.isNotBlank()) {
-                                    api.createCancion(
-                                        mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
-                                            titulo = finalTitle,
-                                            artista = if (artist.isNotBlank()) artist else "José Alfredo Jiménez"
-                                        )
-                                    )
+                                val finalTitle = title.trim()
+                                val token = mx.utng.festivaltrack.app.data.TokenManager(context).getToken()
+                                    ?: throw IllegalStateException("Inicia sesión como administrador")
+                                val bearer = "Bearer $token"
+
+                                // 1. Audio real (si se eligió) y su duración
+                                var audioUrl: String? = null
+                                var seconds = 180
+                                val audioUri = selectedAudioUri
+                                if (audioUri != null) {
+                                    audioUrl = uploadSongFile(context, api, bearer, audioUri, "audio/mpeg")
+                                    seconds = audioDurationSeconds(context, audioUri) ?: seconds
                                 }
-                                
-                                // 2. Si seleccionó una imagen, guardar en la Galería
-                                if (selectedImageUri != null) {
-                                    api.addImagenGaleria(
-                                        mx.utng.festivaltrack.shared.data.remote.ImagenCreateDto(
-                                            url = selectedImageUri.toString(),
-                                            titulo = finalTitle
-                                        )
+                                uploadProgress = 0.7f
+
+                                // 2. Portada (si se eligió)
+                                val coverUri = selectedImageUri
+                                val coverUrl = if (coverUri != null) uploadSongFile(context, api, bearer, coverUri, "image/jpeg") else null
+                                uploadProgress = 0.9f
+
+                                // 3. Canción en el catálogo, con su portada
+                                api.createCancion(
+                                    mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
+                                        titulo = finalTitle,
+                                        artista = if (artist.isNotBlank()) artist.trim() else "José Alfredo Jiménez",
+                                        duracion = seconds,
+                                        archivoUrl = audioUrl ?: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                                        portadaUrl = coverUrl
                                     )
-                                }
-                                
+                                )
+
                                 uploadProgress = 1.0f
                                 isUploading = false
-                                Toast.makeText(context, "¡Publicado exitosamente! Revisa la Galería o Audio.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "¡Canción publicada! Ya puedes asignarla a un concierto en Gestionar → Eventos.", Toast.LENGTH_LONG).show()
                                 title = ""
                                 artist = ""
                                 selectedImageUri = null
                                 selectedAudioUri = null
                             } catch (e: Exception) {
                                 isUploading = false
-                                Toast.makeText(context, "Error al publicar: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "No se pudo publicar: ${e.localizedMessage ?: "revisa tu conexión"}", Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -318,5 +331,40 @@ fun AdminUploadScreen() {
             
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+/** Sube un archivo (audio o portada) al servidor y devuelve su ruta `/uploads/...`. */
+private suspend fun uploadSongFile(
+    context: android.content.Context,
+    api: mx.utng.festivaltrack.shared.data.remote.FestivalApiService,
+    bearer: String,
+    uri: Uri,
+    fallbackMime: String
+): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    val mime = context.contentResolver.getType(uri) ?: fallbackMime
+    val tmp = java.io.File.createTempFile("cancion_", ".tmp", context.cacheDir)
+    try {
+        val input = context.contentResolver.openInputStream(uri) ?: throw java.io.IOException("No se pudo leer el archivo")
+        input.use { i -> tmp.outputStream().use { o -> i.copyTo(o) } }
+        val body = tmp.asRequestBody(mime.toMediaType())
+        val part = okhttp3.MultipartBody.Part.createFormData("file", tmp.name, body)
+        api.subirArchivoCancion(bearer, part).url
+    } finally {
+        tmp.delete()
+    }
+}
+
+/** Duración del audio en segundos (null si no se puede leer). */
+private fun audioDurationSeconds(context: android.content.Context, uri: Uri): Int? {
+    val retriever = android.media.MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(context, uri)
+        retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+            ?.toLongOrNull()?.let { (it / 1000).toInt().coerceAtLeast(1) }
+    } catch (e: Exception) {
+        null
+    } finally {
+        retriever.release()
     }
 }

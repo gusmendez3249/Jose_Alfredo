@@ -72,6 +72,7 @@ let CancionesService = class CancionesService {
                 artista: dto.artista || 'José Alfredo Jiménez',
                 duracion: dto.duracion || 180,
                 archivoUrl: dto.archivoUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                portadaUrl: dto.portadaUrl || null,
                 genero: dto.genero || 'Ranchera',
                 estado: 'PUBLICADA',
                 administradorId: admin.id,

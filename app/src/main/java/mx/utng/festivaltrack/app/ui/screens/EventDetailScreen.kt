@@ -17,7 +17,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import mx.utng.festivaltrack.app.ui.utils.mediaUrl
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -181,18 +185,45 @@ private fun DemoRow(
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val cover = mediaUrl(song.portadaUrl)
         Box(
             modifier = Modifier
-                .size(44.dp)
-                .background(if (isCurrent) PrimaryGold else Color(0xFF2A3A2E), CircleShape),
+                .size(56.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFF2A3A2E)),
             contentAlignment = Alignment.Center
         ) {
-            when {
-                isBuffering -> CircularProgressIndicator(
-                    color = Color.Black, strokeWidth = 2.dp, modifier = Modifier.size(20.dp)
+            if (cover != null) {
+                AsyncImage(
+                    model = cover,
+                    contentDescription = "Portada de ${song.titulo}",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-                isPlaying -> Icon(Icons.Default.Pause, "Pausar ${song.titulo}", tint = Color.Black)
-                else -> Icon(Icons.Default.PlayArrow, "Reproducir ${song.titulo}", tint = if (isCurrent) Color.Black else PrimaryGold)
+            } else {
+                Icon(Icons.Default.MusicNote, null, tint = Color.Gray, modifier = Modifier.size(26.dp))
+            }
+            // Botón de reproducir/pausar sobre la portada (visible al tocar o mientras suena)
+            if (isCurrent || cover == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = if (cover != null) 0.45f else 0f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        isBuffering -> CircularProgressIndicator(
+                            color = PrimaryGold, strokeWidth = 2.dp, modifier = Modifier.size(22.dp)
+                        )
+                        isPlaying -> Icon(Icons.Default.Pause, "Pausar ${song.titulo}", tint = PrimaryGold, modifier = Modifier.size(30.dp))
+                        else -> Icon(Icons.Default.PlayArrow, "Reproducir ${song.titulo}", tint = PrimaryGold, modifier = Modifier.size(30.dp))
+                    }
+                }
+            } else {
+                Icon(
+                    Icons.Default.PlayArrow, "Reproducir ${song.titulo}",
+                    tint = Color.White.copy(alpha = 0.85f), modifier = Modifier.size(26.dp)
+                )
             }
         }
         Spacer(Modifier.width(14.dp))

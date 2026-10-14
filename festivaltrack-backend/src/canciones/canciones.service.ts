@@ -54,7 +54,7 @@ export class CancionesService {
     return this.findByEvento(eventoId);
   }
 
-  async create(dto: { titulo: string; artista?: string; duracion?: number; archivoUrl?: string; genero?: string }) {
+  async create(dto: { titulo: string; artista?: string; duracion?: number; archivoUrl?: string; portadaUrl?: string; genero?: string }) {
     let admin = await this.prisma.administrador.findFirst();
     if (!admin) {
       let user = await this.prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } });
@@ -72,6 +72,7 @@ export class CancionesService {
         artista: dto.artista || 'José Alfredo Jiménez',
         duracion: dto.duracion || 180,
         archivoUrl: dto.archivoUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        portadaUrl: dto.portadaUrl || null,
         genero: dto.genero || 'Ranchera',
         estado: 'PUBLICADA',
         administradorId: admin.id,

@@ -73,6 +73,7 @@ model Cancion {
   artista         String
   duracion        Int
   archivoUrl      String
+  portadaUrl      String?
   genero          String?
   estado          EstadoCancion        @default(BORRADOR)
   administradorId String

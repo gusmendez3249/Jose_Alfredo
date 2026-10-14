@@ -12,6 +12,7 @@ export declare class CancionesController {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
     findByEvento(eventoId: string): Promise<{
@@ -24,6 +25,7 @@ export declare class CancionesController {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
     setRepertorio(eventoId: string, cancionIds: string[]): Promise<{
@@ -36,8 +38,12 @@ export declare class CancionesController {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
+    upload(file: Express.Multer.File): {
+        url: string;
+    };
     create(body: any): Promise<{
         artista: string;
         id: string;
@@ -48,6 +54,7 @@ export declare class CancionesController {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }>;
     remove(id: string): Promise<{
@@ -60,6 +67,7 @@ export declare class CancionesController {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }>;
 }

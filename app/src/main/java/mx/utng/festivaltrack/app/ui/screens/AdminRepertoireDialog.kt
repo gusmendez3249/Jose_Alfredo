@@ -10,6 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import mx.utng.festivaltrack.app.ui.utils.mediaUrl
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -181,6 +186,18 @@ private fun SongPickRow(
             onCheckedChange = { onToggle() },
             colors = CheckboxDefaults.colors(checkedColor = PrimaryGold, checkmarkColor = Color.Black, uncheckedColor = Color.Gray)
         )
+        val cover = mediaUrl(song.portadaUrl)
+        Box(
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(6.dp)).background(Color(0xFF2A3A2E)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (cover != null) {
+                AsyncImage(model = cover, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            } else {
+                Icon(Icons.Default.MusicNote, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+            }
+        }
+        Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 (orderLabel?.let { "$it " } ?: "") + song.titulo,

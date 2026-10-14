@@ -12,6 +12,7 @@ export declare class CancionesService {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
     findByEvento(eventoId: string): Promise<{
@@ -24,6 +25,7 @@ export declare class CancionesService {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
     setRepertorio(eventoId: string, cancionIds: string[]): Promise<{
@@ -36,6 +38,7 @@ export declare class CancionesService {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }[]>;
     create(dto: {
@@ -43,6 +46,7 @@ export declare class CancionesService {
         artista?: string;
         duracion?: number;
         archivoUrl?: string;
+        portadaUrl?: string;
         genero?: string;
     }): Promise<{
         artista: string;
@@ -54,6 +58,7 @@ export declare class CancionesService {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }>;
     remove(id: string): Promise<{
@@ -66,6 +71,7 @@ export declare class CancionesService {
         estado: import(".prisma/client").$Enums.EstadoCancion;
         duracion: number;
         archivoUrl: string;
+        portadaUrl: string | null;
         genero: string | null;
     }>;
 }
