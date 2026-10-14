@@ -30,7 +30,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Home : BottomNavItem("home", Icons.Default.Home, "Inicio")
     object Biography : BottomNavItem("biography", Icons.Default.Book, "Biografía")
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
-    object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
+    object Concerts : BottomNavItem("concerts", Icons.Default.Audiotrack, "Conciertos")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
     object Gallery : BottomNavItem("gallery", Icons.Default.Person, "Galería")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
@@ -49,7 +49,7 @@ fun MainScreen(
         BottomNavItem.Home,
         BottomNavItem.Biography,
         BottomNavItem.Map,
-        BottomNavItem.Audio,
+        BottomNavItem.Concerts,
         BottomNavItem.Tickets,
         BottomNavItem.Gallery,
         BottomNavItem.Profile
@@ -110,8 +110,11 @@ fun MainScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
-                composable(BottomNavItem.Audio.route) {
-                    AudioScreen()
+                composable(BottomNavItem.Concerts.route) {
+                    ConcertsScreen(
+                        eventosViewModel = eventosViewModel,
+                        onOpenEvent = { eventoId -> navController.navigate("event/$eventoId") }
+                    )
                 }
                 composable(BottomNavItem.Tickets.route) {
                     TicketsScreen(
