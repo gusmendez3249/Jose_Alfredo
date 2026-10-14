@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.ui.utils.mediaUrl
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
@@ -99,7 +100,7 @@ class EventDemosViewModel(application: Application) : AndroidViewModel(applicati
         }
         player.stop()
         val item = MediaItem.Builder()
-            .setUri(song.archivoUrl)
+            .setUri(mediaUrl(song.archivoUrl))
             .setClippingConfiguration(
                 MediaItem.ClippingConfiguration.Builder().setEndPositionMs(DEMO_MS).build()
             )
