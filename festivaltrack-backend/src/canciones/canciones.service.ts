@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -13,8 +13,7 @@ export class CancionesService {
 
   /**
    * Canciones (demos) del concierto: las ligadas a la transmisión del evento,
-   * en su orden. Si el evento aún no tiene repertorio asignado se devuelve el
-   * catálogo publicado del tributo, para que siempre haya demos que escuchar.
+   * en el orden definido por el administrador. Si no tiene repertorio, lista vacía.
    */
   async findByEvento(eventoId: string) {
     const ligadas = await this.prisma.cancionTransmision.findMany({
@@ -22,20 +21,37 @@ export class CancionesService {
       orderBy: { orden: 'asc' },
       include: { cancion: true },
     });
-    if (ligadas.length > 0) return ligadas.map((l) => l.cancion);
+    return ligadas.map((l) => l.cancion);
+  }
 
-    const catalogo = await this.prisma.cancion.findMany({
-      where: { estado: 'PUBLICADA' },
-      orderBy: { createdAt: 'asc' },
+  /**
+   * Define el repertorio de un concierto (reemplaza el anterior). El orden del
+   * arreglo es el orden de reproducción. Crea la transmisión del evento si aún no existe.
+   */
+  async setRepertorio(eventoId: string, cancionIds: string[]) {
+    if (!Array.isArray(cancionIds)) throw new BadRequestException('cancionIds debe ser una lista');
+    const ids = [...new Set(cancionIds)];
+
+    const evento = await this.prisma.evento.findUnique({ where: { id: eventoId } });
+    if (!evento) throw new NotFoundException('Evento no encontrado');
+
+    const existentes = await this.prisma.cancion.count({ where: { id: { in: ids } } });
+    if (existentes !== ids.length) throw new BadRequestException('Alguna canción no existe');
+
+    await this.prisma.$transaction(async (tx) => {
+      const transmision = await tx.transmision.upsert({
+        where: { eventoId },
+        create: { eventoId, titulo: evento.nombre },
+        update: {},
+      });
+      await tx.cancionTransmision.deleteMany({ where: { transmisionId: transmision.id } });
+      if (ids.length > 0) {
+        await tx.cancionTransmision.createMany({
+          data: ids.map((cancionId, orden) => ({ cancionId, transmisionId: transmision.id, orden })),
+        });
+      }
     });
-    // El catálogo puede traer la misma canción dada de alta más de una vez.
-    const vistas = new Set<string>();
-    return catalogo.filter((c) => {
-      const clave = `${c.titulo.trim().toLowerCase()}|${c.artista.trim().toLowerCase()}`;
-      if (vistas.has(clave)) return false;
-      vistas.add(clave);
-      return true;
-    });
+    return this.findByEvento(eventoId);
   }
 
   async create(dto: { titulo: string; artista?: string; duracion?: number; archivoUrl?: string; genero?: string }) {

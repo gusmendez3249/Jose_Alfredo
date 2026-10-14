@@ -148,6 +148,17 @@ interface FestivalApiService {
     suspend fun getCancionesEvento(@retrofit2.http.Path("eventoId") eventoId: String): List<CancionDto>
 
     /**
+     * Define el repertorio de un concierto (solo administrador). El orden de la lista es el
+     * orden de reproducción y reemplaza el repertorio anterior.
+     */
+    @retrofit2.http.PUT("canciones/evento/{eventoId}")
+    suspend fun setRepertorioEvento(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("eventoId") eventoId: String,
+        @retrofit2.http.Body request: RepertorioDto
+    ): List<CancionDto>
+
+    /**
      * Obtiene las galerías de fotos del festival.
      * @return Lista de [GaleriaDto] con sus colecciones de imágenes.
      */
@@ -537,6 +548,9 @@ data class StreamStatusDto(
  * @property archivoUrl URL pública de la canción (MP3).
  * @property genero Género musical.
  */
+/** Ids de canciones, en orden, que forman el repertorio de un concierto. */
+data class RepertorioDto(val cancionIds: List<String>)
+
 data class CancionCreateDto(
     val titulo: String,
     val artista: String = "José Alfredo Jiménez",

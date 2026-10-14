@@ -28,20 +28,32 @@ let CancionesService = class CancionesService {
             orderBy: { orden: 'asc' },
             include: { cancion: true },
         });
-        if (ligadas.length > 0)
-            return ligadas.map((l) => l.cancion);
-        const catalogo = await this.prisma.cancion.findMany({
-            where: { estado: 'PUBLICADA' },
-            orderBy: { createdAt: 'asc' },
+        return ligadas.map((l) => l.cancion);
+    }
+    async setRepertorio(eventoId, cancionIds) {
+        if (!Array.isArray(cancionIds))
+            throw new common_1.BadRequestException('cancionIds debe ser una lista');
+        const ids = [...new Set(cancionIds)];
+        const evento = await this.prisma.evento.findUnique({ where: { id: eventoId } });
+        if (!evento)
+            throw new common_1.NotFoundException('Evento no encontrado');
+        const existentes = await this.prisma.cancion.count({ where: { id: { in: ids } } });
+        if (existentes !== ids.length)
+            throw new common_1.BadRequestException('Alguna canción no existe');
+        await this.prisma.$transaction(async (tx) => {
+            const transmision = await tx.transmision.upsert({
+                where: { eventoId },
+                create: { eventoId, titulo: evento.nombre },
+                update: {},
+            });
+            await tx.cancionTransmision.deleteMany({ where: { transmisionId: transmision.id } });
+            if (ids.length > 0) {
+                await tx.cancionTransmision.createMany({
+                    data: ids.map((cancionId, orden) => ({ cancionId, transmisionId: transmision.id, orden })),
+                });
+            }
         });
-        const vistas = new Set();
-        return catalogo.filter((c) => {
-            const clave = `${c.titulo.trim().toLowerCase()}|${c.artista.trim().toLowerCase()}`;
-            if (vistas.has(clave))
-                return false;
-            vistas.add(clave);
-            return true;
-        });
+        return this.findByEvento(eventoId);
     }
     async create(dto) {
         let admin = await this.prisma.administrador.findFirst();

@@ -26,6 +26,18 @@ export declare class CancionesController {
         archivoUrl: string;
         genero: string | null;
     }[]>;
+    setRepertorio(eventoId: string, cancionIds: string[]): Promise<{
+        artista: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        administradorId: string;
+        titulo: string;
+        estado: import(".prisma/client").$Enums.EstadoCancion;
+        duracion: number;
+        archivoUrl: string;
+        genero: string | null;
+    }[]>;
     create(body: any): Promise<{
         artista: string;
         id: string;

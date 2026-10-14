@@ -14,6 +14,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CancionesController = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const canciones_service_1 = require("./canciones.service");
 let CancionesController = class CancionesController {
     cancionesService;
@@ -25,6 +28,9 @@ let CancionesController = class CancionesController {
     }
     findByEvento(eventoId) {
         return this.cancionesService.findByEvento(eventoId);
+    }
+    setRepertorio(eventoId, cancionIds) {
+        return this.cancionesService.setRepertorio(eventoId, cancionIds);
     }
     create(body) {
         return this.cancionesService.create(body);
@@ -47,6 +53,16 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], CancionesController.prototype, "findByEvento", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('ADMINISTRADOR'),
+    (0, common_1.Put)('evento/:eventoId'),
+    __param(0, (0, common_1.Param)('eventoId')),
+    __param(1, (0, common_1.Body)('cancionIds')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Array]),
+    __metadata("design:returntype", void 0)
+], CancionesController.prototype, "setRepertorio", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
