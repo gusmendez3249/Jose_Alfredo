@@ -160,13 +160,13 @@ interface FestivalApiService {
      * Publica una nueva canción en el catálogo.
      */
     @retrofit2.http.POST("canciones")
-    suspend fun createCancion(@retrofit2.http.Body request: CancionCreateDto): CancionDto
+    suspend fun createCancion(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body request: CancionCreateDto): CancionDto
 
     /**
      * Publica una nueva imagen en la galería del festival.
      */
     @retrofit2.http.POST("galeria/imagen")
-    suspend fun addImagenGaleria(@retrofit2.http.Body request: ImagenCreateDto): ImagenDto
+    suspend fun addImagenGaleria(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body request: ImagenCreateDto): ImagenDto
 
     // ─── Foro de la Galería Interactiva ─────────────────────────────────────
 
@@ -229,13 +229,13 @@ interface FestivalApiService {
      * Elimina una canción del catálogo por su ID.
      */
     @retrofit2.http.DELETE("canciones/{id}")
-    suspend fun deleteCancion(@retrofit2.http.Path("id") id: String)
+    suspend fun deleteCancion(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Path("id") id: String)
 
     /**
      * Elimina una imagen de la galería por su ID.
      */
     @retrofit2.http.DELETE("galeria/imagen/{id}")
-    suspend fun deleteImagenGaleria(@retrofit2.http.Path("id") id: String)
+    suspend fun deleteImagenGaleria(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Path("id") id: String)
 
     /**
      * Obtiene el estado actual de la transmisión en vivo (URL del stream RTSP y si está activo).
@@ -250,7 +250,7 @@ interface FestivalApiService {
      * @param body Objeto con streamUrl (ej. "rtsp://192.168.1.5:1935") e isLive (true/false).
      */
     @retrofit2.http.POST("stream/status")
-    suspend fun setStreamStatus(@retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
+    suspend fun setStreamStatus(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
 
     /**
      * Obtiene la lista de todos los usuarios registrados (requiere rol ADMIN).
@@ -315,12 +315,6 @@ interface FestivalApiService {
     companion object {
         /**
          * Host del backend según dónde corre la app:
-         *  - Emulador: `10.0.2.2`, alias especial que apunta al localhost de la PC host.
-         *  - Celular físico: la IP de la PC en la red Wi-Fi, definida en `local.properties`
-         *    con `festivaltrack.deviceHost=192.168.X.X` (ver BuildConfig.DEVICE_HOST).
-         */
-        /**
-         * Host del backend según dónde corre la app:
          *  - Emulador: `10.0.2.2` (alias de la PC host).
          *  - Celular físico: IP de la PC en el Wi-Fi, definida en `local.properties`
          *    con `festivaltrack.deviceHost=192.168.X.X` (ver BuildConfig.DEVICE_HOST).
@@ -338,7 +332,11 @@ interface FestivalApiService {
 
         /** Origen del servidor (sin /api/v1); lo usa la galería para resolver URLs relativas de imágenes. */
         val SERVER_URL: String
-            get() = "http://$host:3001"
+            get() = CONFIGURED_URL.ifBlank { "http://$host:3001" }
+
+        /** URL fija definida con `-PfestivaltrackApiUrl` (por ejemplo la de Railway); vacía = detección automática. */
+        private val CONFIGURED_URL: String
+            get() = mx.utng.festivaltrack.shared.BuildConfig.API_BASE_URL.removeSuffix("/").removeSuffix("/api/v1")
 
         private val BASE_URL: String
             get() = "$SERVER_URL/api/v1/"

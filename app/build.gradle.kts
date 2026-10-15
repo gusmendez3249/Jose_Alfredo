@@ -77,4 +77,9 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:$camerax_version")
+
+    // Android Auto (Car App Library)
+    implementation("androidx.car.app:app:1.4.0")
+
+    testImplementation("junit:junit:4.13.2")
 }
