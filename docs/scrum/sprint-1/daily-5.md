@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-5-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-5-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-5-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,14 +29,14 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-5-ar-historial.png" width="220"> | Historial de sitios visitados con el módulo AR (#23) |
-| <img src="img/daily-5-archivo.png" width="220"> | Entrada del archivo histórico oficial en la galería, creada con la Factory |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-5-ar-historial.png` | Historial de sitios visitados con el módulo AR (#23) | Gustavo |
+| <img src="img/daily-5-archivo.png" width="220"> | Entrada del archivo histórico oficial en la galería, creada con la Factory | Omar |
 
 ### Código que lo hace funcionar
 
-**`festivaltrack-backend/src/ar/ar-reconocimiento.facade.ts`** — fachada AR: foto → reconocimiento visual → catálogo → historial (#32, #35, #23)
+**`festivaltrack-backend/src/ar/ar-reconocimiento.facade.ts`** — fachada AR: foto → reconocimiento visual → catálogo → historial (#32, #35, #23) · **Responsable:** Gustavo
 
 ```ts
 const visual = await this.reconocedor.identificar(
@@ -56,7 +56,7 @@ const visita = await this.prisma.visitaSitio.create({
 });
 ```
 
-**`app/src/main/java/mx/utng/festivaltrack/app/data/factory/BiographyFactory.kt`** — patrón Factory: cada tipo de entrada del archivo histórico tiene su fábrica
+**`app/src/main/java/mx/utng/festivaltrack/app/data/factory/BiographyFactory.kt`** — patrón Factory: cada tipo de entrada del archivo histórico tiene su fábrica · **Responsable:** Omar
 
 ```kotlin
 class MilestoneBiographyFactory : BiographyFactory {
@@ -76,7 +76,7 @@ class MilestoneBiographyFactory : BiographyFactory {
 }
 ```
 
-**`app/src/main/java/mx/utng/festivaltrack/app/auto/SalidaCalculator.kt`** — cuándo salir hacia un evento: inicio − traslado − margen (#37)
+**`app/src/main/java/mx/utng/festivaltrack/app/auto/SalidaCalculator.kt`** — cuándo salir hacia un evento: inicio − traslado − margen (#37) · **Responsable:** Noé
 
 ```kotlin
 fun trasladoMin(distanciaKm: Double): Int =

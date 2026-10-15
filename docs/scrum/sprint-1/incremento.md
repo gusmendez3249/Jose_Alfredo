@@ -28,8 +28,8 @@
 
 ## Evidencia
 
-| Captura | Qué se muestra |
-|---|---|
-| <img src="img/daily-3-foro.png" width="220"> | Galería como foro |
-| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR |
-| <img src="img/daily-6-inicio.png" width="220"> | Inicio con los módulos nuevos |
+| Captura | Qué se muestra | Responsable |
+|---|---|---|
+| <img src="img/daily-3-foro.png" width="220"> | Galería como foro | Omar |
+| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR | Gustavo |
+| <img src="img/daily-6-inicio.png" width="220"> | Inicio con los módulos nuevos | Gustavo (Explorar AR) · Omar (Comunidad) |

@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-6-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-6-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-6-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,13 +29,13 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-6-inicio.png" width="220"> | Inicio con el acceso "Explorar AR" y la galería, ya integrados en `develop` |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-6-inicio.png" width="220"> | Inicio con el acceso "Explorar AR" y la galería, ya integrados en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
 
 ### Código que lo hace funcionar
 
-**`app/src/main/AndroidManifest.xml`** — servicio que Android Auto llama al conectar el teléfono (#34)
+**`app/src/main/AndroidManifest.xml`** — servicio que Android Auto llama al conectar el teléfono (#34) · **Responsable:** Noé
 
 ```xml
 <service
@@ -48,7 +48,7 @@
 </service>
 ```
 
-**`app/src/main/java/mx/utng/festivaltrack/app/auto/AlertaSalidaScreen.kt`** — cada evento se muestra con "Sal ya" / "Sal en X min" y al tocarlo abre la navegación (#37)
+**`app/src/main/java/mx/utng/festivaltrack/app/auto/AlertaSalidaScreen.kt`** — cada evento se muestra con "Sal ya" / "Sal en X min" y al tocarlo abre la navegación (#37) · **Responsable:** Noé
 
 ```kotlin
 return Row.Builder()

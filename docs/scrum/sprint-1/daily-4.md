@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-4-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-4-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-4-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,14 +29,14 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR: vista de la cámara con la retícula y el botón de captura |
-| <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico, solo fotos |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR: vista de la cámara con la retícula y el botón de captura | Gustavo |
+| <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico, solo fotos | Omar |
 
 ### Código que lo hace funcionar
 
-**`app/src/main/java/mx/utng/festivaltrack/app/data/ar/ArFacade.kt`** — la app captura la foto con CameraX y la envía al backend en una sola llamada (#32)
+**`app/src/main/java/mx/utng/festivaltrack/app/data/ar/ArFacade.kt`** — la app captura la foto con CameraX y la envía al backend en una sola llamada (#32) · **Responsable:** Gustavo
 
 ```kotlin
 suspend fun reconocer(imageCapture: ImageCapture, onFotoCapturada: () -> Unit = {}): ReconocimientoDto {
@@ -50,7 +50,7 @@ suspend fun reconocer(imageCapture: ImageCapture, onFotoCapturada: () -> Unit = 
 }
 ```
 
-**`.github/workflows/backend.yml`** — CI del backend en cada Pull Request (#27)
+**`.github/workflows/backend.yml`** — CI del backend en cada Pull Request (#27) · **Responsable:** Noé
 
 ```yaml
 steps:

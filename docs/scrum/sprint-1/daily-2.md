@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-2-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-2-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-2-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,13 +29,13 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-2-login.png" width="220"> | Inicio de sesión, punto de entrada para publicar en el foro y usar el AR |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-2-login.png" width="220"> | Inicio de sesión, punto de entrada para publicar en el foro y usar el AR | Omar |
 
 ### Código que lo hace funcionar
 
-**`festivaltrack-backend/prisma/schema.prisma`** — catálogo de sitios AR e historial de visitas (#20, #23)
+**`festivaltrack-backend/prisma/schema.prisma`** — catálogo de sitios AR e historial de visitas (#20, #23) · **Responsable:** Gustavo
 
 ```prisma
 model SitioAR {
@@ -63,7 +63,7 @@ model VisitaSitio {
 }
 ```
 
-**`festivaltrack-backend/prisma/schema.prisma`** — publicaciones, comentarios y me gusta del foro (#22)
+**`festivaltrack-backend/prisma/schema.prisma`** — publicaciones, comentarios y me gusta del foro (#22) · **Responsable:** Omar
 
 ```prisma
 model Publicacion {

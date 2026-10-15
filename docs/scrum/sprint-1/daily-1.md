@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-1-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-1-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-1-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -31,13 +31,13 @@
 
 Punto de partida del sprint: la app móvil ya contaba con boletos, programación, biografía, mapa y audio.
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-1-mapa.png" width="220"> | Mapa y rutas existente: base para la épica del GPS para auto (#21) |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-1-mapa.png" width="220"> | Mapa y rutas existente: base para la épica del GPS para auto (#21) | Equipo (base existente) |
 
 ### Código que lo hace funcionar
 
-**`festivaltrack-backend/prisma/schema.prisma`** — modelo `Evento` del que parten los módulos nuevos: las coordenadas `latitud` / `longitud` las usarán el mapa, el AR y la alerta de salida del auto.
+**`festivaltrack-backend/prisma/schema.prisma`** — modelo `Evento` del que parten los módulos nuevos: las coordenadas `latitud` / `longitud` las usarán el mapa, el AR y la alerta de salida del auto. · **Responsable:** Equipo (base existente)
 
 ```prisma
 model Evento {

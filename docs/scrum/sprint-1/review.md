@@ -5,13 +5,15 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Objetivo del sprint:** galería interactiva como foro de la comunidad, módulo de realidad aumentada (pantallas 1–3), base del modo automóvil (Android Auto y alerta de salida), seguridad del backend y flujo de trabajo con `develop` y CI.
 
-![Reunión](img/review-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/review-reunion.png` y reemplaza esta nota por `![Reunión](img/review-reunion.png)`.
 
 ## Resultado del sprint
 
 Milestone: [Sprint 1](https://github.com/gusmendez3249/Jose_Alfredo/milestone/1) · **8 de 8 tareas cerradas (100 %)**
 
-![Milestone](img/review-milestone.png)
+| Milestone | Cerradas | Abiertas | Avance |
+|---|---|---|---|
+| [Sprint 1](https://github.com/gusmendez3249/Jose_Alfredo/milestone/1) | 8 | 0 | 100 % |
 
 ## Tareas terminadas
 
@@ -41,21 +43,28 @@ Las épicas #21 (GPS para auto) y #24 (Demos de audio) continúan en el Sprint 2
 
 ## Demostración
 
-| Captura | Qué se muestra |
-|---|---|
-| <img src="img/daily-3-foro.png" width="220"> | Galería como foro de la comunidad (#22) |
-| <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico |
-| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR con la cámara (#32) |
-| <img src="img/daily-5-ar-historial.png" width="220"> | Historial de sitios visitados (#23) |
-| <img src="img/daily-5-archivo.png" width="220"> | Archivo histórico oficial creado con la Factory |
-| <img src="img/daily-6-inicio.png" width="220"> | Inicio con "Explorar AR" integrado en `develop` |
+| Captura | Qué se muestra | Responsable |
+|---|---|---|
+| <img src="img/daily-3-foro.png" width="220"> | Galería como foro de la comunidad (#22) | Omar |
+| <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico | Omar |
+| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR con la cámara (#32) | Gustavo |
+| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-5-ar-historial.png` | Historial de sitios visitados (#23) | Gustavo |
+| <img src="img/daily-5-archivo.png" width="220"> | Archivo histórico oficial creado con la Factory | Omar |
+| <img src="img/daily-6-inicio.png" width="220"> | Inicio con "Explorar AR" integrado en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
 
 **Calidad:** los 4 Pull Requests del sprint (#43–#46) pasaron Backend CI y Android CI.
 Pruebas unitarias: 17 del backend y 8 de la app (`SalidaCalculator`).
 
 ## Tablero al cierre
 
-![Tablero](img/review-tablero.png)
+Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/gusmendez3249/projects/2) (filtro `sprint:"Sprint 1"`).
+
+| Estado | Tareas del Sprint 1 |
+|---|---|
+| Done | #22, #26, #27, #32, #35, #23, #34, #37 y la épica #20 |
+| Movida al Sprint 2 | #28 · épicas #21 y #24 |
+
+> 📷 Opcional: agrega una captura del tablero como `img/review-tablero.png`.
 
 ## Retroalimentación recibida
 

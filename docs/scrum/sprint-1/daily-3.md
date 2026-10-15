@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-3-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-3-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-3-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,13 +29,13 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-3-foro.png" width="220"> | Galería como foro de la comunidad: publicaciones de los asistentes |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-3-foro.png" width="220"> | Galería como foro de la comunidad: publicaciones de los asistentes | Omar |
 
 ### Código que lo hace funcionar
 
-**`festivaltrack-backend/src/ar/vision/reconocedor-visual.ts`** — contrato del motor de visión: la fachada no depende de un proveedor concreto (#32)
+**`festivaltrack-backend/src/ar/vision/reconocedor-visual.ts`** — contrato del motor de visión: la fachada no depende de un proveedor concreto (#32) · **Responsable:** Gustavo
 
 ```ts
 export interface ResultadoVisual {
@@ -51,7 +51,7 @@ export interface ReconocedorVisual {
 }
 ```
 
-**`festivaltrack-backend/src/foro/foro.service.ts`** — me gusta de una publicación: si ya existe se quita, si no se agrega (#22)
+**`festivaltrack-backend/src/foro/foro.service.ts`** — me gusta de una publicación: si ya existe se quita, si no se agrega (#22) · **Responsable:** Omar
 
 ```ts
 async toggleLike(usuario: UsuarioActual, publicacionId: string) {
@@ -67,7 +67,7 @@ async toggleLike(usuario: UsuarioActual, publicacionId: string) {
 }
 ```
 
-**`festivaltrack-backend/src/auth/auth.controller.ts`** — solo un administrador puede listar usuarios, crear administradores y cambiar roles
+**`festivaltrack-backend/src/auth/auth.controller.ts`** — solo un administrador puede listar usuarios, crear administradores y cambiar roles · **Responsable:** Noé
 
 ```ts
 @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')

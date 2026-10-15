@@ -18,6 +18,6 @@
 
 ## Evidencia
 
-| Captura | Qué se muestra |
-|---|---|
-| ![](img/incremento-1.png) | |
+| Captura | Qué se muestra | Responsable |
+|---|---|---|
+| 📷 *Captura pendiente*: agrega `img/incremento-1.png` | | |

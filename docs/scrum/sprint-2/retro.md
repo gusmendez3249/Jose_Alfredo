@@ -4,7 +4,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Formato:** Continuar / Dejar de hacer / Empezar
 
-![Reunión](img/retro-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/retro-reunion.png` y reemplaza esta nota por `![Reunión](img/retro-reunion.png)`.
 
 ## Continuar (lo que funcionó)
 

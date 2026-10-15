@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
-![Reunión](img/daily-N-reunion.png)
+> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-N-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-N-reunion.png)`.
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -29,9 +29,9 @@
 
 ### En la app
 
-| Captura | Descripción |
-|---|---|
-| <img src="img/daily-N-app.png" width="220"> | |
+| Captura | Descripción | Responsable |
+|---|---|---|
+| 📷 *Captura pendiente* — captura: agrega `img/.png` | |  |
 
 ### Código que lo hace funcionar
 
