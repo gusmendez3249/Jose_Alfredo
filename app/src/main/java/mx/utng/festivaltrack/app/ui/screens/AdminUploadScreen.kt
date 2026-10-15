@@ -278,6 +278,7 @@ fun AdminUploadScreen() {
                                 // 1. Si hay audio o título, guardar Canción en Backend
                                 if (selectedAudioUri != null || title.isNotBlank()) {
                                     api.createCancion(
+                                        "Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}",
                                         mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
                                             titulo = finalTitle,
                                             artista = if (artist.isNotBlank()) artist else "José Alfredo Jiménez"
@@ -288,6 +289,7 @@ fun AdminUploadScreen() {
                                 // 2. Si seleccionó una imagen, guardar en la Galería
                                 if (selectedImageUri != null) {
                                     api.addImagenGaleria(
+                                        "Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}",
                                         mx.utng.festivaltrack.shared.data.remote.ImagenCreateDto(
                                             url = selectedImageUri.toString(),
                                             titulo = finalTitle
