@@ -7,19 +7,23 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.ui.utils.mediaUrl
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
 /**
- * Estado y reproducción de las demos de audio de un concierto.
+ * Estado y reproducción de la playlist de demos de un concierto.
  *
- * Usa un único [ExoPlayer], así que solo puede sonar una demo a la vez: al tocar otra
- * canción la anterior se detiene. Cada demo es un fragmento de [DEMO_MS] ms.
+ * Funciona como una cola: al terminar una demo (fragmento de [DEMO_MS] ms) pasa sola a la
+ * siguiente, con siguiente/anterior y modo aleatorio. Usa un único [ExoPlayer], así que solo
+ * suena una demo a la vez.
  */
 class EventDemosViewModel(application: Application) : AndroidViewModel(application) {
     private val api = FestivalApiService.create()
@@ -46,21 +50,26 @@ class EventDemosViewModel(application: Application) : AndroidViewModel(applicati
     private val _playbackError = MutableStateFlow<String?>(null)
     val playbackError: StateFlow<String?> = _playbackError.asStateFlow()
 
+    /** Avance de la demo actual, de 0 a 1. */
+    private val _progress = MutableStateFlow(0f)
+    val progress: StateFlow<Float> = _progress.asStateFlow()
+
+    private val _shuffle = MutableStateFlow(false)
+    val shuffle: StateFlow<Boolean> = _shuffle.asStateFlow()
+
     private var eventoId: String? = null
+    private var progressJob: Job? = null
 
     private val player: ExoPlayer = ExoPlayer.Builder(application).build().apply {
         addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 _isPlaying.value = isPlaying
+                if (isPlaying) startProgress() else progressJob?.cancel()
             }
 
             override fun onPlaybackStateChanged(state: Int) {
                 _isBuffering.value = state == Player.STATE_BUFFERING
-                if (state == Player.STATE_ENDED) {
-                    // La demo terminó: ninguna canción queda activa.
-                    _currentId.value = null
-                    _isPlaying.value = false
-                }
+                if (state == Player.STATE_ENDED) advance()
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -68,6 +77,7 @@ class EventDemosViewModel(application: Application) : AndroidViewModel(applicati
                 _currentId.value = null
                 _isPlaying.value = false
                 _isBuffering.value = false
+                _progress.value = 0f
             }
         })
     }
@@ -91,13 +101,71 @@ class EventDemosViewModel(application: Application) : AndroidViewModel(applicati
         eventoId?.let(::load)
     }
 
-    /** Toca una canción: la inicia, o pausa/reanuda si ya es la activa. */
+    // ─── Controles ───────────────────────────────────────────────────────────
+
+    /** Toca una canción de la lista: la inicia, o pausa/reanuda si ya es la activa. */
     fun toggle(song: CancionDto) {
-        _playbackError.value = null
         if (_currentId.value == song.id) {
-            if (player.isPlaying) player.pause() else player.play()
-            return
+            playPause()
+        } else {
+            val index = _songs.value.indexOfFirst { it.id == song.id }
+            if (index >= 0) playIndex(index)
         }
+    }
+
+    /** Botón grande de la cabecera: empieza la playlist o pausa/reanuda. */
+    fun playAll() {
+        if (_songs.value.isEmpty()) return
+        if (_currentId.value != null) playPause()
+        else playIndex(if (_shuffle.value) _songs.value.indices.random() else 0)
+    }
+
+    fun playPause() {
+        if (_currentId.value == null) return
+        if (player.isPlaying) player.pause() else player.play()
+    }
+
+    fun next() {
+        advance()
+    }
+
+    /** Anterior: si ya avanzó más de 3 s reinicia la demo; si no, va a la canción previa. */
+    fun previous() {
+        val index = currentIndex()
+        if (index < 0) return
+        if (player.currentPosition > 3_000 || index == 0) {
+            player.seekTo(0)
+        } else {
+            playIndex(index - 1)
+        }
+    }
+
+    fun toggleShuffle() {
+        _shuffle.value = !_shuffle.value
+    }
+
+    /** Detiene la reproducción (al salir de la pantalla). */
+    fun stop() {
+        progressJob?.cancel()
+        player.stop()
+        player.clearMediaItems()
+        _currentId.value = null
+        _isPlaying.value = false
+        _isBuffering.value = false
+        _progress.value = 0f
+    }
+
+    fun dismissPlaybackError() {
+        _playbackError.value = null
+    }
+
+    // ─── Internos ────────────────────────────────────────────────────────────
+
+    private fun currentIndex(): Int = _songs.value.indexOfFirst { it.id == _currentId.value }
+
+    private fun playIndex(index: Int) {
+        val song = _songs.value.getOrNull(index) ?: return
+        _playbackError.value = null
         player.stop()
         val item = MediaItem.Builder()
             .setUri(mediaUrl(song.archivoUrl))
@@ -110,19 +178,31 @@ class EventDemosViewModel(application: Application) : AndroidViewModel(applicati
         player.playWhenReady = true
         _currentId.value = song.id
         _isBuffering.value = true
+        _progress.value = 0f
     }
 
-    /** Detiene la reproducción (al salir de la pantalla). */
-    fun stop() {
-        player.stop()
-        player.clearMediaItems()
-        _currentId.value = null
-        _isPlaying.value = false
-        _isBuffering.value = false
+    /** Pasa a la siguiente demo (o a una al azar en modo aleatorio); al final de la cola se detiene. */
+    private fun advance() {
+        val songs = _songs.value
+        val index = currentIndex()
+        val nextIndex = when {
+            songs.isEmpty() -> -1
+            _shuffle.value && songs.size > 1 -> songs.indices.filter { it != index }.random()
+            index + 1 < songs.size -> index + 1
+            else -> -1
+        }
+        if (nextIndex >= 0) playIndex(nextIndex) else stop()
     }
 
-    fun dismissPlaybackError() {
-        _playbackError.value = null
+    private fun startProgress() {
+        progressJob?.cancel()
+        progressJob = viewModelScope.launch {
+            while (isActive) {
+                val total = player.duration.takeIf { it > 0 } ?: DEMO_MS
+                _progress.value = (player.currentPosition.toFloat() / total).coerceIn(0f, 1f)
+                delay(200)
+            }
+        }
     }
 
     override fun onCleared() {
