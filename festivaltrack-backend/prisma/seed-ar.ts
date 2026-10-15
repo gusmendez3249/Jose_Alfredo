@@ -20,7 +20,7 @@ export async function seedSitiosAR(prisma: PrismaClient, galeriaId?: string) {
       nombre: 'Parroquia de Nuestra Señora de los Dolores',
       ubicacion: 'Jardín Principal, Centro, Dolores Hidalgo, Gto.',
       descripcion: 'Templo barroco churrigueresco del siglo XVIII. Desde su atrio Miguel Hidalgo llamó a la población a levantarse en armas la madrugada del 16 de septiembre de 1810, el Grito de Independencia.',
-      pistasVisuales: 'Fachada barroca de cantera rosa muy labrada, dos torres campanario, gran portada central, atrio con escalinata frente a la plaza.',
+      pistasVisuales: 'Fachada barroca de cantera rosa muy labrada, dos torres campanario altas a los lados, gran portada central con esculturas, a veces se aprecia una cúpula detrás de la fachada; atrio con escalinata frente a la plaza (Jardín Principal) con árboles y faroles.',
       latitud: 21.1563, longitud: -100.9338,
     },
     {

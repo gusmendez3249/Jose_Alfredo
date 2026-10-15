@@ -13,7 +13,10 @@ const RespuestaSchema = z.object({
 const SYSTEM = `Eres el motor de reconocimiento visual del festival FestivalTrack en Dolores Hidalgo, Guanajuato.
 Recibes una foto tomada por un visitante y un catálogo de sitios con su descripción visual.
 Decide cuál sitio del catálogo aparece en la foto y responde con su "id" exacto.
-Si la foto no muestra claramente ninguno de los sitios, responde sitioId = null.
+El sitio puede aparecer de forma indirecta: en un póster, folleto, pantalla, foto impresa o
+visto parcialmente, de noche o desde otro ángulo. Eso es válido: identifícalo por sus rasgos
+arquitectónicos y no lo descartes por no ser una toma en el lugar.
+Si la foto no muestra ninguno de los sitios del catálogo, responde sitioId = null.
 "confianza" va de 0 a 1. "razon" es una frase corta en español con los rasgos que viste.`;
 
 /**
@@ -71,6 +74,7 @@ export class ClaudeReconocedor implements ReconocedorVisual {
       return { sitioId: null, confianza: 0, razon: 'El modelo no devolvió una respuesta válida' };
     }
     const r = response.parsed_output;
+    this.logger.log(`Reconocimiento: sitio=${r.sitioId} confianza=${r.confianza} razón="${r.razon}"`);
     return { sitioId: r.sitioId, confianza: Math.max(0, Math.min(1, r.confianza)), razon: r.razon };
   }
 }
