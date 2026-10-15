@@ -13,7 +13,7 @@ Registro de las ceremonias Scrum del Proyecto Integrador (Desarrollo Móvil Inte
 | Sprint Review | 2 | 0 |
 | Sprint Retrospective | 2 | 0 |
 | Daily Scrum | 6 | 0 |
-| Incremento | 1 | 0 |
+| Incremento (Release por sprint) | 1 | 0 |
 
 ## Sprint 1 · 5 al 16 de octubre de 2026
 
@@ -26,6 +26,7 @@ Registro de las ceremonias Scrum del Proyecto Integrador (Desarrollo Móvil Inte
 | Daily Scrum 3 | | [daily-3.md](sprint-1/daily-3.md) |
 | Sprint Review | | [review.md](sprint-1/review.md) |
 | Retrospectiva | | [retro.md](sprint-1/retro.md) |
+| Incremento | | [incremento.md](sprint-1/incremento.md) |
 
 ## Sprint 2 · 19 al 30 de octubre de 2026
 
@@ -47,8 +48,21 @@ Registro de las ceremonias Scrum del Proyecto Integrador (Desarrollo Móvil Inte
 3. Llena la fecha en la tabla de arriba y actualiza el conteo de **Registradas**.
 4. Sube los cambios a la rama `docs/scrum-sprints`. Al cierre de cada sprint se abre un Pull Request hacia `develop` para que otro integrante lo revise.
 
-## Incremento
+## Incremento y Release de cada sprint
 
-El incremento es el software funcionando que se integra a `main` al cierre del sprint. Se marca con una
-[Release](https://github.com/gusmendez3249/Jose_Alfredo/releases) (tag `vX.Y.Z`) que incluye las notas generadas
-y el APK compilado.
+Al cierre de **cada sprint** se entrega un incremento: el software funcionando que pasa de `develop` a `main`.
+Se marca con una [Release](https://github.com/gusmendez3249/Jose_Alfredo/releases) que incluye las notas
+generadas y el APK compilado.
+
+| Sprint | Tag sugerido |
+|---|---|
+| Sprint 1 | `v1.1.0` |
+| Sprint 2 | `v1.2.0` |
+| Sprint 3 | `v2.0.0` (entrega final) |
+
+**Pasos al cierre del sprint:**
+
+1. PR `docs/scrum-sprints` → `develop` con las evidencias del sprint.
+2. PR `develop` → `main`, revisado por un compañero.
+3. En GitHub: **Releases → Draft a new release** → tag nuevo sobre `main` → **Generate release notes** → adjuntar el APK → **Publish release**.
+4. Llenar `sprint-N/incremento.md` con el enlace a la Release.
