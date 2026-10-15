@@ -31,7 +31,10 @@
 
 | Captura | Descripción | Responsable |
 |---|---|---|
-| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-5-ar-historial.png` | Historial de sitios visitados con el módulo AR (#23) | Gustavo |
+| <img src="img/daily-5-ar-historial.png" width="220"> | Pantalla 3 · historial de sitios visitados con la fecha de la visita (#23) | Gustavo |
+| <img src="img/daily-5-ar-sitio-identificado.png" width="220"> | Pantalla 2 · sitio identificado: Parroquia de Nuestra Señora de los Dolores con 80 % de confianza (#35) | Gustavo |
+| <img src="img/daily-5-ar-audio.png" width="220"> | Pantalla 2 · "Escuchar audio" narra la descripción del sitio (#35) | Gustavo |
+| <img src="img/daily-5-ar-galeria.png" width="220"> | "Ver en galería" abre la galería del festival desde la tarjeta AR (#35) | Gustavo |
 | <img src="img/daily-5-archivo.png" width="220"> | Entrada del archivo histórico oficial en la galería, creada con la Factory | Omar |
 
 ### Evidencia técnica

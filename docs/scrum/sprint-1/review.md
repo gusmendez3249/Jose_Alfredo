@@ -47,8 +47,9 @@ Las épicas #21 (GPS para auto) y #24 (Demos de audio) continúan en el Sprint 2
 |---|---|---|
 | <img src="img/daily-3-foro.png" width="220"> | Galería como foro de la comunidad (#22) | Omar |
 | <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico | Omar |
-| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR con la cámara (#32) | Gustavo |
-| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-5-ar-historial.png` | Historial de sitios visitados (#23) | Gustavo |
+| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR con la cámara (#32) | Gustavo |
+| <img src="img/daily-5-ar-historial.png" width="220"> | Historial de sitios visitados (#23) | Gustavo |
+| <img src="img/daily-5-ar-sitio-identificado.png" width="220"> | Sitio identificado con su descripción, galería y audio (#35) | Gustavo |
 | <img src="img/daily-5-archivo.png" width="220"> | Archivo histórico oficial creado con la Factory | Omar |
 | <img src="img/daily-6-inicio.png" width="220"> | Inicio con "Explorar AR" integrado en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
 

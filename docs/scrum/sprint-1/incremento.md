@@ -31,7 +31,8 @@
 | Captura | Qué se muestra | Responsable |
 |---|---|---|
 | <img src="img/daily-3-foro.png" width="220"> | Galería como foro | Omar |
-| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR | Gustavo |
+| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR | Gustavo |
+| <img src="img/daily-5-ar-sitio-identificado.png" width="220"> | Sitio identificado por el AR | Gustavo |
 | <img src="img/daily-6-inicio.png" width="220"> | Inicio con los módulos nuevos | Gustavo (Explorar AR) · Omar (Comunidad) |
 | <img src="img/daily-6-pruebas-backend.png" width="520"> | 17 pruebas del backend en verde | Equipo |
 | <img src="img/daily-5-pruebas-auto.png" width="520"> | 8 pruebas del modo automóvil en verde | Noé |

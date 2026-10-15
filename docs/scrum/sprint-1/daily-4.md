@@ -31,7 +31,8 @@
 
 | Captura | Descripción | Responsable |
 |---|---|---|
-| 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR: vista de la cámara con la retícula y el botón de captura | Gustavo |
+| <img src="img/daily-4-ar-camara.png" width="220"> | Escáner AR: vista de la cámara con la retícula y el botón de captura | Gustavo |
+| <img src="img/daily-4-ar-reconociendo.png" width="220"> | Captura enviada: el backend analiza la foto con IA (paso 3 del flujo) | Gustavo |
 | <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico, solo fotos | Omar |
 
 ### Evidencia técnica

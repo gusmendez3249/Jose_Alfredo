@@ -32,6 +32,7 @@
 | Captura | Descripción | Responsable |
 |---|---|---|
 | <img src="img/daily-6-inicio.png" width="220"> | Inicio con el acceso "Explorar AR" y la galería, ya integrados en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
+| <img src="img/daily-6-ar-explorar.png" width="220"> | Botón "Explorar AR" en Inicio, punto de entrada al módulo AR | Gustavo |
 
 ### Evidencia técnica
 
