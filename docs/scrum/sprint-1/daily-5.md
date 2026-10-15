@@ -34,6 +34,16 @@
 | 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-5-ar-historial.png` | Historial de sitios visitados con el módulo AR (#23) | Gustavo |
 | <img src="img/daily-5-archivo.png" width="220"> | Entrada del archivo histórico oficial en la galería, creada con la Factory | Omar |
 
+### Evidencia técnica
+
+| Evidencia | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-5-commit-ar.png" width="520"> | Commit del módulo AR: backend (fachada, catálogo, historial) y app (CameraX, escáner, historial) | Gustavo |
+| <img src="img/daily-5-commit-galeria.png" width="520"> | Commit de la galería interactiva: foro, archivo histórico con Factory y login | Omar |
+| <img src="img/daily-5-commit-seguridad.png" width="520"> | Commit de seguridad: endpoints protegidos, `.env` fuera del repo, CORS y limpieza de archivos generados | Noé |
+| <img src="img/daily-5-commit-auto.png" width="520"> | Commits del modo automóvil: módulo Android Auto (#34) y alerta de salida (#37) con sus pruebas | Noé |
+| <img src="img/daily-5-pruebas-auto.png" width="520"> | 8 pruebas unitarias de `SalidaCalculator` en verde (#37) | Noé |
+
 ### Código que lo hace funcionar
 
 **`festivaltrack-backend/src/ar/ar-reconocimiento.facade.ts`** — fachada AR: foto → reconocimiento visual → catálogo → historial (#32, #35, #23) · **Responsable:** Gustavo

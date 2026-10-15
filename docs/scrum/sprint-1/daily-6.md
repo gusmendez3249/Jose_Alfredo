@@ -33,6 +33,15 @@
 |---|---|---|
 | <img src="img/daily-6-inicio.png" width="220"> | Inicio con el acceso "Explorar AR" y la galería, ya integrados en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
 
+### Evidencia técnica
+
+| Evidencia | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-6-prs-integrados.png" width="520"> | Pull Requests #43–#46 integrados a `develop`, todos con sus checks en verde | Noé (integración) · Gustavo · Omar |
+| <img src="img/daily-6-ci-actions.png" width="520"> | Ejecuciones de GitHub Actions: Backend CI y Android CI en PRs y en `develop` | Noé |
+| <img src="img/daily-6-ramas.png" width="520"> | Ramas del repositorio e historial de `develop` con los merges del sprint | Noé |
+| <img src="img/daily-6-pruebas-backend.png" width="520"> | 17 pruebas unitarias del backend en verde, incluidas las de autenticación y AR | Equipo |
+
 ### Código que lo hace funcionar
 
 **`app/src/main/AndroidManifest.xml`** — servicio que Android Auto llama al conectar el teléfono (#34) · **Responsable:** Noé

@@ -34,6 +34,13 @@
 | 📷 *Captura pendiente* — la toma Gustavo: agrega `img/daily-4-ar-camara.png` | Escáner AR: vista de la cámara con la retícula y el botón de captura | Gustavo |
 | <img src="img/daily-4-mosaico.png" width="220"> | Galería en modo mosaico, solo fotos | Omar |
 
+### Evidencia técnica
+
+| Evidencia | Descripción | Responsable |
+|---|---|---|
+| <img src="img/daily-4-seguridad-endpoints.png" width="520"> | Endpoints de administrador protegidos: 401 sin token, 200 con token de administrador, y el servidor no arranca sin `JWT_SECRET` (prueba contra el backend local) | Noé |
+| <img src="img/daily-4-pruebas-ar.png" width="520"> | Prueba de integración de la fachada AR: 5 casos (sitio reconocido, historial, confianza baja, ID inexistente, archivo que no es imagen) | Gustavo |
+
 ### Código que lo hace funcionar
 
 **`app/src/main/java/mx/utng/festivaltrack/app/data/ar/ArFacade.kt`** — la app captura la foto con CameraX y la envía al backend en una sola llamada (#32) · **Responsable:** Gustavo

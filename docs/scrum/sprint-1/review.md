@@ -52,6 +52,15 @@ Las épicas #21 (GPS para auto) y #24 (Demos de audio) continúan en el Sprint 2
 | <img src="img/daily-5-archivo.png" width="220"> | Archivo histórico oficial creado con la Factory | Omar |
 | <img src="img/daily-6-inicio.png" width="220"> | Inicio con "Explorar AR" integrado en `develop` | Gustavo (Explorar AR) · Omar (Comunidad) |
 
+### Evidencia técnica
+
+| Evidencia | Qué se muestra | Responsable |
+|---|---|---|
+| <img src="img/daily-4-seguridad-endpoints.png" width="520"> | Endpoints de administrador protegidos y `JWT_SECRET` obligatorio | Noé |
+| <img src="img/daily-5-pruebas-auto.png" width="520"> | Pruebas del cálculo de la alerta de salida del auto (#37) | Noé |
+| <img src="img/daily-4-pruebas-ar.png" width="520"> | Prueba de integración de la fachada AR (#32, #35, #23) | Gustavo |
+| <img src="img/daily-6-prs-integrados.png" width="520"> | PRs #43–#46 integrados con CI en verde | Equipo |
+
 **Calidad:** los 4 Pull Requests del sprint (#43–#46) pasaron Backend CI y Android CI.
 Pruebas unitarias: 17 del backend y 8 de la app (`SalidaCalculator`).
 
