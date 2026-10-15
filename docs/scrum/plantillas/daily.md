@@ -1,7 +1,7 @@
 # Daily Scrum N · Sprint N
 
 - **Fecha:** AAAA-MM-DD
-- **Duración:** 10 min
+- **Duración:** 15 min
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):**
 
@@ -27,11 +27,19 @@
 
 ## Avance mostrado
 
-<!-- Capturas de la app, del código o del tablero. Enlaza las issues (#33) y PRs. -->
+### En la app
 
 | Captura | Descripción |
 |---|---|
-| ![](img/daily-N-app.png) | |
+| <img src="img/daily-N-app.png" width="220"> | |
+
+### Código que lo hace funcionar
+
+**`ruta/del/archivo`** — qué hace este fragmento (#issue)
+
+```kotlin
+// fragmento relevante
+```
 
 ## Acuerdos
 
