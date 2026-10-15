@@ -9,18 +9,19 @@ datasource db {
 }
 
 model Usuario {
-  id             String               @id @default(cuid())
+  id             String                  @id @default(cuid())
   nombre         String
-  correo         String               @unique
+  correo         String                  @unique
   contrasena     String
-  rol            Rol                  @default(USUARIO)
-  fechaRegistro  DateTime             @default(now())
-  activo         Boolean              @default(true)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  rol            Rol                     @default(USUARIO)
+  fechaRegistro  DateTime                @default(now())
+  activo         Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
   boletos        Boleto[]
   notificaciones Notificacion[]
   transmisiones  UsuarioTransmision[]
+  visitasSitio   VisitaSitio[]
   publicaciones  Publicacion[]
   comentarios    ComentarioPublicacion[]
   likesForo      LikePublicacion[]
@@ -254,6 +255,43 @@ model ChatStream {
   evento        Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
 
   @@map("chat_stream")
+}
+
+// ─── Módulo AR ──────────────────────────────────────────────────────────────
+// Catálogo de sitios/monumentos administrado por el equipo organizador.
+// `pistasVisuales` describe cómo luce el sitio; se envía al modelo de visión
+// para que pueda distinguirlo de los demás sitios del catálogo.
+model SitioAR {
+  id             String        @id @default(cuid())
+  nombre         String
+  ubicacion      String
+  descripcion    String
+  pistasVisuales String
+  imagenUrl      String?
+  audioUrl       String?
+  galeriaId      String?
+  latitud        Float?
+  longitud       Float?
+  activo         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  visitas        VisitaSitio[]
+
+  @@map("sitios_ar")
+}
+
+// Historial: cada reconocimiento exitoso registra una visita del usuario.
+model VisitaSitio {
+  id          String   @id @default(cuid())
+  sitioId     String
+  usuarioId   String
+  confianza   Float
+  fechaVisita DateTime @default(now())
+  sitio       SitioAR  @relation(fields: [sitioId], references: [id], onDelete: Cascade)
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, fechaVisita])
+  @@map("visitas_sitio")
 }
 
 /// Publicación del foro de la Galería Interactiva (experiencias, recomendaciones y fotos).

@@ -11,8 +11,8 @@ import retrofit2.converter.gson.GsonConverterFactory
  * Se instancia a través del companion object [create], que configura Retrofit
  * con la URL base del backend y el convertidor Gson para serialización JSON.
  *
- * URL Base: [SERVER_URL] + `/api/v1/` (fija con la propiedad Gradle `festivaltrackApiUrl` o detectada automáticamente).
- * Nota: `10.0.2.2` es el alias del host (PC) desde dentro del emulador Android.
+ * URL Base: `http://<host>:3001/api/v1/` — `10.0.2.2` en emulador, o la IP de la PC
+ * (`festivaltrack.deviceHost` en local.properties) en un celular físico.
  *
  * Uso:
  * ```kotlin
@@ -288,19 +288,51 @@ interface FestivalApiService {
         @retrofit2.http.Body request: RoleUpdateDto
     ): UsuarioDto
 
-    companion object {
-        /** IP de la PC con el backend en tu Wi-Fi; solo la usa un teléfono físico. Si cambia, actualízala con `ipconfig`. */
-        private const val LAN_HOST = "http://192.168.110.245:3001"
+    // ─── Módulo AR ─────────────────────────────────────────────────────────
 
-        private val isEmulator: Boolean
-            get() = android.os.Build.FINGERPRINT.contains("generic") ||
+    /**
+     * Facade AR del backend: envía la foto capturada y en una sola llamada recibe
+     * el sitio reconocido (reconocimiento visual + catálogo + registro en historial).
+     * @param token Token JWT del usuario en formato "Bearer <token>".
+     * @param foto Imagen JPEG en el campo multipart "foto".
+     */
+    @retrofit2.http.Multipart
+    @retrofit2.http.POST("ar/reconocer")
+    suspend fun reconocerSitio(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Part foto: okhttp3.MultipartBody.Part
+    ): ReconocimientoDto
+
+    /**
+     * Historial de sitios visitados por el usuario, del más reciente al más antiguo.
+     * @param token Token JWT del usuario en formato "Bearer <token>".
+     */
+    @retrofit2.http.GET("ar/historial")
+    suspend fun getHistorialSitios(
+        @retrofit2.http.Header("Authorization") token: String
+    ): List<VisitaSitioDto>
+
+    companion object {
+        /**
+         * Host del backend según dónde corre la app:
+         *  - Emulador: `10.0.2.2` (alias de la PC host).
+         *  - Celular físico: IP de la PC en el Wi-Fi, definida en `local.properties`
+         *    con `festivaltrack.deviceHost=192.168.X.X` (ver BuildConfig.DEVICE_HOST).
+         */
+        private val host: String
+            get() = if (esEmulador()) "10.0.2.2" else mx.utng.festivaltrack.shared.BuildConfig.DEVICE_HOST
+
+        private fun esEmulador(): Boolean =
+            android.os.Build.FINGERPRINT.startsWith("generic") ||
                 android.os.Build.FINGERPRINT.contains("emulator") ||
+                android.os.Build.HARDWARE.let { it.contains("goldfish") || it.contains("ranchu") } ||
+                android.os.Build.PRODUCT.contains("sdk_gphone") ||
                 android.os.Build.MODEL.contains("Emulator") ||
                 android.os.Build.MODEL.contains("Android SDK built for")
 
-        /** Emulador: 10.0.2.2 (alias del PC, no depende de la red). Teléfono físico: la IP de la PC. */
+        /** Origen del servidor (sin /api/v1); lo usa la galería para resolver URLs relativas de imágenes. */
         val SERVER_URL: String
-            get() = CONFIGURED_URL.ifBlank { if (isEmulator) "http://10.0.2.2:3001" else LAN_HOST }
+            get() = CONFIGURED_URL.ifBlank { "http://$host:3001" }
 
         /** URL fija definida con `-PfestivaltrackApiUrl` (por ejemplo la de Railway); vacía = detección automática. */
         private val CONFIGURED_URL: String
@@ -316,8 +348,15 @@ interface FestivalApiService {
          * @return Instancia lista para usar de [FestivalApiService].
          */
         fun create(): FestivalApiService {
+            // El reconocimiento AR consulta a una IA y puede tardar >10 s (timeout por defecto de OkHttp).
+            val http = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
             return Retrofit.Builder()
                 .baseUrl(BASE_URL)
+                .client(http)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(FestivalApiService::class.java)
@@ -677,6 +716,53 @@ data class UploadResultDto(val url: String)
  */
 data class RoleUpdateDto(
     val rol: String
+)
+
+/**
+ * Sitio/monumento del catálogo AR administrado por los organizadores.
+ * @property galeriaId Galería relacionada para el botón "Ver en galería" (puede ser null).
+ * @property audioUrl Audio guía del sitio; si es null la app narra la descripción con TTS.
+ */
+data class SitioArDto(
+    val id: String,
+    val nombre: String,
+    val ubicacion: String,
+    val descripcion: String,
+    val imagenUrl: String? = null,
+    val audioUrl: String? = null,
+    val galeriaId: String? = null,
+    val latitud: Double? = null,
+    val longitud: Double? = null
+)
+
+/**
+ * Respuesta de `POST ar/reconocer`.
+ * @property reconocido true si la foto coincide con un sitio del catálogo.
+ * @property sitio Sitio identificado (solo si [reconocido]).
+ * @property mensaje Explicación cuando no se reconoció nada.
+ */
+data class ReconocimientoDto(
+    val reconocido: Boolean,
+    val confianza: Double? = null,
+    val fechaVisita: String? = null,
+    val sitio: SitioArDto? = null,
+    val mensaje: String? = null
+)
+
+/** Datos mínimos del sitio embebidos en el historial. */
+data class SitioResumenDto(
+    val id: String,
+    val nombre: String,
+    val ubicacion: String,
+    val imagenUrl: String?
+)
+
+/** Entrada del historial de sitios visitados (pantalla 3 del módulo AR). */
+data class VisitaSitioDto(
+    val id: String,
+    val fechaVisita: String,
+    val confianza: Double,
+    val sitio: SitioResumenDto
 )
 
 /**
