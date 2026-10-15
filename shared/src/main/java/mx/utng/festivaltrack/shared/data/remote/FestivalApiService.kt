@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
  * Se instancia a través del companion object [create], que configura Retrofit
  * con la URL base del backend y el convertidor Gson para serialización JSON.
  *
- * URL Base: `http://10.0.2.2:3001/api/v1/`
+ * URL Base: configurable con la propiedad Gradle `festivaltrackApiUrl` (por defecto `http://10.0.2.2:3001/api/v1/`).
  * Nota: `10.0.2.2` es el alias del host (PC) desde dentro del emulador Android.
  *
  * Uso:
@@ -151,25 +151,25 @@ interface FestivalApiService {
      * Publica una nueva canción en el catálogo.
      */
     @retrofit2.http.POST("canciones")
-    suspend fun createCancion(@retrofit2.http.Body request: CancionCreateDto): CancionDto
+    suspend fun createCancion(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body request: CancionCreateDto): CancionDto
 
     /**
      * Publica una nueva imagen en la galería del festival.
      */
     @retrofit2.http.POST("galeria/imagen")
-    suspend fun addImagenGaleria(@retrofit2.http.Body request: ImagenCreateDto): ImagenDto
+    suspend fun addImagenGaleria(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body request: ImagenCreateDto): ImagenDto
 
     /**
      * Elimina una canción del catálogo por su ID.
      */
     @retrofit2.http.DELETE("canciones/{id}")
-    suspend fun deleteCancion(@retrofit2.http.Path("id") id: String)
+    suspend fun deleteCancion(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Path("id") id: String)
 
     /**
      * Elimina una imagen de la galería por su ID.
      */
     @retrofit2.http.DELETE("galeria/imagen/{id}")
-    suspend fun deleteImagenGaleria(@retrofit2.http.Path("id") id: String)
+    suspend fun deleteImagenGaleria(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Path("id") id: String)
 
     /**
      * Obtiene el estado actual de la transmisión en vivo (URL del stream RTSP y si está activo).
@@ -184,7 +184,7 @@ interface FestivalApiService {
      * @param body Objeto con streamUrl (ej. "rtsp://192.168.1.5:1935") e isLive (true/false).
      */
     @retrofit2.http.POST("stream/status")
-    suspend fun setStreamStatus(@retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
+    suspend fun setStreamStatus(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body body: StreamStatusDto): StreamStatusDto
 
     /**
      * Obtiene la lista de todos los usuarios registrados (requiere rol ADMIN).
@@ -224,11 +224,11 @@ interface FestivalApiService {
 
     companion object {
         /**
-         * URL base del API REST.
-         * `10.0.2.2` es el alias especial del emulador Android para referirse
-         * al localhost del PC host. En producción, cambiar por la URL del servidor real.
+         * URL base del API REST, definida en `shared/build.gradle.kts` (propiedad `festivaltrackApiUrl`).
+         * Por defecto `http://10.0.2.2:3001/api/v1/`: `10.0.2.2` es el alias del emulador Android
+         * para el localhost del PC. Para teléfonos reales se compila con la URL de Railway.
          */
-        private const val BASE_URL = "http://10.0.2.2:3001/api/v1/"
+        private val BASE_URL = mx.utng.festivaltrack.shared.BuildConfig.API_BASE_URL
 
         /**
          * Factory method que crea y retorna una instancia de [FestivalApiService].
