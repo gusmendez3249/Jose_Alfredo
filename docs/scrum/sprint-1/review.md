@@ -73,7 +73,7 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 | Done | #22, #26, #27, #32, #35, #23, #34, #37 y la épica #20 |
 | Movida al Sprint 2 | #28 · épicas #21 y #24 |
 
-> 📷 Opcional: agrega una captura del tablero como `img/review-tablero.png`.
+![Tablero del Sprint 1: las 9 tarjetas del sprint en Done](img/review-tablero.png)
 
 ## Retroalimentación recibida
 
