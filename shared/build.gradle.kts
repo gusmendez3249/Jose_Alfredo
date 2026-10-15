@@ -11,6 +11,16 @@ android {
 
     defaultConfig {
         minSdk = 30
+
+        // URL del backend. Por defecto apunta al PC desde el emulador (10.0.2.2).
+        // Para un teléfono real usa la de Railway, p. ej. en gradle.properties o con
+        // ./gradlew assembleDebug -PfestivaltrackApiUrl=https://festivaltrack-backend.up.railway.app/api/v1/
+        val apiUrl = (project.findProperty("festivaltrackApiUrl") as String?) ?: "http://10.0.2.2:3001/api/v1/"
+        buildConfigField("String", "API_BASE_URL", "\"$apiUrl\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

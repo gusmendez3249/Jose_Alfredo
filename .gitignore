@@ -16,3 +16,15 @@ captures
 local.properties
 
 hs_err_pid*.log
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Basura de builds / crashes de la JVM / IDE
+replay_pid*.log
+.kotlin/
+.idea_backup/
+festivaltrack-backend/dist/
+festivaltrack-backend/uploads/

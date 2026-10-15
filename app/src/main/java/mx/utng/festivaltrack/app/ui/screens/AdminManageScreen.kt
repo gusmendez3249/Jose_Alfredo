@@ -179,7 +179,7 @@ fun AdminManageScreen(
                             onDelete = {
                                 coroutineScope.launch {
                                     try {
-                                        api.deleteCancion(cancion.id)
+                                        api.deleteCancion("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", cancion.id)
                                         android.widget.Toast.makeText(context, "Canción eliminada del catálogo", android.widget.Toast.LENGTH_SHORT).show()
                                         reloadData()
                                     } catch (e: Exception) {
@@ -205,7 +205,7 @@ fun AdminManageScreen(
                             onDelete = {
                                 coroutineScope.launch {
                                     try {
-                                        api.deleteImagenGaleria(imagen.id)
+                                        api.deleteImagenGaleria("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", imagen.id)
                                         android.widget.Toast.makeText(context, "Imagen eliminada de la galería", android.widget.Toast.LENGTH_SHORT).show()
                                         reloadData()
                                     } catch (e: Exception) {
@@ -229,7 +229,7 @@ fun AdminManageScreen(
                         onDelete = {
                             coroutineScope.launch {
                                 try {
-                                    api.deleteCancion(cancion.id)
+                                    api.deleteCancion("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", cancion.id)
                                     android.widget.Toast.makeText(context, "Canción eliminada", android.widget.Toast.LENGTH_SHORT).show()
                                     reloadData()
                                 } catch (e: Exception) {}
@@ -248,7 +248,7 @@ fun AdminManageScreen(
                         onDelete = {
                             coroutineScope.launch {
                                 try {
-                                    api.deleteImagenGaleria(imagen.id)
+                                    api.deleteImagenGaleria("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", imagen.id)
                                     android.widget.Toast.makeText(context, "Imagen eliminada", android.widget.Toast.LENGTH_SHORT).show()
                                     reloadData()
                                 } catch (e: Exception) {}

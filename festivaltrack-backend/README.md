@@ -79,14 +79,15 @@ festivaltrack-backend/
 
 ## Paso 2: Configuración de Variables de Entorno (.env)
 
-Crea o verifica el archivo `.env` en `festivaltrack-backend/`:
+Copia `.env.example` a `.env` en `festivaltrack-backend/` y llena los valores reales.
+**Nunca subas el `.env` al repositorio** (ya está en `.gitignore`); pide las credenciales al equipo.
 
 ```env
 # Conexión a PostgreSQL en Neon Cloud (SSL requerido)
-DATABASE_URL="postgresql://neondb_owner:npg_vU8Nylw8mWkQ@ep-royal-darkness-at4ww4dx.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://<usuario>:<contraseña>@<host>.neon.tech/neondb?sslmode=require"
 
-# Clave secreta para la firma de tokens JWT
-JWT_SECRET="festivaltrack_super_secret_jwt_key_2024"
+# Clave secreta para la firma de tokens JWT (obligatoria; el servidor no arranca sin ella)
+JWT_SECRET="<cadena_aleatoria_larga>"
 
 # Puerto en el que correrá el servidor HTTP
 PORT=3001
