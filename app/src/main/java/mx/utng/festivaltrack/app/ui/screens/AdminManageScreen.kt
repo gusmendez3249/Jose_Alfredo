@@ -28,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.data.factory.BiographyEntryType
+import mx.utng.festivaltrack.app.data.factory.BiographyFactoryProducer
+import mx.utng.festivaltrack.app.data.firebase.BiographyFirestoreService
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
@@ -42,6 +45,7 @@ fun AdminManageScreen(
     val scrollState = rememberScrollState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Eventos") }
+    var showCreateBioDialog by remember { mutableStateOf(false) }
     
     val eventos by viewModel.eventos.collectAsState()
     
@@ -117,6 +121,7 @@ fun AdminManageScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item { FilterChipItem("Eventos", selectedFilter == "Eventos") { selectedFilter = "Eventos" } }
+                item { FilterChipItem("Biografía (Factory)", selectedFilter == "Biografía") { selectedFilter = "Biografía" } }
                 item { FilterChipItem("Todos", selectedFilter == "Todos") { selectedFilter = "Todos" } }
                 item { FilterChipItem("Canciones", selectedFilter == "Canciones") { selectedFilter = "Canciones" } }
                 item { FilterChipItem("Galería", selectedFilter == "Galería") { selectedFilter = "Galería" } }
@@ -186,6 +191,69 @@ fun AdminManageScreen(
                                         android.widget.Toast.makeText(context, "Error al eliminar canción", android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 }
+                            }
+                        )
+                    }
+                }
+            } else if (selectedFilter == "Biografía") {
+                val firestoreService = remember { BiographyFirestoreService.getInstance(context) }
+                val bioItems by firestoreService.itemsFlow.collectAsState()
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clickable { showCreateBioDialog = true },
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720)),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(PrimaryGold),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Alta de Biografía (Factory Pattern)", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("Crear hito, foto en Storage o curiosidad", color = Color.LightGray, fontSize = 11.sp)
+                        }
+                        Text(
+                            "ALTA +",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            modifier = Modifier
+                                .background(PrimaryGold, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (bioItems.isEmpty()) {
+                    Text("No hay elementos biográficos registrados.", color = Color.Gray, modifier = Modifier.padding(16.dp))
+                } else {
+                    bioItems.forEach { item ->
+                        ManageItemCard(
+                            status = "FIRESTORE",
+                            isDraft = false,
+                            title = item.titulo,
+                            subtitle = "${item.anoOEepoca} • ${item.categoria}",
+                            iconType = "image",
+                            onEdit = {},
+                            onDelete = {
+                                firestoreService.deleteBiographyItem(item.id)
+                                android.widget.Toast.makeText(context, "Elemento eliminado de Firestore", android.widget.Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -263,7 +331,13 @@ fun AdminManageScreen(
         
         // FAB
         FloatingActionButton(
-            onClick = onNavigateToCreateEvent,
+            onClick = {
+                if (selectedFilter == "Biografía") {
+                    showCreateBioDialog = true
+                } else {
+                    onNavigateToCreateEvent()
+                }
+            },
             containerColor = PrimaryGold,
             contentColor = Color.Black,
             shape = RoundedCornerShape(16.dp),
@@ -273,6 +347,12 @@ fun AdminManageScreen(
                 .size(64.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(32.dp))
+        }
+
+        if (showCreateBioDialog) {
+            AdminCreateBiographyDialog(
+                onDismiss = { showCreateBioDialog = false }
+            )
         }
     }
 }
@@ -390,4 +470,233 @@ fun ManageItemCard(
             )
         }
     }
+}
+
+/**
+ * Diálogo de Alta de Biografías por el Administrador implementando el FACTORY PATTERN.
+ */
+@Composable
+fun AdminCreateBiographyDialog(
+    onDismiss: () -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val api = remember { mx.utng.festivaltrack.shared.data.remote.FestivalApiService.create() }
+    val firestoreService = remember { BiographyFirestoreService.getInstance(context) }
+
+    var selectedType by remember { mutableStateOf(BiographyEntryType.HISTORICAL_MILESTONE) }
+    var titulo by remember { mutableStateOf("") }
+    var anoOEepoca by remember { mutableStateOf("1954") }
+    var ubicacion by remember { mutableStateOf("Dolores Hidalgo, Gto.") }
+    var descripcion by remember { mutableStateOf("") }
+    var citaCelebre by remember { mutableStateOf("") }
+    var imagenUrl by remember { mutableStateOf("gs://festival-josealfredo.appspot.com/biografias/foto_archivo.jpg") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF161F18),
+        title = {
+            Column {
+                Text(
+                    "ALTA DE BIOGRAFÍA (FACTORY)",
+                    color = PrimaryGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    "Crear Entrada Histórica",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Tipo de Elemento (Factory):", color = PrimaryGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val isMilestone = selectedType == BiographyEntryType.HISTORICAL_MILESTONE
+                    Button(
+                        onClick = { selectedType = BiographyEntryType.HISTORICAL_MILESTONE },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isMilestone) PrimaryGold else Color(0xFF263328),
+                            contentColor = if (isMilestone) Color.Black else Color.White
+                        ),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                    ) {
+                        Text("Hito", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    val isPhoto = selectedType == BiographyEntryType.ARCHIVE_PHOTO
+                    Button(
+                        onClick = { selectedType = BiographyEntryType.ARCHIVE_PHOTO },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isPhoto) PrimaryGold else Color(0xFF263328),
+                            contentColor = if (isPhoto) Color.Black else Color.White
+                        ),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                    ) {
+                        Text("Storage", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    val isCuriosity = selectedType == BiographyEntryType.ANECDOTE_CURIOSITY
+                    Button(
+                        onClick = { selectedType = BiographyEntryType.ANECDOTE_CURIOSITY },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isCuriosity) PrimaryGold else Color(0xFF263328),
+                            contentColor = if (isCuriosity) Color.Black else Color.White
+                        ),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                    ) {
+                        Text("Anécdota", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                OutlinedTextField(
+                    value = titulo,
+                    onValueChange = { titulo = it },
+                    label = { Text("Título del Hito o Fotografía") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = PrimaryGold,
+                        unfocusedBorderColor = Color.Gray
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = anoOEepoca,
+                        onValueChange = { anoOEepoca = it },
+                        label = { Text("Año / Época") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = PrimaryGold,
+                            unfocusedBorderColor = Color.Gray
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = ubicacion,
+                        onValueChange = { ubicacion = it },
+                        label = { Text("Ubicación") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = PrimaryGold,
+                            unfocusedBorderColor = Color.Gray
+                        ),
+                        modifier = Modifier.weight(1.4f)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = citaCelebre,
+                    onValueChange = { citaCelebre = it },
+                    label = { Text("Cita Célebre (Opcional)") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = PrimaryGold,
+                        unfocusedBorderColor = Color.Gray
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción Histórica Detallada") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = PrimaryGold,
+                        unfocusedBorderColor = Color.Gray
+                    ),
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = imagenUrl,
+                    onValueChange = { imagenUrl = it },
+                    label = { Text("Storage URL / Imagen") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = PrimaryGold,
+                        unfocusedBorderColor = Color.Gray
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (titulo.isBlank() || descripcion.isBlank()) {
+                        android.widget.Toast.makeText(context, "Completa título y descripción", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        // 1. Invocar Factory Pattern
+                        val createdItem = BiographyFactoryProducer.createAdminEntry(
+                            entryType = selectedType,
+                            titulo = titulo,
+                            anoOEpoca = anoOEepoca,
+                            descripcion = descripcion,
+                            imagenUrl = imagenUrl,
+                            citaCelebre = citaCelebre.takeIf { it.isNotBlank() },
+                            ubicacion = ubicacion
+                        )
+
+                        // 2. Guardar en servicio de Firestore
+                        firestoreService.registerBiographyItem(createdItem)
+
+                        // 3. Notificar a backend
+                        coroutineScope.launch {
+                            try {
+                                api.altaBiografia(
+                                    request = mx.utng.festivaltrack.shared.data.remote.BiografiaAltaDto(
+                                        titulo = createdItem.titulo,
+                                        descripcion = createdItem.descripcion,
+                                        citaCelebre = createdItem.citaCelebre,
+                                        anoOEpoca = createdItem.anoOEepoca,
+                                        imagenUrl = createdItem.storageImageUrl,
+                                        tipo = createdItem.entryType.name
+                                    )
+                                )
+                            } catch (e: Exception) {}
+                        }
+
+                        android.widget.Toast.makeText(
+                            context,
+                            "¡Alta exitosa con Factory! Visible en la Galería Interactiva.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                        onDismiss()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black)
+            ) {
+                Text("CREAR CON FACTORY", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = Color.Gray)
+            }
+        }
+    )
 }

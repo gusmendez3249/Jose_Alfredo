@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // CORS: permite localhost en desarrollo y el/los frontends de FRONTEND_URL (separados por coma).
   // Las apps Android no envían Origin, así que no se ven afectadas.
@@ -22,6 +24,9 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  // Fotos subidas (foro de la galería) accesibles en /uploads/<archivo>
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
   app.setGlobalPrefix('api/v1');
 
   // Railway inyecta PORT automáticamente; en local se usa 3001

@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
  * Se instancia a través del companion object [create], que configura Retrofit
  * con la URL base del backend y el convertidor Gson para serialización JSON.
  *
- * URL Base: configurable con la propiedad Gradle `festivaltrackApiUrl` (por defecto `http://10.0.2.2:3001/api/v1/`).
+ * URL Base: [SERVER_URL] + `/api/v1/` (fija con la propiedad Gradle `festivaltrackApiUrl` o detectada automáticamente).
  * Nota: `10.0.2.2` es el alias del host (PC) desde dentro del emulador Android.
  *
  * Uso:
@@ -134,6 +134,15 @@ interface FestivalApiService {
     suspend fun getBiografias(): List<BiografiaDto>
 
     /**
+     * Da de alta una nueva biografía o hito interactivo en el backend / Firestore.
+     */
+    @retrofit2.http.POST("biografias/alta")
+    suspend fun altaBiografia(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Body request: BiografiaAltaDto
+    ): BiografiaDto
+
+    /**
      * Obtiene el catálogo de canciones disponibles del artista.
      * @return Lista de [CancionDto] con título, duración y URL del archivo de audio.
      */
@@ -158,6 +167,63 @@ interface FestivalApiService {
      */
     @retrofit2.http.POST("galeria/imagen")
     suspend fun addImagenGaleria(@retrofit2.http.Header("Authorization") token: String?, @retrofit2.http.Body request: ImagenCreateDto): ImagenDto
+
+    // ─── Foro de la Galería Interactiva ─────────────────────────────────────
+
+    /**
+     * Lista publicaciones del foro (más recientes primero).
+     * @param tipo Filtro opcional: EXPERIENCIA, RECOMENDACION o FOTO.
+     * @param before Cursor: `createdAt` de la última publicación recibida.
+     */
+    @GET("foro")
+    suspend fun getForo(
+        @retrofit2.http.Header("Authorization") token: String? = null,
+        @retrofit2.http.Query("tipo") tipo: String? = null,
+        @retrofit2.http.Query("before") before: String? = null,
+        @retrofit2.http.Query("limit") limit: Int = 20
+    ): List<PublicacionDto>
+
+    @retrofit2.http.POST("foro")
+    suspend fun crearPublicacion(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Body request: PublicacionCreateDto
+    ): PublicacionDto
+
+    @retrofit2.http.DELETE("foro/{id}")
+    suspend fun eliminarPublicacion(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("id") id: String
+    )
+
+    @retrofit2.http.POST("foro/{id}/like")
+    suspend fun toggleLikePublicacion(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("id") id: String
+    ): LikeResultDto
+
+    @GET("foro/{id}/comentarios")
+    suspend fun getComentarios(@retrofit2.http.Path("id") id: String): List<ComentarioDto>
+
+    @retrofit2.http.POST("foro/{id}/comentarios")
+    suspend fun comentar(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("id") id: String,
+        @retrofit2.http.Body request: ComentarioCreateDto
+    ): ComentarioDto
+
+    @retrofit2.http.DELETE("foro/comentarios/{id}")
+    suspend fun eliminarComentario(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("id") id: String
+    )
+
+    /** Sube una imagen (campo multipart `file`) y devuelve su URL relativa `/uploads/...`. */
+    @retrofit2.http.Multipart
+    @retrofit2.http.POST("upload")
+    suspend fun subirImagen(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Part file: okhttp3.MultipartBody.Part
+    ): UploadResultDto
 
     /**
      * Elimina una canción del catálogo por su ID.
@@ -223,12 +289,25 @@ interface FestivalApiService {
     ): UsuarioDto
 
     companion object {
-        /**
-         * URL base del API REST, definida en `shared/build.gradle.kts` (propiedad `festivaltrackApiUrl`).
-         * Por defecto `http://10.0.2.2:3001/api/v1/`: `10.0.2.2` es el alias del emulador Android
-         * para el localhost del PC. Para teléfonos reales se compila con la URL de Railway.
-         */
-        private val BASE_URL = mx.utng.festivaltrack.shared.BuildConfig.API_BASE_URL
+        /** IP de la PC con el backend en tu Wi-Fi; solo la usa un teléfono físico. Si cambia, actualízala con `ipconfig`. */
+        private const val LAN_HOST = "http://192.168.110.245:3001"
+
+        private val isEmulator: Boolean
+            get() = android.os.Build.FINGERPRINT.contains("generic") ||
+                android.os.Build.FINGERPRINT.contains("emulator") ||
+                android.os.Build.MODEL.contains("Emulator") ||
+                android.os.Build.MODEL.contains("Android SDK built for")
+
+        /** Emulador: 10.0.2.2 (alias del PC, no depende de la red). Teléfono físico: la IP de la PC. */
+        val SERVER_URL: String
+            get() = CONFIGURED_URL.ifBlank { if (isEmulator) "http://10.0.2.2:3001" else LAN_HOST }
+
+        /** URL fija definida con `-PfestivaltrackApiUrl` (por ejemplo la de Railway); vacía = detección automática. */
+        private val CONFIGURED_URL: String
+            get() = mx.utng.festivaltrack.shared.BuildConfig.API_BASE_URL.removeSuffix("/").removeSuffix("/api/v1")
+
+        private val BASE_URL: String
+            get() = "$SERVER_URL/api/v1/"
 
         /**
          * Factory method que crea y retorna una instancia de [FestivalApiService].
@@ -549,9 +628,68 @@ data class ImagenCreateDto(
 )
 
 /**
+ * Publicación del foro de la galería.
+ * @property tipo EXPERIENCIA, RECOMENDACION o FOTO.
+ * @property imagenUrl Ruta relativa (`/uploads/...`) o URL https; null si no tiene foto.
+ * @property createdAt Fecha ISO 8601 (UTC).
+ * @property likedByMe true si el usuario con sesión ya dio "me gusta".
+ */
+data class PublicacionDto(
+    val id: String,
+    val tipo: String,
+    val titulo: String? = null,
+    val contenido: String,
+    val imagenUrl: String? = null,
+    val lugar: String? = null,
+    val createdAt: String,
+    val autorId: String,
+    val autorNombre: String,
+    val likes: Int = 0,
+    val comentarios: Int = 0,
+    val likedByMe: Boolean = false
+)
+
+data class PublicacionCreateDto(
+    val tipo: String,
+    val titulo: String? = null,
+    val contenido: String,
+    val imagenUrl: String? = null,
+    val lugar: String? = null
+)
+
+data class ComentarioDto(
+    val id: String,
+    val texto: String,
+    val createdAt: String,
+    val autorId: String,
+    val autorNombre: String
+)
+
+data class ComentarioCreateDto(val texto: String)
+
+data class LikeResultDto(val liked: Boolean, val likes: Int)
+
+data class UploadResultDto(val url: String)
+
+/**
  * Payload para actualizar el rol de un usuario existente.
  * @property rol Nuevo rol a asignar, típicamente "USER" o "ADMIN".
  */
 data class RoleUpdateDto(
     val rol: String
+)
+
+/**
+ * Payload para dar de alta una nueva biografía o hito interactivo usando el Factory pattern.
+ */
+data class BiografiaAltaDto(
+    val artistaId: String = "art_jose_alfredo",
+    val artistaNombre: String = "José Alfredo Jiménez",
+    val titulo: String,
+    val descripcion: String,
+    val citaCelebre: String? = null,
+    val anoOEpoca: String = "1950s",
+    val imagenUrl: String? = null,
+    val audioUrl: String? = null,
+    val tipo: String = "HISTORICO"
 )
