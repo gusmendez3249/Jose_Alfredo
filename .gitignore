@@ -16,3 +16,8 @@ captures
 local.properties
 
 hs_err_pid*.log
+
+# Credenciales y secretos: nunca se suben al repositorio
+.env
+.env.*
+!.env.example
