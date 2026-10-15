@@ -70,4 +70,9 @@ dependencies {
     implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
     implementation("com.github.pedroSG94:RTSP-Server:1.4.1")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // Android Auto (Car App Library)
+    implementation("androidx.car.app:app:1.4.0")
+
+    testImplementation("junit:junit:4.13.2")
 }

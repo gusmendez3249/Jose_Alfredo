@@ -1,4 +1,4 @@
-# CI de la app Android: compila el APK de depuración en cada PR y lo guarda como artefacto descargable.
+# CI de la app Android: corre las pruebas unitarias, compila el APK de depuración en cada PR y lo guarda como artefacto descargable.
 name: Android CI
 
 on:
@@ -32,10 +32,10 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Compilar APK de la app móvil
+      - name: Pruebas unitarias y APK de la app móvil
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon -Dorg.gradle.jvmargs=-Xmx4g
+          ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon -Dorg.gradle.jvmargs=-Xmx4g
 
       - name: Subir APK como artefacto
         uses: actions/upload-artifact@v4
