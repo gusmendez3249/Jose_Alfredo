@@ -54,11 +54,13 @@ Al cierre de **cada sprint** se entrega un incremento: el software funcionando q
 Se marca con una [Release](https://github.com/gusmendez3249/Jose_Alfredo/releases) que incluye las notas
 generadas y el APK compilado.
 
+Siguiendo los tags que ya existen (`v1.0-wearable`, `v2.0-movil`, `v3.0-tv`):
+
 | Sprint | Tag sugerido |
 |---|---|
-| Sprint 1 | `v1.1.0` |
-| Sprint 2 | `v1.2.0` |
-| Sprint 3 | `v2.0.0` (entrega final) |
+| Sprint 1 | `v4.0-sprint1` |
+| Sprint 2 | `v4.1-sprint2` |
+| Sprint 3 | `v4.2-sprint3` |
 
 **Pasos al cierre del sprint:**
 
