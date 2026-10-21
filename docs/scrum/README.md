@@ -62,6 +62,14 @@ python docs/scrum/herramientas/burndown.py
 
 Requiere GitHub CLI con sesión iniciada (`gh auth login`) y `pip install matplotlib`. Conviene correrlo antes de cada Daily y del Review.
 
+**Automático:** el workflow `.github/workflows/burndown.yml` lo regenera de lunes a viernes a las 07:00 y sube las imágenes a esta rama.
+Para que funcione:
+
+1. El dueño del repo agrega el secreto `PROJECT_TOKEN` (*Settings → Secrets and variables → Actions*): un token personal *classic* con los permisos `repo` y `read:project`.
+2. El workflow debe estar en `main` (GitHub solo ejecuta los programados desde la rama principal); llega ahí con el PR `develop → main` del cierre de sprint.
+
+En Insights también existe la gráfica **Burndown Sprint 2** (suma de Estimate, `sprint:@current -status:Done`), sin línea ideal.
+
 ## Cómo registrar una ceremonia
 
 1. Copia la plantilla de [`plantillas/`](plantillas/) a la carpeta del sprint (por ejemplo `sprint-1/daily-2.md`).
