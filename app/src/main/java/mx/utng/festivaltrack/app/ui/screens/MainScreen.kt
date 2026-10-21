@@ -120,8 +120,12 @@ fun MainScreen(
                 }
                 composable(BottomNavItem.Map.route) {
                     MapScreen(
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onElegirDestino = { navController.navigate("destinos") }
                     )
+                }
+                composable("destinos") {
+                    ElegirDestinoScreen(onNavigateBack = { navController.popBackStack() })
                 }
                 composable(BottomNavItem.Audio.route) {
                     AudioScreen()
