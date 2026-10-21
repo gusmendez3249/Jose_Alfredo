@@ -68,7 +68,7 @@ Para que funcione:
 1. El dueño del repo agrega el secreto `PROJECT_TOKEN` (*Settings → Secrets and variables → Actions*): un token personal *classic* con los permisos `repo` y `read:project`.
 2. El workflow debe estar en `main` (GitHub solo ejecuta los programados desde la rama principal); llega ahí con el PR `develop → main` del cierre de sprint.
 
-En Insights también existe la gráfica **Burndown Sprint 2** (suma de Estimate, `sprint:@current -status:Done`), sin línea ideal.
+> Las gráficas personalizadas de Insights aplican el estado **actual** de cada tarea a todo el historial, por eso no sirven como burndown; se usa esta imagen.
 
 ## Cómo registrar una ceremonia
 
