@@ -1,6 +1,9 @@
 package mx.utng.festivaltrack.app.auto
 
+import android.content.Intent
+import android.net.Uri
 import androidx.car.app.CarContext
+import androidx.car.app.CarToast
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.ItemList
@@ -27,12 +30,7 @@ class InicioAutoScreen(carContext: CarContext) : Screen(carContext) {
                     .setOnClickListener { screenManager.push(AlertaSalidaScreen(carContext)) }
                     .build()
             )
-            .addItem(
-                Row.Builder()
-                    .setTitle("Ruta al festival")
-                    .addText("Disponible próximamente")
-                    .build()
-            )
+            .addItem(filaRuta())
             .addItem(
                 Row.Builder()
                     .setTitle("Audio en curso")
@@ -45,6 +43,26 @@ class InicioAutoScreen(carContext: CarContext) : Screen(carContext) {
             .setTitle("FestivalTrack")
             .setHeaderAction(Action.APP_ICON)
             .setSingleList(opciones)
+            .build()
+    }
+
+    /** Ruta elegida en el teléfono (pantalla 7); al tocarla abre la navegación del auto. */
+    private fun filaRuta(): Row {
+        val ruta = RutaActivaStore(carContext).obtener()
+            ?: return Row.Builder()
+                .setTitle("Ruta al festival")
+                .addText("Elige tu destino en el teléfono: Mapa → ícono del auto")
+                .build()
+        return Row.Builder()
+            .setTitle("Ruta activa: ${ruta.nombre}")
+            .addText("Toca para iniciar la navegación")
+            .setOnClickListener {
+                try {
+                    carContext.startCarApp(Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${ruta.latitud},${ruta.longitud}")))
+                } catch (e: Exception) {
+                    CarToast.makeText(carContext, "No hay una app de navegación disponible", CarToast.LENGTH_LONG).show()
+                }
+            }
             .build()
     }
 }
