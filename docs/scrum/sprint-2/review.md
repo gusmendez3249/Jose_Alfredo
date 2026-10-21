@@ -13,6 +13,12 @@ Milestone: [Sprint 2](https://github.com/gusmendez3249/Jose_Alfredo/milestones) 
 
 > 📷 Agrega la captura del milestone como `img/review-milestone.png`.
 
+### Burndown
+
+![Burndown del Sprint 2](img/burndown-sprint-2.png)
+
+Gráfica generada con `docs/scrum/herramientas/burndown.py` a partir del campo Sprint, el Estimate y la fecha de cierre de cada issue del Project.
+
 ## Tareas terminadas
 
 | Issue | Tarea | Responsable | Evidencia |

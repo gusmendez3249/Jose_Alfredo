@@ -48,6 +48,20 @@ base del modo automóvil (Android Auto y alerta de salida), seguridad del backen
 | Retrospectiva | Vie 30/10 | [retro.md](sprint-2/retro.md) |
 | Incremento | Vie 30/10 | [incremento.md](sprint-2/incremento.md) |
 
+## Burndown
+
+GitHub Projects solo muestra burn up en Insights. El burndown de cada sprint se genera con los datos reales del Project:
+
+```bash
+python docs/scrum/herramientas/burndown.py
+```
+
+| Sprint 1 | Sprint 2 |
+|---|---|
+| ![Burndown Sprint 1](sprint-1/img/burndown-sprint-1.png) | ![Burndown Sprint 2](sprint-2/img/burndown-sprint-2.png) |
+
+Requiere GitHub CLI con sesión iniciada (`gh auth login`) y `pip install matplotlib`. Conviene correrlo antes de cada Daily y del Review.
+
 ## Cómo registrar una ceremonia
 
 1. Copia la plantilla de [`plantillas/`](plantillas/) a la carpeta del sprint (por ejemplo `sprint-1/daily-2.md`).

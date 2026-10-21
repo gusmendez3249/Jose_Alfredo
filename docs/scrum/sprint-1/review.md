@@ -15,6 +15,12 @@ Milestone: [Sprint 1](https://github.com/gusmendez3249/Jose_Alfredo/milestone/1)
 |---|---|---|---|
 | [Sprint 1](https://github.com/gusmendez3249/Jose_Alfredo/milestone/1) | 8 | 0 | 100 % |
 
+### Burndown
+
+![Burndown del Sprint 1](img/burndown-sprint-1.png)
+
+Gráfica generada con `docs/scrum/herramientas/burndown.py` a partir del campo Sprint, el Estimate y la fecha de cierre de cada issue del Project.
+
 ## Tareas terminadas
 
 | Issue | Tarea | Responsable | Evidencia |
