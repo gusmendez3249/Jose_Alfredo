@@ -27,7 +27,9 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 fun DashboardScreen(
     eventosViewModel: EventosViewModel? = null,
     onNavigateToTickets: () -> Unit = {},
-    onNavigateToLive: (String) -> Unit = {}
+    onNavigateToLive: (String) -> Unit = {},
+    onNavigateToBiography: () -> Unit = {},
+    onNavigateToGallery: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
@@ -120,7 +122,8 @@ fun DashboardScreen(
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .height(130.dp),
+                    .height(130.dp)
+                    .clickable { onNavigateToBiography() },
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -186,8 +189,115 @@ fun DashboardScreen(
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(28.dp))
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ⭐ BANNER DE ACCESO DIRECTO: GALERÍA INTERACTIVA (Módulo Biografía)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .clickable { onNavigateToBiography() },
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF162219)),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold.copy(alpha = 0.6f))
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.jose_alfredo_portrait),
+                        contentDescription = "Galería Interactiva",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "⭐ BIOGRAFÍA",
+                            color = PrimaryGold,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "El Legado de José Alfredo",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Vida, obra y discografía del Rey",
+                        color = Color.LightGray,
+                        fontSize = 11.sp
+                    )
+                }
+
+                Text("EXPLORAR ➜", color = PrimaryGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 💬 ACCESO DIRECTO: FORO / GALERÍA DE LA COMUNIDAD
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .clickable { onNavigateToGallery() },
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF162219)),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold.copy(alpha = 0.35f))
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.gal_banner_festival),
+                    contentDescription = "Comunidad del festival",
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.CenterStart,
+                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "COMUNIDAD",
+                        color = PrimaryGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "Comparte tu experiencia",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Fotos, recomendaciones y anécdotas de los asistentes",
+                        color = Color.LightGray,
+                        fontSize = 11.sp
+                    )
+                }
+                Text("VER ➜", color = PrimaryGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Upcoming Event Section
         Text(

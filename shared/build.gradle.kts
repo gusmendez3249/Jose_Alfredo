@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// IP de la PC (backend) vista desde un celular físico. Se define en local.properties
+// (ignorado por git):  festivaltrack.deviceHost=192.168.X.X
+// Si no se define, un celular físico usará 10.0.2.2 (solo válido en emulador).
+val deviceHost: String = Properties().also { props ->
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { props.load(it) }
+}.getProperty("festivaltrack.deviceHost") ?: "10.0.2.2"
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -11,17 +20,16 @@ android {
 
     defaultConfig {
         minSdk = 30
+        buildConfigField("String", "DEVICE_HOST", "\"$deviceHost\"")
 
-        // URL del backend. Por defecto apunta al PC desde el emulador (10.0.2.2).
-        // Para un teléfono real usa la de Railway, p. ej. en gradle.properties o con
-        // ./gradlew assembleDebug -PfestivaltrackApiUrl=https://festivaltrack-backend.up.railway.app/api/v1/
-        val apiUrl = (project.findProperty("festivaltrackApiUrl") as String?) ?: "http://10.0.2.2:3001/api/v1/"
+        // URL fija del backend (opcional). Vacía = detección automática: 10.0.2.2 en el emulador
+        // y la IP de la PC en un teléfono físico (ver FestivalApiService.SERVER_URL).
+        // Ejemplo: ./gradlew assembleDebug -PfestivaltrackApiUrl=https://festivaltrack-backend.up.railway.app/api/v1/
+        val apiUrl = (project.findProperty("festivaltrackApiUrl") as String?) ?: ""
         buildConfigField("String", "API_BASE_URL", "\"$apiUrl\"")
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
