@@ -33,7 +33,9 @@ fun TicketsScreen(
     eventosViewModel: EventosViewModel? = null,
     onNavigateToCheckout: (eventoId: String, vip: Int, general: Int) -> Unit = { _, _, _ -> }
 ) {
-    // Los boletos se compran para el próximo evento a la venta (el backend rechaza eventos inexistentes o cancelados)
+    // Los boletos se compran para el próximo evento a la venta (#52): el backend ahora rechaza
+    // eventos inexistentes o cancelados, así que ya no se puede mandar "EVT-001" fijo.
+    // Se toma de la caché local (Room), ordenando por fecha ISO-8601 (orden alfabético = cronológico).
     val eventos = eventosViewModel?.eventosLocales?.collectAsState()?.value ?: emptyList()
     val eventoAVenta = eventos
         .filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
@@ -104,6 +106,7 @@ fun TicketsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
+                        // Sin evento a la venta no se puede comprar (p. ej. si aún no se sincronizan los eventos)
                         enabled = totalTickets > 0 && eventoAVenta != null
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {

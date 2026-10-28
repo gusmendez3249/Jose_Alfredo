@@ -100,6 +100,8 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
             _checkoutState.value = CheckoutState.Processing
             try {
                 // Al ser un simulador, usamos cualquier método
+                // Una petición por categoría con boletos (#52): el backend cobra cada una con su
+                // precio oficial. Antes se mandaba todo como VIP con el total calculado en la app.
                 listOf("VIP" to vipTickets, "GENERAL" to generalTickets)
                     .filter { (_, cantidad) -> cantidad > 0 }
                     .forEach { (categoria, cantidad) ->

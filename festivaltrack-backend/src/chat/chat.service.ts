@@ -42,12 +42,16 @@ export class ChatService {
    * @throws NotFoundException Si el evento no existe.
    */
   async enviarMensaje(usuarioId: string, dto: EnviarMensajeDto) {
+    // 1. El remitente se busca con el ID del token: así el nombre y el rol son los reales (#50)
     const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioId } });
     if (!usuario || !usuario.activo) throw new UnauthorizedException();
+
+    // 2. El mensaje solo se guarda si el evento existe (antes fallaba la FK con un error 500)
 
     const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
     if (!evento) throw new NotFoundException('Evento no encontrado');
 
+    // 3. Se guarda con datos del servidor: el cliente ya no puede mandar usuarioNombre ni esAdmin
     return this.prisma.chatStream.create({
       data: {
         eventoId: dto.eventoId,

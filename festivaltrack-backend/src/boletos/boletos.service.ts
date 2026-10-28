@@ -32,11 +32,15 @@ export class BoletosService {
    * @throws BadRequestException Si el evento no está a la venta (HTTP 400).
    */
   async comprar(usuarioId: string, dto: ComprarBoletoDto) {
+    // Valores por defecto para clientes que no mandan categoría, cantidad o método de pago
     const categoria = dto.categoria ?? 'GENERAL';
     const cantidad = dto.cantidad ?? 1;
     const metodoPago = dto.metodoPago ?? 'TARJETA_CREDITO';
+    // El monto SIEMPRE sale de la tabla de precios del servidor (#52): un cliente modificado
+    // ya no puede pagar $1 por un boleto VIP mandando su propio precioTotal.
     const montoTotal = PRECIOS_BOLETO[categoria] * cantidad;
 
+    // El evento debe existir; antes se usaba el primero de la BD o se creaba uno (y un admin falso)
     const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
     if (!evento) throw new NotFoundException('Evento no encontrado');
     if (evento.estado !== 'PUBLICADO' && evento.estado !== 'EN_CURSO') {

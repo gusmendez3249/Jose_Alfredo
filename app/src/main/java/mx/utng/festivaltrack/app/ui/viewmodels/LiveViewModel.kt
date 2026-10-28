@@ -64,7 +64,8 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
         if (text.isBlank()) return
         
         val nombre = tokenManager.getUserName() ?: "Usuario"
-        // El chat exige sesión: sin token no se puede publicar
+        // El chat exige sesión (#50): el backend toma el nombre y el rol del token,
+        // así que sin token no se puede publicar
         val token = tokenManager.getToken() ?: return
 
         viewModelScope.launch {

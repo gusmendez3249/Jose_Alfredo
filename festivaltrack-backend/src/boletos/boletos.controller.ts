@@ -9,6 +9,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class BoletosController {
   constructor(private readonly boletosService: BoletosService) {}
 
+  // El body se valida con ComprarBoletoDto (#52); el precio lo calcula el servicio.
   @UseGuards(JwtAuthGuard)
   @Post('comprar')
   comprar(@Body() dto: ComprarBoletoDto, @Request() req: any) {

@@ -21,6 +21,8 @@ import { ForoModule } from './foro/foro.module';
     // Los endpoints sensibles bajan este límite con @Throttle.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     PrismaModule, AuthModule, EventosModule, SyncModule, BoletosModule, GaleriaModule, ChatModule, BiografiasModule, CancionesModule, StreamModule, ArModule, ForoModule],
+  // Rate limiting (#51): el guard se registra como APP_GUARD para que aplique a TODAS las rutas
+  // sin tener que decorar cada controlador; responde 429 Too Many Requests al pasarse del límite.
   providers: [{ provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
 export class AppModule {}

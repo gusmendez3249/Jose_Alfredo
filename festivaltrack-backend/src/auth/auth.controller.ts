@@ -12,9 +12,12 @@ import { Throttle } from '@nestjs/throttler';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // Anti fuerza bruta / altas masivas: al superar el límite responde 429.
+  // Rate limiting (#51): al superar el límite responde 429 Too Many Requests.
+  // Registro: máx. 3 cuentas por minuto desde la misma IP (evita altas masivas).
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('register') register(@Body() dto: RegisterDto) { return this.authService.register(dto); }
+  // Login: máx. 5 intentos por minuto por IP + correo (ver AppThrottlerGuard). Frena la
+  // fuerza bruta contra una cuenta sin bloquear a otros usuarios que comparten la IP.
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')    login(@Body() dto: LoginDto)       { return this.authService.login(dto); }
   @Post('tv-sync')  tvSync(@Body() body: { tvToken: string, userId: string }) { return this.authService.tvSync(body); }

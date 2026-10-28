@@ -111,6 +111,7 @@ fun CheckoutScreen(
                                 tarjetaCVV = cvv
                             )
                         },
+                        // Evita doble envío mientras se procesa y compras sin evento o sin boletos
                         enabled = checkoutState !is CheckoutState.Processing && eventoId.isNotBlank() && totalTickets > 0,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PrimaryGold,
@@ -154,6 +155,7 @@ fun CheckoutScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Resumen del Pedido", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
+                    // Desglose por categoría (antes mostraba todo como "x VIP")
                     if (vipTickets > 0) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

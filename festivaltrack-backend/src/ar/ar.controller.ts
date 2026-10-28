@@ -18,7 +18,8 @@ export class ArController {
   ) {}
 
   /** Pantalla 1 → 2: recibe la foto (multipart, campo "foto") y devuelve el sitio identificado. */
-  // Cada reconocimiento llama a la API de Claude (costo): máx. 10 por minuto.
+  // Rate limiting (#51): cada reconocimiento llama a la API de Claude (visión), que se cobra
+  // por uso; se limita a 10 por minuto para que un abuso no se traduzca en costo.
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @Post('reconocer')
