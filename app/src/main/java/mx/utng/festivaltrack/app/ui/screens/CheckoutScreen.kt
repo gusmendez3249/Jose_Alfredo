@@ -1,5 +1,6 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import mx.utng.festivaltrack.shared.data.remote.PreciosBoleto
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,9 +32,9 @@ import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutState
  * la compra de accesos al festival. Se conecta con [CheckoutViewModel] para enviar
  * la petición `POST /boletos/comprar` al backend REST.
  *
- * @param eventoId ID del evento seleccionado (ej. "EVT-001"). Si está vacío usa "EVT-001" como fallback.
- * @param totalPrice Monto total acumulado en pesos mexicanos (MXN).
- * @param totalTickets Cantidad total de boletos a comprar.
+ * @param eventoId ID del evento para el que se compran los boletos (ej. "EVT-001").
+ * @param vipTickets Cantidad de boletos VIP.
+ * @param generalTickets Cantidad de boletos General.
  * @param onNavigateBack Callback de navegación para regresar al paso anterior.
  * @param onPaymentSuccess Callback ejecutado cuando el backend confirma el pago con éxito.
  * @param viewModel Instancia del ViewModel para la lógica de negocio del checkout.
@@ -42,12 +43,16 @@ import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutState
 @Composable
 fun CheckoutScreen(
     eventoId: String = "",
-    totalPrice: Int = 4500,
-    totalTickets: Int = 1,
+    vipTickets: Int = 1,
+    generalTickets: Int = 0,
     onNavigateBack: () -> Unit = {},
     onPaymentSuccess: () -> Unit = {},
     viewModel: CheckoutViewModel = viewModel()
 ) {
+    // Total solo informativo: el cobro real lo calcula el backend con los mismos precios
+    val totalTickets = vipTickets + generalTickets
+    val totalPrice = vipTickets * PreciosBoleto.VIP + generalTickets * PreciosBoleto.GENERAL
+
     // Estados locales para los campos de texto del formulario de pago
     var cardNumber by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
@@ -98,16 +103,15 @@ fun CheckoutScreen(
                     Button(
                         onClick = {
                             viewModel.procesarPago(
-                                eventoId = if (eventoId.isNotBlank()) eventoId else "EVT-001",
-                                categoria = "VIP",
-                                cantidad = totalTickets,
-                                precioTotal = totalPrice,
+                                eventoId = eventoId,
+                                vipTickets = vipTickets,
+                                generalTickets = generalTickets,
                                 tarjetaNumero = cardNumber,
                                 tarjetaVencimiento = expiryDate,
                                 tarjetaCVV = cvv
                             )
                         },
-                        enabled = checkoutState !is CheckoutState.Processing,
+                        enabled = checkoutState !is CheckoutState.Processing && eventoId.isNotBlank() && totalTickets > 0,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PrimaryGold,
                             contentColor = Color.Black
@@ -150,12 +154,23 @@ fun CheckoutScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Resumen del Pedido", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Accesos ($totalTickets x VIP)", color = Color.White)
-                        Text("$$totalPrice MXN", color = Color.White, fontWeight = FontWeight.Bold)
+                    if (vipTickets > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Accesos ($vipTickets x VIP)", color = Color.White)
+                            Text("$${vipTickets * PreciosBoleto.VIP} MXN", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    if (generalTickets > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Accesos ($generalTickets x General)", color = Color.White)
+                            Text("$${generalTickets * PreciosBoleto.GENERAL} MXN", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(

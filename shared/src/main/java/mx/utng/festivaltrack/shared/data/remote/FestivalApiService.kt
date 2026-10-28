@@ -506,18 +506,29 @@ data class UsuarioDto(
 /**
  * Solicitud de compra de boleto.
  * @property eventoId ID del evento para el que se compra el boleto.
- * @property categoria Tipo de boleto: "GENERAL", "VIP", "PALCO".
- * @property cantidad Número de boletos a comprar.
- * @property precioTotal Precio total en pesos mexicanos (MXN).
- * @property metodoPago Método elegido: "TARJETA", "EFECTIVO", etc.
+ * El monto no se envía: el servidor lo calcula con el precio oficial de la categoría.
+ * @property eventoId ID del evento para el que se compra el boleto (debe existir y estar a la venta).
+ * @property categoria Tipo de boleto: "VIP", "GENERAL" o "ESTUDIANTE".
+ * @property cantidad Número de boletos a comprar (1 a 10).
+ * @property metodoPago "TARJETA_CREDITO", "TARJETA_DEBITO", "TRANSFERENCIA" o "PAYPAL".
  */
 data class CompraBoletoDto(
     val eventoId: String,
     val categoria: String,
     val cantidad: Int,
-    val precioTotal: Int,
     val metodoPago: String
 )
+
+/**
+ * Precios oficiales por boleto en MXN. Solo se usan para mostrarlos en pantalla:
+ * el cobro real lo calcula el backend (`PRECIOS_BOLETO`), así que deben coincidir.
+ */
+object PreciosBoleto {
+    const val VIP = 4500
+    const val GENERAL = 1200
+    /** Máximo de boletos por categoría en una compra (igual que la validación del backend). */
+    const val MAX_POR_COMPRA = 10
+}
 
 /**
  * Boleto generado tras una compra exitosa.

@@ -12,13 +12,12 @@ export interface BoletoDto {
 }
 
 export const boletosService = {
+  // El monto lo calcula el backend según la categoría; no se envía precio desde el cliente.
   comprarBoleto: async (eventoId: string, categoria: string, cantidad: number) => {
-    const precioTotal = 4500 * cantidad;
     const response = await api.post('/boletos/comprar', {
       eventoId,
       categoria,
       cantidad,
-      precioTotal,
       metodoPago: 'TARJETA_CREDITO'
     });
     return response.data;

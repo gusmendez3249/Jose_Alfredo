@@ -62,19 +62,19 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
     /**
      * Procesa el pago de boletos validando la tarjeta y llamando al API.
      *
+     * Se hace una compra por categoría (VIP y General); el backend calcula el monto de cada una.
+     *
      * @param eventoId ID del evento para el cual se compran boletos.
-     * @param categoria Categoría del boleto (e.g., VIP, General).
-     * @param cantidad Cantidad de boletos a comprar.
-     * @param precioTotal Monto total de la compra.
+     * @param vipTickets Cantidad de boletos VIP.
+     * @param generalTickets Cantidad de boletos General.
      * @param tarjetaNumero Número de la tarjeta de crédito/débito.
      * @param tarjetaVencimiento Fecha de expiración de la tarjeta.
      * @param tarjetaCVV Código de seguridad de la tarjeta.
      */
     fun procesarPago(
         eventoId: String,
-        categoria: String,
-        cantidad: Int,
-        precioTotal: Int,
+        vipTickets: Int,
+        generalTickets: Int,
         tarjetaNumero: String,
         tarjetaVencimiento: String,
         tarjetaCVV: String
@@ -100,14 +100,17 @@ class CheckoutViewModel(application: Application) : AndroidViewModel(application
             _checkoutState.value = CheckoutState.Processing
             try {
                 // Al ser un simulador, usamos cualquier método
-                val dto = CompraBoletoDto(
-                    eventoId = eventoId,
-                    categoria = categoria,
-                    cantidad = cantidad,
-                    precioTotal = precioTotal,
-                    metodoPago = "TARJETA_CREDITO"
-                )
-                api.comprarBoleto("Bearer $token", dto)
+                listOf("VIP" to vipTickets, "GENERAL" to generalTickets)
+                    .filter { (_, cantidad) -> cantidad > 0 }
+                    .forEach { (categoria, cantidad) ->
+                        val dto = CompraBoletoDto(
+                            eventoId = eventoId,
+                            categoria = categoria,
+                            cantidad = cantidad,
+                            metodoPago = "TARJETA_CREDITO"
+                        )
+                        api.comprarBoleto("Bearer $token", dto)
+                    }
                 _checkoutState.value = CheckoutState.Success
             } catch (e: Exception) {
                 val detail = e.localizedMessage ?: "Error desconocido"

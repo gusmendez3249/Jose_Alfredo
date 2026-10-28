@@ -38,7 +38,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun MainScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> },
+    onNavigateToCheckout: (eventoId: String, vip: Int, general: Int) -> Unit = { _, _, _ -> },
     onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -133,7 +133,7 @@ fun MainScreen(
                 composable(BottomNavItem.Tickets.route) {
                     TicketsScreen(
                         eventosViewModel = eventosViewModel,
-                        onNavigateToCheckout = { total, count -> onNavigateToCheckout(total, count) }
+                        onNavigateToCheckout = { eventoId, vip, general -> onNavigateToCheckout(eventoId, vip, general) }
                     )
                 }
                 composable(BottomNavItem.Gallery.route) {

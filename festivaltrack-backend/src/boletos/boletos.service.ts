@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ComprarBoletoDto, PRECIOS_BOLETO } from './dto/comprar-boleto.dto';
 
 /**
  * Servicio de Gestión y Venta de Boletos ([BoletosService]).
  *
  * Administra el ciclo de vida completo de la boletaje del festival:
- * 1. Compras transaccionales de entradas con generación de pagos.
+ * 1. Compras transaccionales de entradas con generación de pagos (precio calculado en el servidor).
  * 2. Asignación de firma de código QR único (`FESTIVAL-TICKET-2024::<ID>`).
  * 3. Consulta de historial de accesos comprados por usuario.
  * 4. Escaneo y validación de QR en el acceso presencial con prevención de reutilización.
@@ -18,58 +19,28 @@ export class BoletosService {
    * Procesa la compra de un boleto dentro de una transacción atómica ($transaction).
    *
    * Flujo:
-   * 1. Garantiza la existencia de un evento de respaldo si el ID no se especifica.
-   * 2. Crea el registro de `Boleto` en la base de datos.
-   * 3. Registra el `Pago` correspondiente con estado COMPLETADO y número de referencia único.
+   * 1. Verifica que el evento exista y esté a la venta (PUBLICADO o EN_CURSO).
+   * 2. Calcula el monto en el servidor: precio oficial de la categoría × cantidad
+   *    (cualquier precio que mande el cliente se ignora).
+   * 3. Crea el registro de `Boleto` y su `Pago` con estado COMPLETADO.
    * 4. Genera la firma digital del código QR asociada al boleto.
    *
    * @param usuarioId UUID del usuario autenticado que realiza la compra.
-   * @param body Payload con eventoId, categoría, cantidad, precioTotal y métodoPago.
+   * @param dto eventoId, categoría, cantidad y método de pago (validados por {@link ComprarBoletoDto}).
    * @returns El registro final del boleto con el pago incluido.
+   * @throws NotFoundException Si el evento no existe (HTTP 404).
+   * @throws BadRequestException Si el evento no está a la venta (HTTP 400).
    */
-  async comprar(usuarioId: string, body: any) {
-    let { eventoId, categoria, cantidad, precioTotal, metodoPago } = body;
-    const cantidadFinal = Number(cantidad || 1);
-    const precioUnitario = Number(precioTotal || 4500);
-    const montoTotal = precioUnitario * cantidadFinal;
-    
-    // Garantizar que exista un Evento válido en la BD para la FK de Boleto
-    let evento = eventoId ? await this.prisma.evento.findUnique({ where: { id: eventoId } }) : null;
-    if (!evento) {
-      evento = await this.prisma.evento.findFirst();
-    }
-    if (!evento) {
-      let admin = await this.prisma.administrador.findFirst();
-      if (!admin) {
-        let adminUser = await this.prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } });
-        if (!adminUser) {
-          adminUser = await this.prisma.usuario.create({
-            data: {
-              nombre: 'Admin Sistema',
-              correo: 'admin@festivaltrack.com',
-              contrasena: '$2a$10$abcdefghijklmnopqrstuv',
-              rol: 'ADMINISTRADOR'
-            }
-          });
-        }
-        admin = await this.prisma.administrador.create({
-          data: {
-            usuarioId: adminUser.id,
-            nivel: 1
-          }
-        });
-      }
-      evento = await this.prisma.evento.create({
-        data: {
-          nombre: 'Gala Inaugural José Alfredo Jiménez',
-          fechaHora: new Date('2026-11-23T20:00:00Z'),
-          ubicacion: 'Dolores Hidalgo, Gto.',
-          escenario: 'Escenario Principal',
-          capacidad: 5000,
-          estado: 'PUBLICADO',
-          administradorId: admin.id
-        }
-      });
+  async comprar(usuarioId: string, dto: ComprarBoletoDto) {
+    const categoria = dto.categoria ?? 'GENERAL';
+    const cantidad = dto.cantidad ?? 1;
+    const metodoPago = dto.metodoPago ?? 'TARJETA_CREDITO';
+    const montoTotal = PRECIOS_BOLETO[categoria] * cantidad;
+
+    const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
+    if (!evento) throw new NotFoundException('Evento no encontrado');
+    if (evento.estado !== 'PUBLICADO' && evento.estado !== 'EN_CURSO') {
+      throw new BadRequestException(`El evento no está a la venta (estado: ${evento.estado})`);
     }
     const realEventoId = evento.id;
 
@@ -80,7 +51,7 @@ export class BoletosService {
         data: {
           eventoId: realEventoId,
           usuarioId,
-          categoria: categoria || 'GENERAL',
+          categoria,
           precio: montoTotal,
         },
       });
@@ -90,7 +61,7 @@ export class BoletosService {
         data: {
           boletoId: boleto.id,
           monto: montoTotal,
-          metodo: metodoPago || 'TARJETA_CREDITO',
+          metodo: metodoPago,
           estado: 'COMPLETADO',
           referencia: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`
         }

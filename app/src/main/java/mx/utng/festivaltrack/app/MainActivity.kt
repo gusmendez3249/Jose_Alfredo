@@ -35,7 +35,7 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
  * - `login`               → [LoginScreen]
  * - `register`            → [RegisterScreen]
  * - `main`                → [MainScreen] (usuarios normales)
- * - `checkout/{total}/{count}` → [CheckoutScreen]
+ * - `checkout/{eventoId}/{vip}/{general}` → [CheckoutScreen]
  * - `success`             → [TicketSuccessScreen]
  * - `live/{eventoId}`     → [UserLiveStreamScreen]
  * - `admin_dashboard`     → [AdminMainScreen] (administradores)
@@ -114,9 +114,9 @@ class MainActivity : ComponentActivity() {
                         composable("main") {
                             mx.utng.festivaltrack.app.ui.screens.MainScreen(
                                 eventosViewModel = eventosViewModel,
-                                onNavigateToCheckout = { total, count ->
-                                    // Pasa el total en pesos y cantidad de boletos como argumentos de ruta
-                                    navController.navigate("checkout/$total/$count")
+                                onNavigateToCheckout = { eventoId, vip, general ->
+                                    // Pasa el evento y la cantidad de boletos por categoría; el precio lo calcula el backend
+                                    navController.navigate("checkout/$eventoId/$vip/$general")
                                 },
                                 onLogout = {
                                     // Borra el token JWT antes de navegar para invalidar la sesión
@@ -129,13 +129,15 @@ class MainActivity : ComponentActivity() {
                         }
 
                         // ─── CHECKOUT (COMPRA DE BOLETOS) ────────────────────────────────
-                        // Recibe argumentos: total (precio total en MXN) y count (cantidad)
-                        composable("checkout/{total}/{count}") { backStackEntry ->
-                            val total = backStackEntry.arguments?.getString("total")?.toIntOrNull() ?: 0
-                            val count = backStackEntry.arguments?.getString("count")?.toIntOrNull() ?: 0
+                        // Recibe argumentos: eventoId y cantidad de boletos VIP y General
+                        composable("checkout/{eventoId}/{vip}/{general}") { backStackEntry ->
+                            val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                            val vip = backStackEntry.arguments?.getString("vip")?.toIntOrNull() ?: 0
+                            val general = backStackEntry.arguments?.getString("general")?.toIntOrNull() ?: 0
                             mx.utng.festivaltrack.app.ui.screens.CheckoutScreen(
-                                totalPrice = total,
-                                totalTickets = count,
+                                eventoId = eventoId,
+                                vipTickets = vip,
+                                generalTickets = general,
                                 onNavigateBack = { navController.popBackStack() },
                                 onPaymentSuccess = {
                                     navController.navigate("success") {
