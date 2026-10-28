@@ -118,11 +118,15 @@ interface FestivalApiService {
     ): List<ChatMessageDto>
 
     /**
-     * Envía un mensaje al chat de la transmisión en vivo.
-     * @param request Mensaje con el ID del evento, nombre del usuario y texto.
+     * Envía un mensaje al chat de la transmisión en vivo (requiere sesión).
+     * El servidor toma el nombre del remitente y si es admin del token, no del body.
+     * @param token Token JWT del usuario en formato "Bearer <token>".
+     * @param request Mensaje con el ID del evento y el texto.
+     * @throws retrofit2.HttpException 401 si no hay sesión válida.
      */
     @retrofit2.http.POST("stream/chat")
     suspend fun sendChatMessage(
+        @retrofit2.http.Header("Authorization") token: String,
         @retrofit2.http.Body request: ChatMessageDto
     )
 
@@ -541,7 +545,7 @@ data class BoletoDto(
  * Mensaje del chat de transmisión en vivo.
  * @property id UUID del mensaje (null al enviarlo, asignado por el servidor).
  * @property eventoId ID del evento al que pertenece el mensaje (debe existir en BD).
- * @property usuarioNombre Nombre visible del remitente.
+ * @property usuarioNombre Nombre visible del remitente (al enviar, el servidor lo reemplaza por el del usuario autenticado).
  * @property mensaje Contenido del mensaje.
  * @property esAdmin Si true, el mensaje es del administrador del festival (se resalta visualmente).
  * @property fechaEnvio Timestamp de envío (null en el request, asignado por el servidor).

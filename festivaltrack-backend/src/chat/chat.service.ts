@@ -1,5 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EnviarMensajeDto } from './dto/enviar-mensaje.dto';
 
 /**
  * Servicio de Gestión del Chat de Transmisión en Vivo (ChatService).
@@ -31,23 +32,28 @@ export class ChatService {
   /**
    * Registra y guarda un nuevo mensaje en el chat de un evento.
    *
-   * @param body Payload del mensaje que contiene eventoId, usuarioNombre, mensaje y opcionalmente esAdmin.
+   * El nombre visible y la marca `esAdmin` se obtienen del usuario autenticado,
+   * nunca del cliente, para que nadie pueda hacerse pasar por otro usuario o por el admin.
+   *
+   * @param usuarioId ID del usuario autenticado (del JWT).
+   * @param dto eventoId y texto del mensaje (validado por {@link EnviarMensajeDto}).
    * @returns Registro del mensaje recién guardado en PostgreSQL.
-   * @throws BadRequestException Si faltan campos requeridos o el eventoId no existe en la BD.
+   * @throws UnauthorizedException Si el usuario ya no existe o está inactivo.
+   * @throws NotFoundException Si el evento no existe.
    */
-  async enviarMensaje(body: any) {
-    const { eventoId, usuarioNombre, mensaje, esAdmin } = body;
-    
-    if (!eventoId || !usuarioNombre || !mensaje) {
-      throw new BadRequestException('Faltan parámetros requeridos');
-    }
+  async enviarMensaje(usuarioId: string, dto: EnviarMensajeDto) {
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: usuarioId } });
+    if (!usuario || !usuario.activo) throw new UnauthorizedException();
+
+    const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
+    if (!evento) throw new NotFoundException('Evento no encontrado');
 
     return this.prisma.chatStream.create({
       data: {
-        eventoId,
-        usuarioNombre,
-        mensaje,
-        esAdmin: esAdmin || false
+        eventoId: dto.eventoId,
+        usuarioNombre: usuario.nombre,
+        mensaje: dto.mensaje.trim(),
+        esAdmin: usuario.rol === 'ADMINISTRADOR',
       }
     });
   }

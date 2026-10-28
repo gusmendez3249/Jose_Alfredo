@@ -64,10 +64,13 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
         if (text.isBlank()) return
         
         val nombre = tokenManager.getUserName() ?: "Usuario"
+        // El chat exige sesión: sin token no se puede publicar
+        val token = tokenManager.getToken() ?: return
 
         viewModelScope.launch {
             try {
                 api.sendChatMessage(
+                    "Bearer $token",
                     ChatMessageDto(
                         eventoId = eventoId,
                         usuarioNombre = nombre,
