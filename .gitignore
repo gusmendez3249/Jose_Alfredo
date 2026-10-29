@@ -17,7 +17,14 @@ local.properties
 
 hs_err_pid*.log
 
-# Credenciales y secretos: nunca se suben al repositorio
+# Secretos
 .env
 .env.*
 !.env.example
+
+# Basura de builds / crashes de la JVM / IDE
+replay_pid*.log
+.kotlin/
+.idea_backup/
+festivaltrack-backend/dist/
+festivaltrack-backend/uploads/

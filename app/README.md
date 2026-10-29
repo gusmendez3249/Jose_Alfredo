@@ -6596,3 +6596,39 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
 ./gradlew :app:installDebug
 
 ```
+
+---
+
+## Modo automóvil (Android Auto)
+
+El modo automóvil vive en el paquete `mx.utng.festivaltrack.app.auto` y usa la **Car App Library**
+(`androidx.car.app:app`). Android Auto no permite pantallas libres de Compose: todo se arma con plantillas
+(listas, cuadrículas y navegación) que el auto dibuja con su propio estilo.
+
+| Archivo | Responsabilidad |
+|---|---|
+| `FestivalCarAppService.kt` | Servicio que Android Auto llama al conectar el teléfono; crea la sesión del auto |
+| `InicioAutoScreen.kt` | Menú inicial del modo automóvil |
+| `AlertaSalidaScreen.kt` | Pantalla 9: próximos eventos, cuándo salir, aviso por voz y navegación al tocar un evento |
+| `SalidaCalculator.kt` | Lógica pura: distancia, tiempo de traslado y minutos para salir (con pruebas unitarias) |
+| `res/xml/automotive_app_desc.xml` | Declara que la app usa plantillas de Android Auto |
+
+### Probar en el emulador de Android Auto (Desktop Head Unit)
+
+1. **Instalar el DHU:** Android Studio → *Tools → SDK Manager → SDK Tools* → marcar **Android Auto Desktop Head Unit Emulator**.
+2. **Instalar la app** en el emulador del teléfono o en un celular: `./gradlew :app:installDebug`.
+3. **Activar el modo desarrollador de Android Auto** en ese dispositivo:
+   abrir *Ajustes → Apps → Android Auto* (en el emulador, instalar Android Auto desde Play Store),
+   tocar 10 veces la versión al final de la pantalla, y en el menú ⋮ elegir **Iniciar servidor de unidad principal**.
+4. **Redirigir el puerto** desde la PC:
+   ```bash
+   adb forward tcp:5277 tcp:5277
+   ```
+5. **Abrir el DHU:**
+   ```bash
+   cd %LOCALAPPDATA%\Android\Sdk\extras\google\auto
+   desktop-head-unit.exe
+   ```
+6. En la pantalla del auto, abrir el lanzador de apps y elegir **FestivalTrack Phone**.
+
+El backend debe estar corriendo (`npm run start:dev`) para que la alerta de salida cargue los eventos.

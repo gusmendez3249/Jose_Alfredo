@@ -1,10 +1,10 @@
 import { BadRequestException, Controller, Get, Post, Put, Delete, Body, Param, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { CancionesService } from './canciones.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { CancionesService } from './canciones.service';
 
 /** Tipos permitidos: audio de la canción y su portada. La extensión sale del tipo MIME validado. */
 const ARCHIVO_EXT: Record<string, string> = {
@@ -69,11 +69,13 @@ export class CancionesController {
     return { url: `/uploads/${file.filename}` };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post()
   create(@Body() body: any) {
     return this.cancionesService.create(body);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cancionesService.remove(id);

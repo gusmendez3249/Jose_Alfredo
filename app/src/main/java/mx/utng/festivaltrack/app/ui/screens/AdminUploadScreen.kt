@@ -299,6 +299,7 @@ fun AdminUploadScreen() {
 
                                 // 3. Canción en el catálogo, con su portada
                                 api.createCancion(
+                                    bearer,
                                     mx.utng.festivaltrack.shared.data.remote.CancionCreateDto(
                                         titulo = finalTitle,
                                         artista = if (artist.isNotBlank()) artist.trim() else "José Alfredo Jiménez",

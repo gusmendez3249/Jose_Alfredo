@@ -229,7 +229,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                         // Publicar URL del stream al backend para que la TV se conecte
                                         coroutineScope.launch {
                                             try {
-                                                api.setStreamStatus(StreamStatusDto(streamUrl = streamUrl, isLive = true))
+                                                api.setStreamStatus("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", StreamStatusDto(streamUrl = streamUrl, isLive = true))
                                             } catch (e: Exception) { /* Fallo silencioso */ }
                                         }
                                     } else {
@@ -242,7 +242,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     // Notificar al backend que el stream terminó
                                     coroutineScope.launch {
                                         try {
-                                            api.setStreamStatus(StreamStatusDto(streamUrl = "", isLive = false))
+                                            api.setStreamStatus("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", StreamStatusDto(streamUrl = "", isLive = false))
                                         } catch (e: Exception) { /* Fallo silencioso */ }
                                     }
                                 }

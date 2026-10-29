@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { seedSitiosAR } from './seed-ar';
 
 const prisma = new PrismaClient();
 
@@ -119,6 +120,8 @@ async function main() {
     }
   });
   console.log('Galería creada.');
+
+  await seedSitiosAR(prisma, galeria.id);
 
   console.log('Seed terminado.');
 }

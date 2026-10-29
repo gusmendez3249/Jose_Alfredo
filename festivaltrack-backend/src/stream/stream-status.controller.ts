@@ -1,4 +1,7 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 /**
  * Controlador de Estado de Transmisión en Vivo ([StreamStatusController]).
@@ -45,6 +48,7 @@ export class StreamStatusController {
   /**
    * El admin móvil registra la URL del stream al iniciar o detener la transmisión.
    */
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post()
   setStatus(@Body() body: { streamUrl: string; isLive: boolean }) {
     this.streamUrl = body.streamUrl || '';

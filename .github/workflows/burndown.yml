@@ -1,0 +1,47 @@
+# Regenera cada día las gráficas burndown de los sprints con los datos del Project "Festival Track"
+# y las sube a la rama docs/scrum-sprints. El README del Project muestra esas imágenes.
+#
+# Requiere el secreto PROJECT_TOKEN: un token personal (classic) con los permisos `repo` y `read:project`,
+# porque el GITHUB_TOKEN de Actions no puede leer Projects de un usuario.
+name: Burndown diario
+
+on:
+  schedule:
+    - cron: '0 13 * * 1-5'   # 07:00 hora del centro de México, de lunes a viernes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  burndown:
+    name: Actualizar burndown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/scrum-sprints
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar matplotlib
+        run: pip install matplotlib
+
+      - name: Generar gráficas
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: python docs/scrum/herramientas/burndown.py
+
+      - name: Subir cambios
+        run: |
+          if git diff --quiet -- docs/scrum; then
+            echo "Sin cambios en el burndown"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/scrum/sprint-*/img/burndown-*.png
+          git commit -m "docs(scrum): actualizar burndown $(date +%d/%m/%Y)"
+          git push origin HEAD:docs/scrum-sprints
