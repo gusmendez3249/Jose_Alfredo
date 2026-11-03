@@ -1,6 +1,17 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import mx.utng.festivaltrack.app.playback.PlaybackManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -60,6 +71,17 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Reproductor global (#25): la hoja "Reproduciendo" y el permiso de notificaciones (Android 13+)
+    var showNowPlaying by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val isPlaying by PlaybackManager.isPlaying.collectAsState()
+    LaunchedEffect(isPlaying) {
+        if (isPlaying && Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
     Scaffold(
         floatingActionButton = {
             // Acceso al módulo AR desde Inicio
@@ -76,6 +98,9 @@ fun MainScreen(
         bottomBar = {
             // La cámara AR usa pantalla completa
             if (currentRoute?.startsWith("ar") == true) return@Scaffold
+            Column {
+            // Se ve en toda la app mientras haya una demo en la cola
+            GlobalMiniPlayer(onOpen = { showNowPlaying = true })
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = Color.White
@@ -100,8 +125,10 @@ fun MainScreen(
                     )
                 }
             }
+            }
         }
     ) { innerPadding ->
+        if (showNowPlaying) NowPlayingSheet(onDismiss = { showNowPlaying = false })
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             NavHost(navController = navController, startDestination = BottomNavItem.Home.route) {
                 composable(BottomNavItem.Home.route) {

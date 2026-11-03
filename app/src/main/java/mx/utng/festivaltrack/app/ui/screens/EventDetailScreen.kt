@@ -48,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
+import mx.utng.festivaltrack.app.playback.PlaybackManager
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.utils.mediaUrl
 import mx.utng.festivaltrack.app.ui.viewmodels.EventDemosViewModel
@@ -82,12 +83,16 @@ fun EventDetailScreen(
     val songs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val loadError by viewModel.loadError.collectAsState()
-    val currentId by viewModel.currentId.collectAsState()
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val isBuffering by viewModel.isBuffering.collectAsState()
-    val playbackError by viewModel.playbackError.collectAsState()
-    val progress by viewModel.progress.collectAsState()
-    val shuffle by viewModel.shuffle.collectAsState()
+    // La reproducción vive en la cola global: esta pantalla solo la muestra y la controla.
+    val queue by PlaybackManager.queue.collectAsState()
+    val queueIndex by PlaybackManager.currentIndex.collectAsState()
+    val isPlayingNow by PlaybackManager.isPlaying.collectAsState()
+    val shuffle by PlaybackManager.shuffle.collectAsState()
+    val playbackError by PlaybackManager.error.collectAsState()
+    val activeTrack = queue.getOrNull(queueIndex)
+    val thisConcertActive = activeTrack?.eventoId == eventoId
+    val currentId = if (thisConcertActive) activeTrack?.id else null
+    val isPlaying = thisConcertActive && isPlayingNow
 
     val snackbar = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
@@ -105,35 +110,14 @@ fun EventDetailScreen(
     LaunchedEffect(playbackError) {
         playbackError?.let {
             snackbar.showSnackbar(it)
-            viewModel.dismissPlaybackError()
+            PlaybackManager.dismissError()
         }
     }
-    // Al salir de la pantalla se detiene la reproducción.
-    DisposableEffect(Unit) { onDispose { viewModel.stop() } }
-
     Scaffold(
         containerColor = ScreenBg,
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             Column(modifier = Modifier.background(ScreenBg)) {
-                AnimatedVisibility(
-                    visible = current != null,
-                    enter = slideInVertically { it },
-                    exit = slideOutVertically { it }
-                ) {
-                    if (current != null) {
-                        MiniPlayer(
-                            song = current,
-                            accent = accent,
-                            isPlaying = isPlaying,
-                            isBuffering = isBuffering,
-                            progress = progress,
-                            onPlayPause = viewModel::playPause,
-                            onNext = viewModel::next,
-                            onPrevious = viewModel::previous
-                        )
-                    }
-                }
                 Button(
                     onClick = { onBuyTickets(eventoId) },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black),
@@ -163,11 +147,10 @@ fun EventDetailScreen(
                         songs = songs,
                         covers = covers,
                         accent = accent,
-                        isPlaying = isPlaying && currentId != null,
-                        isBuffering = isBuffering,
+                        isPlaying = isPlaying,
                         shuffle = shuffle,
-                        onPlayAll = viewModel::playAll,
-                        onShuffle = viewModel::toggleShuffle
+                        onPlayAll = { viewModel.playAll(evento, thisConcertActive) },
+                        onShuffle = PlaybackManager::toggleShuffle
                     )
                 }
 
@@ -185,7 +168,7 @@ fun EventDetailScreen(
                             song = song,
                             isCurrent = currentId == song.id,
                             isPlaying = currentId == song.id && isPlaying,
-                            onClick = { viewModel.toggle(song) }
+                            onClick = { viewModel.toggle(song, evento, currentId) }
                         )
                     }
                 }
@@ -228,7 +211,6 @@ private fun PlaylistHeader(
     covers: List<String>,
     accent: Color,
     isPlaying: Boolean,
-    isBuffering: Boolean,
     shuffle: Boolean,
     onPlayAll: () -> Unit,
     onShuffle: () -> Unit
@@ -366,59 +348,6 @@ private fun Equalizer(color: Color) {
         listOf(a, b, c).forEach { h ->
             Box(Modifier.width(3.dp).fillMaxHeight(h).background(color, RoundedCornerShape(1.dp)))
         }
-    }
-}
-
-// ─── Minirreproductor ────────────────────────────────────────────────────────
-
-@Composable
-private fun MiniPlayer(
-    song: CancionDto,
-    accent: Color,
-    isPlaying: Boolean,
-    isBuffering: Boolean,
-    progress: Float,
-    onPlayPause: () -> Unit,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit
-) {
-    val shape = RoundedCornerShape(14.dp)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .clip(shape)
-            .background(Brush.horizontalGradient(listOf(accent.copy(alpha = 0.95f), Color(0xFF16221A))))
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Cover(song, size = 44.dp, radius = 6.dp)
-            Spacer(Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(song.titulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(song.artista, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            IconButton(onClick = onPrevious) { Icon(Icons.Default.SkipPrevious, "Anterior", tint = Color.White) }
-            Box(
-                modifier = Modifier.size(42.dp).background(Color.White, CircleShape).clickable(onClick = onPlayPause),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isBuffering) CircularProgressIndicator(color = Color.Black, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
-                else Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    if (isPlaying) "Pausar" else "Reproducir", tint = Color.Black, modifier = Modifier.size(26.dp)
-                )
-            }
-            IconButton(onClick = onNext) { Icon(Icons.Default.SkipNext, "Siguiente", tint = Color.White) }
-        }
-        LinearProgressIndicator(
-            progress = progress,
-            modifier = Modifier.fillMaxWidth().height(3.dp),
-            color = PrimaryGold,
-            trackColor = Color.White.copy(alpha = 0.18f)
-        )
     }
 }
 
