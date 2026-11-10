@@ -12,8 +12,11 @@ Cada sprint registra 6 Daily Scrum, 1 Sprint Review, 1 Retrospectiva y 1 Increme
 
 | Sprint | Daily Scrum | Sprint Review | Retrospectiva | Incremento |
 |---|---|---|---|---|
-| Sprint 1 | 6 / 6 | Preparada (vie 16/10) | Preparada (vie 16/10) | Pendiente: Release `v4.0-sprint1` |
-| Sprint 2 | 0 / 6 | 0 / 1 | 0 / 1 | 0 / 1 |
+| Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
+| Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
+| Sprint 3 | 4 / 6 | Vie 13/11 | Vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
+
+> 📷 Las capturas de las reuniones (`daily-N-reunion.png`, `review-reunion.png`, `retro-reunion.png`) siguen pendientes en los tres sprints.
 
 ## Sprint 1 · 5 al 16 de octubre de 2026
 
@@ -34,7 +37,8 @@ base del modo automóvil (Android Auto y alerta de salida), seguridad del backen
 
 ## Sprint 2 · 19 al 30 de octubre de 2026
 
-**Objetivo:**
+**Objetivo:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
+Se sumaron las correcciones de seguridad #50–#52 y se adelantaron las pantallas 8 y 10 del auto (#39 y #36).
 
 | Ceremonia | Fecha | Documento |
 |---|---|---|
@@ -48,6 +52,23 @@ base del modo automóvil (Android Auto y alerta de salida), seguridad del backen
 | Retrospectiva | Vie 30/10 | [retro.md](sprint-2/retro.md) |
 | Incremento | Vie 30/10 | [incremento.md](sprint-2/incremento.md) |
 
+## Sprint 3 · 2 al 13 de noviembre de 2026
+
+**Objetivo:** cerrar el MVP (reproductor con cola), integrar en `develop` todo lo terminado, probar los módulos nuevos,
+alinear el reporte técnico con el stack real y publicar la Release final.
+
+| Ceremonia | Fecha | Documento |
+|---|---|---|
+| Daily Scrum 1 | Lun 02/11 | [daily-1.md](sprint-3/daily-1.md) |
+| Daily Scrum 2 | Mié 04/11 | [daily-2.md](sprint-3/daily-2.md) |
+| Daily Scrum 3 | Vie 06/11 | [daily-3.md](sprint-3/daily-3.md) |
+| Daily Scrum 4 | Lun 09/11 | [daily-4.md](sprint-3/daily-4.md) |
+| Daily Scrum 5 | Mié 11/11 | [daily-5.md](sprint-3/daily-5.md) |
+| Daily Scrum 6 | Jue 12/11 | [daily-6.md](sprint-3/daily-6.md) |
+| Sprint Review | Vie 13/11 | [review.md](sprint-3/review.md) |
+| Retrospectiva | Vie 13/11 | [retro.md](sprint-3/retro.md) |
+| Incremento | Vie 13/11 | [incremento.md](sprint-3/incremento.md) |
+
 ## Burndown
 
 GitHub Projects solo muestra burn up en Insights. El burndown de cada sprint se genera con los datos reales del Project:
@@ -56,9 +77,9 @@ GitHub Projects solo muestra burn up en Insights. El burndown de cada sprint se 
 python docs/scrum/herramientas/burndown.py
 ```
 
-| Sprint 1 | Sprint 2 |
-|---|---|
-| ![Burndown Sprint 1](sprint-1/img/burndown-sprint-1.png) | ![Burndown Sprint 2](sprint-2/img/burndown-sprint-2.png) |
+| Sprint 1 | Sprint 2 | Sprint 3 |
+|---|---|---|
+| ![Burndown Sprint 1](sprint-1/img/burndown-sprint-1.png) | ![Burndown Sprint 2](sprint-2/img/burndown-sprint-2.png) | ![Burndown Sprint 3](sprint-3/img/burndown-sprint-3.png) |
 
 Requiere GitHub CLI con sesión iniciada (`gh auth login`) y `pip install matplotlib`. Conviene correrlo antes de cada Daily y del Review.
 

@@ -6608,17 +6608,40 @@ El modo automóvil vive en el paquete `mx.utng.festivaltrack.app.auto` y usa la 
 | Archivo | Responsabilidad |
 |---|---|
 | `FestivalCarAppService.kt` | Servicio que Android Auto llama al conectar el teléfono; crea la sesión del auto |
-| `InicioAutoScreen.kt` | Menú inicial del modo automóvil |
-| `AlertaSalidaScreen.kt` | Pantalla 9: próximos eventos, cuándo salir, aviso por voz y navegación al tocar un evento |
-| `SalidaCalculator.kt` | Lógica pura: distancia, tiempo de traslado y minutos para salir (con pruebas unitarias) |
+| `InicioAutoScreen.kt` | Pantalla 10 · Home del modo automóvil: tarjetas de audio en curso, ruta activa y resumen AR del día (#36) |
+| `NavegacionAutoScreen.kt` | Pantalla 8 · Navegación: destino, distancia, tiempo, lectura por voz y botón **Iniciar navegación** (#39) |
+| `AlertaSalidaScreen.kt` | Pantalla 9: próximos eventos, cuándo salir, aviso por voz y navegación al tocar un evento (#37) |
+| `SalidaCalculator.kt` | Lógica pura: distancia, tiempo de traslado y minutos para salir (8 pruebas unitarias) |
+| `DestinosCalculator.kt` | Lógica de la pantalla 7: un destino por escenario más los sitios del catálogo, ordenados por cercanía (5 pruebas) |
+| `NavegacionCalculator.kt` | Resumen de la ruta, texto para voz y URI `geo:` para `CarContext.ACTION_NAVIGATE` (6 pruebas) |
+| `ResumenArCalculator.kt` | Sitios descubiertos hoy con la cámara AR para la tarjeta del Home (4 pruebas) |
+| `RutaActivaStore.kt` | Guarda la ruta elegida en el teléfono para que el auto la lea |
+| `UbicacionAuto.kt` | Ubicación actual y envío de la ruta al navegador del auto (Google Maps / Waze) |
 | `res/xml/automotive_app_desc.xml` | Declara que la app usa plantillas de Android Auto |
+
+En el teléfono, la **pantalla 7 · Elige tu destino** (`ui/screens/ElegirDestinoScreen.kt`, #33) se abre desde
+**Mapa → ícono del auto**. Al elegir un destino y tocar **Navegar**, la ruta queda como *ruta activa* y aparece en el Home del auto.
+
+### Flujo de las pantallas del auto
+
+```
+Teléfono: Mapa → Elige tu destino (7) → Navegar
+                                   │ guarda la ruta activa
+                                   ▼
+Auto:     Home (10) ──► Ruta activa ──► Navegación (8) ──► Iniciar navegación → Google Maps / Waze
+             └────────► Alerta de salida y próximos eventos (9)
+```
 
 ### Probar en el emulador de Android Auto (Desktop Head Unit)
 
+> ⚠️ **Se necesita un celular Android físico.** En los emuladores (API 34 y 36, con Google Play) la Play Store marca
+> Android Auto como incompatible y el DHU no tiene a qué conectarse. Guía completa con la lista de capturas:
+> [`docs/pruebas/android-auto.md`](../docs/pruebas/android-auto.md).
+
 1. **Instalar el DHU:** Android Studio → *Tools → SDK Manager → SDK Tools* → marcar **Android Auto Desktop Head Unit Emulator**.
-2. **Instalar la app** en el emulador del teléfono o en un celular: `./gradlew :app:installDebug`.
+2. **Instalar la app** en el celular: `./gradlew :app:installDebug`.
 3. **Activar el modo desarrollador de Android Auto** en ese dispositivo:
-   abrir *Ajustes → Apps → Android Auto* (en el emulador, instalar Android Auto desde Play Store),
+   abrir *Ajustes → Apps → Android Auto*,
    tocar 10 veces la versión al final de la pantalla, y en el menú ⋮ elegir **Iniciar servidor de unidad principal**.
 4. **Redirigir el puerto** desde la PC:
    ```bash
@@ -6632,3 +6655,18 @@ El modo automóvil vive en el paquete `mx.utng.festivaltrack.app.auto` y usa la 
 6. En la pantalla del auto, abrir el lanzador de apps y elegir **FestivalTrack Phone**.
 
 El backend debe estar corriendo (`npm run start:dev`) para que la alerta de salida cargue los eventos.
+
+---
+
+## Módulos de la Unidad II
+
+| Pantalla | Archivo | Issue | Descripción |
+|---|---|---|---|
+| AR 1 · Cámara de reconocimiento | `ui/screens/ArScannerScreen.kt` | #32 | Vista previa con CameraX; la foto se envía a `POST /ar/reconocer` |
+| AR 2 · Sitio identificado | `ui/screens/ArScannerScreen.kt` | #35 | Tarjeta con descripción, galería y audio del sitio, con lectura por voz |
+| AR 3 · Historial de sitios | `ui/screens/ArHistoryScreen.kt` | #23 | Sitios visitados por el usuario (`GET /ar/historial`) |
+| Galería interactiva (foro) | `ui/screens/GalleryScreen.kt`, `ForumComponents.kt` | #22 | Publicaciones de la comunidad con me gusta, comentarios, filtros y mosaico |
+| Auto 7 · Elige tu destino | `ui/screens/ElegirDestinoScreen.kt` | #33 | Ver [Modo automóvil](#modo-automóvil-android-auto) |
+| Auto 8, 9 y 10 | paquete `auto/` | #39, #37, #36 | Ver [Modo automóvil](#modo-automóvil-android-auto) |
+
+Pruebas unitarias de la app: `./gradlew :app:testDebugUnitTest` (paquete `auto`, 23 pruebas).
