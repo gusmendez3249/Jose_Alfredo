@@ -59,7 +59,7 @@ Todas las tareas del milestone se cerraron. **Sin embargo, no todo el código ce
 | <img src="img/seguridad-50-app-chat-en-vivo.png" width="220"> | Chat en vivo con sesión obligatoria (#50) | Gustavo |
 | <img src="img/seguridad-52-app-checkout-desglose.png" width="220"> | Checkout con el precio del servidor (#52) | Gustavo |
 | 📷 *Captura pendiente*: `img/review-auto-destinos.png` | Pantalla 7 · Elige tu destino en el teléfono (#33) | Noé |
-| 📷 *Captura pendiente*: `img/review-auto-navegacion.png` | Pantalla 8 · Navegación en el Desktop Head Unit (#39) | Noé |
+| 📷 *Captura pendiente*: `img/review-auto-navegacion.png` | Pantalla 8 · Navegación en el Desktop Head Unit (#39). Se toma con celular físico: [guía](../../pruebas/android-auto.md) | Noé |
 | 📷 *Captura pendiente*: `img/review-auto-home.png` | Pantalla 10 · Home del modo automóvil en el DHU (#36) | Noé |
 
 ### Evidencia técnica

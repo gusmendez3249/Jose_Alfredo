@@ -29,7 +29,7 @@ Terminado fuera de `develop` (se integra en el Sprint 3):
 1. Compilar la app desde `develop` (o descargar el artefacto `festivaltrack-app-debug` del último Android CI).
 2. Levantar el backend: `cd festivaltrack-backend && npm run start:dev` con el `.env` del equipo.
 3. **Pantalla 7:** en el teléfono, Mapa → ícono del auto → elegir un destino → **Navegar**.
-4. **Pantallas 8 y 10:** conectar el teléfono al Desktop Head Unit (`desktop-head-unit.exe` del SDK de Android). En el Home del auto aparece la ruta activa; al tocarla se abre la pantalla de navegación con **Iniciar navegación**.
+4. **Pantallas 8 y 10:** conectar un celular físico al Desktop Head Unit siguiendo [`docs/pruebas/android-auto.md`](../../pruebas/android-auto.md) (en emuladores la Play Store no permite instalar Android Auto). En el Home del auto aparece la ruta activa; al tocarla se abre la pantalla de navegación con **Iniciar navegación**.
 5. **Resumen AR:** iniciar sesión con una cuenta de rol USUARIO, reconocer un sitio con la cámara AR y volver al Home del auto.
 
 ## Evidencia

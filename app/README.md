@@ -6634,10 +6634,14 @@ Auto:     Home (10) ──► Ruta activa ──► Navegación (8) ──► In
 
 ### Probar en el emulador de Android Auto (Desktop Head Unit)
 
+> ⚠️ **Se necesita un celular Android físico.** En los emuladores (API 34 y 36, con Google Play) la Play Store marca
+> Android Auto como incompatible y el DHU no tiene a qué conectarse. Guía completa con la lista de capturas:
+> [`docs/pruebas/android-auto.md`](../docs/pruebas/android-auto.md).
+
 1. **Instalar el DHU:** Android Studio → *Tools → SDK Manager → SDK Tools* → marcar **Android Auto Desktop Head Unit Emulator**.
-2. **Instalar la app** en el emulador del teléfono o en un celular: `./gradlew :app:installDebug`.
+2. **Instalar la app** en el celular: `./gradlew :app:installDebug`.
 3. **Activar el modo desarrollador de Android Auto** en ese dispositivo:
-   abrir *Ajustes → Apps → Android Auto* (en el emulador, instalar Android Auto desde Play Store),
+   abrir *Ajustes → Apps → Android Auto*,
    tocar 10 veces la versión al final de la pantalla, y en el menú ⋮ elegir **Iniciar servidor de unidad principal**.
 4. **Redirigir el puerto** desde la PC:
    ```bash
