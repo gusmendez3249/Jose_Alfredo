@@ -2,7 +2,7 @@
 
 - **Fecha de entrega:** 2026-10-30
 - **Versión:** `v4.1-sprint2`
-- **Release:** *no se publicó por separado. Su contenido se entrega en la Release del Sprint 3 ([v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases)).*
+- **Release:** no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3).
 - **Pull Request develop → main:** #49 (22/10/2026). Integró el incremento del Sprint 1 y la pantalla 7; lo demás de este sprint entra con el PR de cierre del Sprint 3 (#42).
 
 ## Funcionalidades incluidas

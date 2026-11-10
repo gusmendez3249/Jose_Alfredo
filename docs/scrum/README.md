@@ -12,9 +12,9 @@ Cada sprint registra 6 Daily Scrum, 1 Sprint Review, 1 Retrospectiva y 1 Increme
 
 | Sprint | Daily Scrum | Sprint Review | Retrospectiva | Incremento |
 |---|---|---|---|---|
-| Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (Release pendiente, se entrega en `v4.2-sprint3`) |
-| Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (Release pendiente, se entrega en `v4.2-sprint3`) |
-| Sprint 3 | 4 / 6 | Vie 13/11 | Vie 13/11 | Vie 13/11 · Release `v4.2-sprint3` |
+| Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
+| Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
+| Sprint 3 | 4 / 6 | Vie 13/11 | Vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
 
 > 📷 Las capturas de las reuniones (`daily-N-reunion.png`, `review-reunion.png`, `retro-reunion.png`) siguen pendientes en los tres sprints.
 
