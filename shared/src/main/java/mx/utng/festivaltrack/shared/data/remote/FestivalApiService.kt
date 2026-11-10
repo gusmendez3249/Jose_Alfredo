@@ -312,6 +312,13 @@ interface FestivalApiService {
         @retrofit2.http.Header("Authorization") token: String
     ): List<VisitaSitioDto>
 
+    /**
+     * Catálogo público de sitios del festival con sus coordenadas.
+     * Lo usa la pantalla "Elige tu destino" del modo automóvil.
+     */
+    @retrofit2.http.GET("ar/sitios")
+    suspend fun getSitiosAr(): List<SitioArDto>
+
     companion object {
         /**
          * Host del backend según dónde corre la app:
