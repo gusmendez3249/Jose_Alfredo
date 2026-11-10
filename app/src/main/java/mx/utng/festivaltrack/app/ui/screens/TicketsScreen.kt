@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mx.utng.festivaltrack.shared.data.remote.PreciosBoleto
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
 import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
@@ -30,14 +31,22 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 @Composable
 fun TicketsScreen(
     eventosViewModel: EventosViewModel? = null,
-    onNavigateToCheckout: (Int, Int) -> Unit = { _, _ -> }
+    onNavigateToCheckout: (eventoId: String, vip: Int, general: Int) -> Unit = { _, _, _ -> }
 ) {
+    // Los boletos se compran para el próximo evento a la venta (#52): el backend ahora rechaza
+    // eventos inexistentes o cancelados, así que ya no se puede mandar "EVT-001" fijo.
+    // Se toma de la caché local (Room), ordenando por fecha ISO-8601 (orden alfabético = cronológico).
+    val eventos = eventosViewModel?.eventosLocales?.collectAsState()?.value ?: emptyList()
+    val eventoAVenta = eventos
+        .filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
+        .minByOrNull { it.fechaHora }
+
     var selectedDate by remember { mutableStateOf("21") }
     var vipTickets by remember { mutableStateOf(1) }
     var generalTickets by remember { mutableStateOf(0) }
 
-    val vipPrice = 4500
-    val generalPrice = 1200
+    val vipPrice = PreciosBoleto.VIP
+    val generalPrice = PreciosBoleto.GENERAL
 
     val totalTickets = vipTickets + generalTickets
     val totalPrice = (vipTickets * vipPrice) + (generalTickets * generalPrice)
@@ -88,7 +97,7 @@ fun TicketsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Button(
-                        onClick = { onNavigateToCheckout(totalPrice, totalTickets) },
+                        onClick = { eventoAVenta?.let { onNavigateToCheckout(it.id, vipTickets, generalTickets) } },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PrimaryGold,
                             contentColor = Color.Black
@@ -97,7 +106,8 @@ fun TicketsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = totalTickets > 0
+                        // Sin evento a la venta no se puede comprar (p. ej. si aún no se sincronizan los eventos)
+                        enabled = totalTickets > 0 && eventoAVenta != null
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("CONTINUAR COMPRA", fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -194,7 +204,7 @@ fun TicketsScreen(
                                 Icon(Icons.Default.Remove, contentDescription = "Quitar", tint = PrimaryGold)
                             }
                             Text(vipTickets.toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(horizontal = 8.dp))
-                            IconButton(onClick = { vipTickets++ }) {
+                            IconButton(onClick = { if (vipTickets < PreciosBoleto.MAX_POR_COMPRA) vipTickets++ }) {
                                 Icon(Icons.Default.Add, contentDescription = "Agregar", tint = PrimaryGold)
                             }
                         }
@@ -238,7 +248,7 @@ fun TicketsScreen(
                                 Icon(Icons.Default.Remove, contentDescription = "Quitar", tint = Color.White)
                             }
                             Text(generalTickets.toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(horizontal = 8.dp))
-                            IconButton(onClick = { generalTickets++ }) {
+                            IconButton(onClick = { if (generalTickets < PreciosBoleto.MAX_POR_COMPRA) generalTickets++ }) {
                                 Icon(Icons.Default.Add, contentDescription = "Agregar", tint = Color.White)
                             }
                         }

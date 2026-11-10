@@ -92,18 +92,9 @@ fun TvLiveStreamScreen(
             onDismiss = { showChatDialog = false },
             onSend = { msgText ->
                 if (msgText.isNotBlank()) {
+                    // La TV no tiene sesión de usuario y el chat del servidor la exige,
+                    // así que el mensaje del espectador solo se muestra en pantalla.
                     chatMessages.add(ChatMessage("Espectador TV", msgText, "Ahora"))
-                    coroutineScope.launch {
-                        try {
-                            api.sendChatMessage(
-                                mx.utng.festivaltrack.shared.data.remote.ChatMessageDto(
-                                    eventoId = "EVT-001",
-                                    usuarioNombre = "Espectador TV",
-                                    mensaje = msgText
-                                )
-                            )
-                        } catch (e: Exception) { /* red */ }
-                    }
                 }
             }
         )

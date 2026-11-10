@@ -2,6 +2,7 @@ import {
   Body, Controller, Delete, Get, Param, Post, Put, Request, UploadedFile, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -17,6 +18,9 @@ export class ArController {
   ) {}
 
   /** Pantalla 1 → 2: recibe la foto (multipart, campo "foto") y devuelve el sitio identificado. */
+  // Rate limiting (#51): cada reconocimiento llama a la API de Claude (visión), que se cobra
+  // por uso; se limita a 10 por minuto para que un abuso no se traduzca en costo.
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @Post('reconocer')
   @UseInterceptors(FileInterceptor('foto', { limits: { fileSize: 5 * 1024 * 1024 } }))
