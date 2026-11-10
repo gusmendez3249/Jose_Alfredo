@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Request, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
+import { EnviarMensajeDto } from './dto/enviar-mensaje.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('stream/chat')
 export class ChatController {
@@ -10,8 +12,10 @@ export class ChatController {
     return this.chatService.getMensajes(eventoId);
   }
 
+  // Requiere sesión: el remitente sale del token, no del body (evita suplantación).
+  @UseGuards(JwtAuthGuard)
   @Post()
-  enviarMensaje(@Body() body: any) {
-    return this.chatService.enviarMensaje(body);
+  enviarMensaje(@Body() dto: EnviarMensajeDto, @Request() req: any) {
+    return this.chatService.enviarMensaje(req.user.id, dto);
   }
 }

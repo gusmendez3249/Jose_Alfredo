@@ -69,6 +69,15 @@ La solución permite conectar a organizadores, visitantes presenciales, espectad
 - **`AdminLiveStreamScreen`**: Panel donde el administrador usa la cámara física del smartphone para transmitir video en formato RTSP en el puerto `1935`.
 - **`AdminScannerScreen`**: Escáner de cámara para validar códigos QR en el acceso del recinto y prevenir reutilización.
 - **`AdminManageScreen` & `AdminCreateEventScreen`**: CRUD completo para publicar, actualizar o cancelar eventos en la agenda.
+- **`ArScannerScreen` & `ArHistoryScreen`**: Reconocimiento de sitios históricos con la cámara (CameraX): la foto se identifica en el backend y se muestra la tarjeta del sitio con descripción, galería y audio; incluye el historial de sitios visitados.
+- **`GalleryScreen`**: Galería interactiva como foro de la comunidad: publicar experiencias y fotos, me gusta, comentarios, filtros y vista en mosaico.
+- **`ElegirDestinoScreen`**: Pantalla 7 del modo automóvil: escenarios y sitios con distancia y tiempo estimado; **Navegar** envía la ruta al auto.
+
+### 1.1 Modo automóvil (Android Auto, `app/.../auto/`)
+- **Pantalla 8 · `NavegacionAutoScreen`**: destino, distancia, tiempo restante, lectura por voz y **Iniciar navegación** hacia Google Maps / Waze en el auto.
+- **Pantalla 9 · `AlertaSalidaScreen`**: próximos eventos con "Sal ya" / "Sal en X min", leído por voz.
+- **Pantalla 10 · `InicioAutoScreen`**: Home del auto con audio en curso, ruta activa y resumen AR del día.
+- Se prueba con el **Desktop Head Unit**; pasos en [app/README.md](./app/README.md#modo-automóvil-android-auto).
 
 ### 2. Aplicación Smart TV (`tv/`)
 - **`TvLiveStreamScreen`**: Pantalla dividida (68% reproductor ExoPlayer RTSP + 32% panel de chat comunitario con refresco automático cada 3 segundos).
@@ -95,11 +104,14 @@ La solución permite conectar a organizadores, visitantes presenciales, espectad
 
 ## 🛠️ Tecnologías y Stack Técnico Global
 
-- **Android Móvil / TV / Wear**: Kotlin, Jetpack Compose, Compose TV, ExoPlayer (Media3 RTSP), Retrofit 2, Room DB, Accompanist Permissions.
+- **Android Móvil / TV / Wear**: Kotlin, Jetpack Compose (MVVM con ViewModel y StateFlow), Compose TV, ExoPlayer (Media3 RTSP), Retrofit 2, Room DB, Accompanist Permissions, OSMDroid.
+- **Realidad aumentada**: CameraX en la app; reconocimiento visual con IA en el backend detrás de la interfaz `ReconocedorVisual`.
+- **Android Auto**: Car App Library (`androidx.car.app`) con plantillas `ListTemplate` y `PaneTemplate`; Text-to-Speech para los avisos.
 - **Backend API**: Node.js, NestJS, TypeScript, Prisma ORM, Passport JWT, Bcrypt.
 - **Base de Datos**: PostgreSQL Serverless (Neon Cloud Database).
-- **Web App**: React 18, Vite, TypeScript, Dark Gold Design System CSS3.
+- **Web App**: React 19, Vite, TypeScript, Dark Gold Design System CSS3.
 - **Protocolo de Video Streaming**: RTSP (Real-Time Streaming Protocol) en puerto `1935`.
+- **CI y Scrum**: GitHub Actions (Backend CI, Android CI y burndown diario); evidencias de los sprints en [`docs/scrum/`](./docs/scrum/README.md).
 
 ---
 

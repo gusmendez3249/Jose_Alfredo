@@ -1,9 +1,6 @@
 package mx.utng.festivaltrack.app.auto
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.speech.tts.TextToSpeech
 import androidx.car.app.CarContext
@@ -15,20 +12,16 @@ import androidx.car.app.model.ItemList
 import androidx.car.app.model.ListTemplate
 import androidx.car.app.model.Row
 import androidx.car.app.model.Template
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.coroutines.resume
 
 /**
  * Pantalla 9 del modo automóvil: alerta de salida y próximos eventos.
@@ -86,26 +79,13 @@ class AlertaSalidaScreen(carContext: CarContext) : Screen(carContext), DefaultLi
     }
 
     /** Ubicación del teléfono; si no hay permiso o señal, se usa el centro de Dolores Hidalgo. */
-    @SuppressLint("MissingPermission")
     private suspend fun obtenerUbicacion(): Pair<Double, Double> {
-        if (!tienePermisoUbicacion()) {
-            ubicacionAproximada = true
-            return CENTRO_DOLORES
-        }
-        val ubicacion = suspendCancellableCoroutine { cont ->
-            LocationServices.getFusedLocationProviderClient(carContext).lastLocation
-                .addOnSuccessListener { cont.resume(it) }
-                .addOnFailureListener { cont.resume(null) }
-        }
+        val ubicacion = UbicacionAuto.obtener(carContext)
         ubicacionAproximada = ubicacion == null
-        return ubicacion?.let { it.latitude to it.longitude } ?: CENTRO_DOLORES
+        return ubicacion ?: UbicacionAuto.CENTRO_DOLORES
     }
 
-    private fun tienePermisoUbicacion(): Boolean =
-        ContextCompat.checkSelfPermission(carContext, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(carContext, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
+    private fun tienePermisoUbicacion(): Boolean = UbicacionAuto.tienePermiso(carContext)
 
     /** Lee el aviso una sola vez por pantalla, para no distraer al conductor. */
     private fun avisarSiEsHora() {
@@ -122,12 +102,12 @@ class AlertaSalidaScreen(carContext: CarContext) : Screen(carContext), DefaultLi
     private fun navegarA(salida: SalidaEvento) {
         val lat = salida.evento.latitud
         val lon = salida.evento.longitud
-        val destino = if (lat != null && lon != null) "geo:$lat,$lon" else "geo:0,0?q=${Uri.encode(salida.evento.ubicacion)}"
-        try {
-            carContext.startCarApp(Intent(CarContext.ACTION_NAVIGATE, Uri.parse(destino)))
-        } catch (e: Exception) {
-            CarToast.makeText(carContext, "No hay una app de navegación disponible", CarToast.LENGTH_LONG).show()
+        val destino = if (lat != null && lon != null) {
+            NavegacionCalculator.uriNavegacion(lat, lon)
+        } else {
+            "geo:0,0?q=${Uri.encode(salida.evento.ubicacion)}"
         }
+        UbicacionAuto.navegar(carContext, destino)
     }
 
     override fun onGetTemplate(): Template {
@@ -183,9 +163,6 @@ class AlertaSalidaScreen(carContext: CarContext) : Screen(carContext), DefaultLi
     }
 
     private companion object {
-        /** Jardín Principal de Dolores Hidalgo, usado cuando no hay ubicación del teléfono. */
-        val CENTRO_DOLORES = 21.1561 to -100.9318
-
         /** Límite de filas que Android Auto muestra sin distraer al conductor. */
         const val MAX_FILAS = 6
     }

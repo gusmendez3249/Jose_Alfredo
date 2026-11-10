@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { BoletosService } from './boletos.service';
+import { ComprarBoletoDto } from './dto/comprar-boleto.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -8,10 +9,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class BoletosController {
   constructor(private readonly boletosService: BoletosService) {}
 
+  // El body se valida con ComprarBoletoDto (#52); el precio lo calcula el servicio.
   @UseGuards(JwtAuthGuard)
   @Post('comprar')
-  comprar(@Body() body: any, @Request() req: any) {
-    return this.boletosService.comprar(req.user.id, body);
+  comprar(@Body() dto: ComprarBoletoDto, @Request() req: any) {
+    return this.boletosService.comprar(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)

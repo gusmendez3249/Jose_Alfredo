@@ -2,8 +2,8 @@
 
 - **Fecha de entrega:** 2026-10-16
 - **Versión:** `v4.0-sprint1`
-- **Release:** [v4.0-sprint1](https://github.com/gusmendez3249/Jose_Alfredo/releases) *(se publica al cierre del sprint)*
-- **Pull Request develop → main:** *(pendiente)*
+- **Release:** no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3).
+- **Pull Request develop → main:** #49 (22/10/2026)
 
 ## Funcionalidades incluidas
 
