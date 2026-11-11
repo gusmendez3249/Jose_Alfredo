@@ -1,8 +1,9 @@
-import { Body, Controller, Post, Get, Put, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, Put, Param, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RoleUpdateDto } from './dto/role-update.dto';
+import { TvSyncDto } from './dto/tv-sync.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -20,7 +21,11 @@ export class AuthController {
   // fuerza bruta contra una cuenta sin bloquear a otros usuarios que comparten la IP.
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')    login(@Body() dto: LoginDto)       { return this.authService.login(dto); }
-  @Post('tv-sync')  tvSync(@Body() body: { tvToken: string, userId: string }) { return this.authService.tvSync(body); }
+  // Vincular una TV exige sesión: el usuario sale del JWT y no del cuerpo (evita vincular cuentas ajenas).
+  @UseGuards(JwtAuthGuard)
+  @Post('tv-sync')  tvSync(@Body() body: TvSyncDto, @Request() req: any) {
+    return this.authService.tvSync({ tvToken: body.tvToken, userId: req.user.id });
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Get('usuarios')

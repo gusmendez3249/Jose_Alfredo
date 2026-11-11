@@ -1,3 +1,4 @@
+import { CreateCancionDto } from './dto/create-cancion.dto';
 import { BadRequestException, Controller, Get, Post, Put, Delete, Body, Param, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -71,7 +72,7 @@ export class CancionesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post()
-  create(@Body() body: any) {
+  create(@Body() body: CreateCancionDto) {
     return this.cancionesService.create(body);
   }
 

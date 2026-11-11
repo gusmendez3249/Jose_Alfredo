@@ -9,6 +9,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { ArReconocimientoFacade } from './ar-reconocimiento.facade';
 import { ArCatalogoService } from './ar-catalogo.service';
 import { SitioArDto } from './dto/sitio-ar.dto';
+import { UpdateSitioArDto } from './dto/update-sitio-ar.dto';
 
 @Controller('ar')
 export class ArController {
@@ -49,7 +50,7 @@ export class ArController {
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Put('sitios/:id')
-  actualizar(@Param('id') id: string, @Body() dto: Partial<SitioArDto>) { return this.catalogo.actualizar(id, dto); }
+  actualizar(@Param('id') id: string, @Body() dto: UpdateSitioArDto) { return this.catalogo.actualizar(id, dto); }
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Delete('sitios/:id')

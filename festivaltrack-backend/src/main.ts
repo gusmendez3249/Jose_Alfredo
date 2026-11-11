@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -10,7 +11,11 @@ async function bootstrap() {
   // Detrás del proxy de Railway: usar la IP real del cliente (X-Forwarded-For) para el rate limiting.
   app.set('trust proxy', 1);
 
-  // CORS: permite localhost en desarrollo y el/los frontends de FRONTEND_URL (separados por coma).
+  // Cabeceras HTTP de seguridad (X-Content-Type-Options, HSTS, X-Frame-Options, etc.).
+  // /uploads se sirve también a otros orígenes porque el portal web muestra esas imágenes.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+  // CORS: localhost solo fuera de producción; en producción, únicamente los frontends de FRONTEND_URL.
   // Las apps Android no envían Origin, así que no se ven afectadas.
   const allowedOrigins = (process.env.FRONTEND_URL ?? 'https://festivaltrack-web.up.railway.app')
     .split(',')
@@ -18,7 +23,9 @@ async function bootstrap() {
     .filter(Boolean);
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
+      const esLocal =
+        process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin ?? '');
+      if (!origin || esLocal || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(null, false);

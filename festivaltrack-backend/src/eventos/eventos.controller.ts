@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { EventosService } from './eventos.service';
 import { CreateEventoDto } from './dto/create-evento.dto';
+import { UpdateEventoDto } from './dto/update-evento.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -21,7 +22,7 @@ export class EventosController {
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Patch(':id')
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateEventoDto>) {
+  update(@Param('id') id: string, @Body() dto: UpdateEventoDto) {
     return this.eventosService.update(id, dto);
   }
 
