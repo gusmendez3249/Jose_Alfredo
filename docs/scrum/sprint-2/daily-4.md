@@ -27,6 +27,10 @@
 
 ## Avance mostrado
 
+### Hallazgos registrados
+
+![Hallazgos de seguridad](img/daily-4-hallazgos-seguridad.png)
+
 ### Código que lo hace funcionar
 
 **`app/src/main/java/mx/utng/festivaltrack/app/auto/NavegacionCalculator.kt`**: URI que entiende `CarContext.ACTION_NAVIGATE` para mandar la ruta a Google Maps o Waze en el auto (#39) · **Responsable:** Noé

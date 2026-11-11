@@ -27,6 +27,8 @@
 
 ## Avance mostrado
 
+![Sprint Backlog del Sprint 3](img/daily-1-sprint-backlog.png)
+
 Sprint Planning. Objetivo del Sprint 3: **cerrar el MVP (reproductor con cola), integrar todo lo terminado en `develop`, pruebas de los módulos nuevos y publicar la Release final.**
 
 | Issue | Tarea | Responsable | Estimate |

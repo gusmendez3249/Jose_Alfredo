@@ -22,7 +22,7 @@ Terminado fuera de `develop` (se integra en el Sprint 3):
 | Issue | Funcionalidad | Responsable | Dónde está |
 |---|---|---|---|
 | #50, #51, #52 | Chat con sesión obligatoria, rate limiting y precio del boleto en el servidor | Gustavo | `feature/mejoras-seguridad` |
-| #29, #30, #31 | Demos de audio por concierto y reproductor en segundo plano | Omar | Pendiente de subir |
+| #29, #30, #31 | Demos de audio por concierto y reproductor en segundo plano | Omar | Integrado en el Sprint 3 (PRs #57 y #58) |
 
 ## Cómo probarlo
 
@@ -36,6 +36,6 @@ Terminado fuera de `develop` (se integra en el Sprint 3):
 
 | Captura | Qué se muestra | Responsable |
 |---|---|---|
-| 📷 *Captura pendiente*: agrega `img/incremento-destinos.png` | Pantalla 7 en el teléfono | Noé |
-| 📷 *Captura pendiente*: agrega `img/incremento-auto-home.png` | Home del modo automóvil en el DHU | Noé |
+| <img src="img/review-codigo-destinos.png" width="420"> | Pantalla 7 · Elige tu destino (#33) | Noé |
+| <img src="img/review-codigo-home-auto.png" width="420"> | Pantalla 10 · Home del modo automóvil (#36) | Noé |
 | <img src="img/seguridad-52-app-checkout-desglose.png" width="220"> | Compra con el precio calculado por el servidor (rama de seguridad) | Gustavo |

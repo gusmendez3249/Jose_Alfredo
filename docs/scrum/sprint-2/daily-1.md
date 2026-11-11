@@ -27,6 +27,8 @@
 
 ## Avance mostrado
 
+![Sprint Backlog del Sprint 2](img/daily-1-sprint-backlog.png)
+
 Sprint Planning. Objetivo del Sprint 2: **demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla
 "Elige tu destino" del modo automóvil**.
 

@@ -35,6 +35,33 @@
 | 14 · Tecnologías | Firebase (Firestore, Auth, Storage), Cloud Functions, HLS | NestJS + Prisma + PostgreSQL en Neon; JWT; Media3 (ExoPlayer) con RTSP |
 | 15 · Servicios | Firebase Authentication, Cloud Vision, FCM | Login propio con JWT y bcrypt; reconocimiento AR en el backend; recordatorios locales |
 
+![Diferencias del reporte con el stack real](img/daily-2-reporte-stack.png)
+
+### Código que lo hace funcionar
+
+**`app/src/main/java/mx/utng/festivaltrack/app/playback/PlaybackService.kt`**: el reproductor vive en un `MediaSessionService`; el audio sigue sonando en segundo plano y Android muestra la notificación con los controles (#31, #25) · **Responsable:** Omar
+
+```kotlin
+class PlaybackService : MediaSessionService() {
+    private var session: MediaSession? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        val player = ExoPlayer.Builder(this)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build(),
+                /* handleAudioFocus = */ true
+            )
+            .setHandleAudioBecomingNoisy(true) // pausa si se desconectan los audífonos
+            .build()
+        session = MediaSession.Builder(this, player).build()
+    }
+}
+```
+
 ## Acuerdos
 
 - El documento con las secciones corregidas se guarda en `docs/reporte/` para pasarlo al PDF final.

@@ -69,6 +69,30 @@ private fun iniciarNavegacion(resumen: ResumenNavegacion) {
 }
 ```
 
+**`festivaltrack-backend/src/boletos/boletos.service.ts`**: el monto sale de la tabla de precios del servidor y el evento debe estar a la venta (#52) · **Responsable:** Gustavo
+
+```ts
+// El monto SIEMPRE sale de la tabla de precios del servidor (#52)
+const montoTotal = PRECIOS_BOLETO[categoria] * cantidad;
+
+const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
+if (!evento) throw new NotFoundException('Evento no encontrado');
+if (evento.estado !== 'PUBLICADO' && evento.estado !== 'EN_CURSO') {
+  throw new BadRequestException(`El evento no está a la venta (estado: ${evento.estado})`);
+}
+```
+
+**`festivaltrack-backend/src/common/guards/app-throttler.guard.ts`**: en el login el límite cuenta por IP + correo, para no bloquear a todo el Wi-Fi del festival (#51) · **Responsable:** Gustavo
+
+```ts
+protected async getTracker(req: Record<string, any>): Promise<string> {
+  const ip = req.ips?.length ? req.ips[0] : req.ip;
+  const esLogin = typeof req.originalUrl === 'string' && req.originalUrl.includes('/auth/login');
+  const correo = typeof req.body?.correo === 'string' ? req.body.correo.trim().toLowerCase() : '';
+  return esLogin && correo ? `${ip}:${correo}` : ip;
+}
+```
+
 ## Acuerdos
 
 - El PR #53 se integra antes del cierre del sprint.

@@ -60,9 +60,9 @@ Todas las tareas del milestone se cerraron. **Sin embargo, no todo el código ce
 |---|---|---|
 | <img src="img/seguridad-50-app-chat-en-vivo.png" width="220"> | Chat en vivo con sesión obligatoria (#50) | Gustavo |
 | <img src="img/seguridad-52-app-checkout-desglose.png" width="220"> | Checkout con el precio del servidor (#52) | Gustavo |
-| 📷 *Captura pendiente*: `img/review-auto-destinos.png` | Pantalla 7 · Elige tu destino en el teléfono (#33) | Noé |
-| 📷 *Captura pendiente*: `img/review-auto-navegacion.png` | Pantalla 8 · Navegación en el Desktop Head Unit (#39). Se toma con celular físico: [guía](../../pruebas/android-auto.md) | Noé |
-| 📷 *Captura pendiente*: `img/review-auto-home.png` | Pantalla 10 · Home del modo automóvil en el DHU (#36) | Noé |
+| <img src="img/review-codigo-destinos.png" width="420"> | Pantalla 7 · Elige tu destino: un destino por escenario, ordenados por cercanía (#33) | Noé |
+| <img src="img/review-codigo-navegacion.png" width="420"> | Pantalla 8 · Navegación: lectura por voz y envío de la ruta al navegador del auto (#39) | Noé |
+| <img src="img/review-codigo-home-auto.png" width="420"> | Pantalla 10 · Home del modo automóvil con sus cuatro tarjetas (#36) | Noé |
 
 ### Evidencia técnica
 
@@ -84,7 +84,7 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 | Done (adelantadas del Sprint 3) | #39, #36 |
 | Continúan en el Sprint 3 | Épica #24 (falta #25) · épica #21 cerrada al completar #39 y #36 |
 
-> 📷 Agrega la captura del tablero como `img/review-tablero.png`.
+![Tablero al cierre del Sprint 2](img/review-tablero.png)
 
 ## Retroalimentación recibida
 

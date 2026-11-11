@@ -33,6 +33,18 @@
 |---|---|---|
 | ![Burndown del Sprint 3](img/burndown-sprint-3.png) | Burndown del Sprint 3 generado por el workflow diario | Noé |
 
+### Documentación
+
+**`docs/reporte/secciones-actualizadas.md`**: tabla de la sección 14 con el stack real del proyecto (#41) · **Responsable:** Noé
+
+```markdown
+| Backend           | NestJS (Node.js + TypeScript)        | API REST: autenticación, eventos, boletos con QR, chat, AR |
+| Base de datos     | PostgreSQL en Neon + Prisma ORM      | Usuarios, eventos, boletos, canciones y sitios culturales  |
+| Realidad aumentada| CameraX + reconocimiento visual (IA) | La app captura la foto y el backend identifica el sitio    |
+| Integración auto  | Android Auto · Car App Library       | Home, Navegación y Alerta de salida con plantillas         |
+| Streaming y audio | Media3 (ExoPlayer) con RTSP          | Transmisión en vivo y reproducción de audio                |
+```
+
 ## Acuerdos
 
 - Seguimiento de la acción "PR de audio antes de la Daily 3": no cumplida; se revisa en la Daily 4.

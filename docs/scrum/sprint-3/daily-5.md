@@ -35,6 +35,22 @@
 | #58 | Cola robusta ante errores, rediseño del reproductor y subida de canciones | Omar | Compilar APK ✅ · Backend ✅ |
 | #56 | Seguridad: chat con sesión, rate limiting y precio del boleto en el servidor | Gustavo | Compilar APK ✅ · Backend ✅ |
 
+![Integración en develop](img/daily-5-integracion.png)
+
+### Código que lo hace funcionar
+
+**`app/src/main/java/mx/utng/festivaltrack/app/playback/PlaybackLogic.kt`**: qué hace la cola cuando una demo falla; sin conexión se queda en pausa en lugar de saltar (#25) · **Responsable:** Omar
+
+```kotlin
+fun afterError(queueSize: Int, currentIndex: Int, consecutiveErrors: Int,
+               networkError: Boolean = false): ErrorAction = when {
+    networkError -> ErrorAction.WAIT_FOR_NETWORK
+    queueSize <= 1 || consecutiveErrors >= queueSize -> ErrorAction.STOP
+    currentIndex in 0 until queueSize - 1 -> ErrorAction.SKIP_TO_NEXT
+    else -> ErrorAction.BACK_TO_START
+}
+```
+
 ### Estado del tablero
 
 | Estado | Tareas del Sprint 3 |

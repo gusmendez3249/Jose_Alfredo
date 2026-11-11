@@ -41,6 +41,17 @@ val nombres = visitas
     .map { (_, visita) -> visita.sitio.nombre }
 ```
 
+**`festivaltrack-backend/src/chat/chat.controller.ts`**: el chat en vivo exige sesión y el remitente sale del token, no del body (#50) · **Responsable:** Gustavo
+
+```ts
+// Requiere sesión: el remitente sale del token, no del body (evita suplantación).
+@UseGuards(JwtAuthGuard)
+@Post()
+enviarMensaje(@Body() dto: EnviarMensajeDto, @Request() req: any) {
+  return this.chatService.enviarMensaje(req.user.id, dto);
+}
+```
+
 **Integración en `develop`**
 
 | PR | Rama | Contenido |

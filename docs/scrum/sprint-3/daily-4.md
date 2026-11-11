@@ -29,6 +29,8 @@
 
 ### Estado del tablero
 
+![Tablero del Sprint 3 al 09/11](img/daily-4-tablero.png)
+
 | Estado | Tareas del Sprint 3 |
 |---|---|
 | Done | #36, #39 (en `develop` desde el PR #53) · épica #21 |

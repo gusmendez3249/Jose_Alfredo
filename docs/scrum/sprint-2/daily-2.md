@@ -48,6 +48,27 @@ proximos.groupBy { it.evento.escenario ?: it.evento.ubicacion }.forEach { (lugar
 
 **`docs/scrum/herramientas/burndown.py`**: lee el campo Sprint, el Estimate y la fecha de cierre de cada issue del Project y dibuja la línea ideal contra la real · **Responsable:** Noé
 
+**`festivaltrack-backend/src/canciones/canciones.service.ts`**: el administrador define el repertorio de un concierto; el orden del arreglo es el orden de reproducción (#29) · **Responsable:** Omar
+
+```ts
+async setRepertorio(eventoId: string, cancionIds: string[]) {
+  const ids = [...new Set(cancionIds)];
+  const evento = await this.prisma.evento.findUnique({ where: { id: eventoId } });
+  if (!evento) throw new NotFoundException('Evento no encontrado');
+
+  await this.prisma.$transaction(async (tx) => {
+    const transmision = await tx.transmision.upsert({
+      where: { eventoId }, create: { eventoId, titulo: evento.nombre }, update: {},
+    });
+    await tx.cancionTransmision.deleteMany({ where: { transmisionId: transmision.id } });
+    await tx.cancionTransmision.createMany({
+      data: ids.map((cancionId, orden) => ({ cancionId, transmisionId: transmision.id, orden })),
+    });
+  });
+  return this.findByEvento(eventoId);
+}
+```
+
 **Integración en `develop`**
 
 | PR | Rama | Contenido |
