@@ -2,9 +2,10 @@
 
 | Fecha de entrega | Versión | Release | PR `develop` → `main` |
 |:--|:--|:--|:--|
-| 2026-11-10. La Release se publicó antes del cierre del sprint (13/11) para tener el APK listo en la Sprint Review. | `v4.2-sprint3` | [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3), con el APK adjunto | #55 |
+| 10/11/2026 | `v4.2-sprint3` | [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3): incremento acumulado de los Sprints 1–3 | #55 |
+| 11/11/2026 | `v4.3-sprint3` | [v4.3-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.3-sprint3): Release complementaria con el audio y la seguridad en la nube | #82 |
 
-Esta Release es el incremento acumulado de la Unidad II: incluye lo de los Sprints 1 y 2, que no tuvieron Release propia.
+`v4.2-sprint3` es el incremento acumulado de la Unidad II: incluye lo de los Sprints 1 y 2, que no tuvieron Release propia. `v4.3-sprint3` agrega lo que se integró después: el audio del concierto y la segunda ronda de seguridad.
 
 ## Funcionalidades incluidas
 
@@ -21,12 +22,19 @@ Esta Release es el incremento acumulado de la Unidad II: incluye lo de los Sprin
 | 3 | #41 | Reporte técnico y READMEs alineados con el stack real | Noé |
 | 3 | #42 | Integración `develop` → `main` y Release | Noé |
 
-**No incluido en `v4.2-sprint3`:** las demos de audio y el reproductor (#29, #30, #31 y #25) se integraron en `develop` después de publicar la Release (PRs #57 y #58, 10 y 11/11). Se entregan en la Release complementaria acordada en la Review.
+Agregado en `v4.3-sprint3` (11/11/2026):
+
+| Sprint | Issue / PR | Funcionalidad | Responsable |
+|---|---|---|---|
+| 2–3 | #29, #30, #31, #25 · PR #57 | Demos del concierto como playlist, repertorio por administrador y reproductor en segundo plano con cola | Omar |
+| 3 | PR #58 | Cola robusta ante errores, rediseño del reproductor y subida de canciones | Omar |
+| 3 | PR #59 | Seguridad y servicios en la nube: secretos, validación de entradas, token cifrado y pruebas HTTP | Noé |
+| 3 | PR #81 | Evidencias Scrum completas de los Sprints 1–3 | Noé |
 La tarjeta *Audio en curso* del Home del auto muestra "Sin audio en curso" hasta que se integren.
 
 ## Cómo probarlo
 
-1. Descargar `FestivalTrack-v4.2-sprint3.apk` de la Release e instalarlo en un celular Android.
+1. Descargar `FestivalTrack-v4.3-sprint3.apk` de la Release más reciente e instalarlo en un celular Android.
 2. Levantar el backend: `cd festivaltrack-backend && npm install && npm run start:dev` con el `.env` del equipo.
 3. **Galería y AR:** iniciar sesión con una cuenta de rol USUARIO → **Galería** y **Explorar AR** desde Inicio.
 4. **Pantalla 7:** Mapa → ícono del auto → elegir un destino → **Navegar**.
