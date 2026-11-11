@@ -19,10 +19,17 @@ export class EventosController {
     return this.eventosService.create(dto, req.user.id);
   }
 
+  // Nest registra un solo verbo por método, así que PATCH y PUT van en handlers separados.
+  // La app Android edita con PUT; el portal web puede usar PATCH.
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Patch(':id')
-  @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateEventoDto) {
+    return this.eventosService.update(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @Put(':id')
+  reemplazar(@Param('id') id: string, @Body() dto: UpdateEventoDto) {
     return this.eventosService.update(id, dto);
   }
 
