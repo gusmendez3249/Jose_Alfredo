@@ -54,7 +54,7 @@ dependencies {
     
     // Maps & Location (OSMDroid & Google Play Location)
     implementation(libs.osmdroid.android)
-    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.4.0")
 
     // Media3 (ExoPlayer & RTSP for Live Stream)
     val media3_version = "1.3.1"

@@ -62,7 +62,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-wearable:18.2.0")
     
     // Google Play Services Location (para obtener GPS)
-    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.4.0")
 
     // WorkManager (sync periódico en background)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
