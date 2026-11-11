@@ -154,6 +154,31 @@ interface FestivalApiService {
     suspend fun getCanciones(): List<CancionDto>
 
     /**
+     * Obtiene las canciones (demos) de un concierto, en el orden del repertorio.
+     * @param eventoId ID del evento.
+     */
+    @retrofit2.http.GET("canciones/evento/{eventoId}")
+    suspend fun getCancionesEvento(@retrofit2.http.Path("eventoId") eventoId: String): List<CancionDto>
+
+    /**
+     * Define el repertorio de un concierto (solo administrador). El orden de la lista es el
+     * orden de reproducción y reemplaza el repertorio anterior.
+     */
+    @retrofit2.http.Multipart
+    @retrofit2.http.POST("canciones/upload")
+    suspend fun subirArchivoCancion(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Part file: okhttp3.MultipartBody.Part
+    ): ArchivoSubidoDto
+
+    @retrofit2.http.PUT("canciones/evento/{eventoId}")
+    suspend fun setRepertorioEvento(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Path("eventoId") eventoId: String,
+        @retrofit2.http.Body request: RepertorioDto
+    ): List<CancionDto>
+
+    /**
      * Obtiene las galerías de fotos del festival.
      * @return Lista de [GaleriaDto] con sus colecciones de imágenes.
      */
@@ -609,6 +634,7 @@ data class BiografiaDto(
  * @property artista Nombre del artista intérprete.
  * @property duracion Duración en segundos.
  * @property archivoUrl URL pública del archivo de audio (MP3).
+ * @property portadaUrl Portada de la canción (ruta `/uploads/...` o URL https); null si no tiene.
  * @property genero Género musical (ej. "Ranchera"). Puede ser null.
  */
 data class CancionDto(
@@ -617,7 +643,8 @@ data class CancionDto(
     val artista: String,
     val duracion: Int,
     val archivoUrl: String,
-    val genero: String?
+    val genero: String?,
+    val portadaUrl: String? = null
 )
 
 /**
@@ -670,13 +697,20 @@ data class StreamStatusDto(
  * @property archivoUrl URL pública de la canción (MP3).
  * @property genero Género musical.
  */
+/** Ids de canciones, en orden, que forman el repertorio de un concierto. */
+data class RepertorioDto(val cancionIds: List<String>)
+
 data class CancionCreateDto(
     val titulo: String,
     val artista: String = "José Alfredo Jiménez",
     val duracion: Int = 180,
     val archivoUrl: String = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    val portadaUrl: String? = null,
     val genero: String = "Ranchera"
 )
+
+/** Respuesta de subir un archivo: ruta relativa (`/uploads/...`) para guardar en la canción. */
+data class ArchivoSubidoDto(val url: String)
 
 /**
  * Datos requeridos para agregar una nueva imagen a la galería.

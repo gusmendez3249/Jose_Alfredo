@@ -91,7 +91,13 @@ JWT_SECRET="<cadena_aleatoria_larga>"
 
 # Puerto en el que correrá el servidor HTTP
 PORT=3001
+
+# Administrador que crea el seed (la contraseña solo vive en tu .env, mínimo 12 caracteres)
+SEED_ADMIN_EMAIL="admin@festivaltrack.test"
+SEED_ADMIN_PASSWORD="<contraseña_local_segura>"
 ```
+
+La lista completa de variables (incluidas las del módulo AR) está en `.env.example`, que solo tiene valores ficticios. En Railway se configuran como variables del servicio, nunca en archivos.
 
 ---
 
@@ -110,7 +116,7 @@ PORT=3001
 
 ## Paso 4: Sembrado de Datos de Prueba (Seed)
 
-Pobla la base de datos con el usuario administrador por defecto (`admin@admin.com`) y el evento `EVT-001`:
+Pobla la base de datos con el usuario administrador (correo y contraseña tomados de `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD`) y el evento `EVT-001`. Si `SEED_ADMIN_PASSWORD` falta o tiene menos de 12 caracteres, el seed se detiene:
 
 ```bash
 npx prisma db seed
@@ -135,7 +141,7 @@ npm run start:dev
 - **POST** `http://localhost:3001/api/v1/auth/login`
 - **Body JSON**:
   ```json
-  { "correo": "admin@admin.com", "contrasena": "admin123" }
+  { "correo": "admin@festivaltrack.test", "contrasena": "<tu SEED_ADMIN_PASSWORD>" }
   ```
 
 ### 2. Comprar Boleto

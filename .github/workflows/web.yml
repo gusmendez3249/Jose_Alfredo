@@ -1,0 +1,40 @@
+# CI del portal web (React + Vite): audita dependencias y compila en cada PR.
+name: Web CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'festivaltrack-web/**'
+      - '.github/workflows/web.yml'
+  push:
+    branches: [develop, main]
+    paths:
+      - 'festivaltrack-web/**'
+      - '.github/workflows/web.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Auditar y compilar portal web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: festivaltrack-web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: festivaltrack-web/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Auditar dependencias de producción
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Compilar
+        run: npm run build

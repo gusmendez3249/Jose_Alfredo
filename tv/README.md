@@ -101,7 +101,7 @@ tv/
         android:label="Festival Track TV"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        android:usesCleartextTraffic="true"> <!-- Permite tráfico HTTP y RTSP en red local sin cifrado forzado -->
+        android:networkSecurityConfig="@xml/network_security_config"> <!-- release: solo HTTPS; debug: HTTP al backend local. RTSP no depende de esta regla -->
         
         <!-- Actividad Principal: Punto de entrada para la interfaz de Android TV -->
         <activity

@@ -27,23 +27,30 @@ async function main() {
   console.log('Artista y Biografía listos.');
 
   // Necesitamos un administrador para relacionar la galería y las canciones
+  // Correo y contraseña del admin salen del .env (SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD).
+  // No hay valor por defecto: una contraseña fija en el código quedaría publicada en el repositorio.
+  const adminCorreo = process.env.SEED_ADMIN_EMAIL ?? 'admin@festivaltrack.test';
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.length < 12) {
+    throw new Error('Define SEED_ADMIN_PASSWORD (mínimo 12 caracteres) en el .env antes de correr el seed.');
+  }
   const bcrypt = await import('bcryptjs');
-  const hashedPassAdmin = await bcrypt.hash('admin123', 10);
+  const hashedPassAdmin = await bcrypt.hash(adminPassword, 10);
 
-  // Crear o actualizar admin@admin.com con contraseña admin123 y hash bcrypt
-  let usuarioAdmin = await prisma.usuario.findUnique({ where: { correo: 'admin@admin.com' } });
+  // Crear o actualizar el administrador con la contraseña del .env (hash bcrypt)
+  let usuarioAdmin = await prisma.usuario.findUnique({ where: { correo: adminCorreo } });
   if (!usuarioAdmin) {
     usuarioAdmin = await prisma.usuario.create({
       data: {
         nombre: 'Administrador Principal',
-        correo: 'admin@admin.com',
+        correo: adminCorreo,
         contrasena: hashedPassAdmin,
         rol: 'ADMINISTRADOR',
       }
     });
   } else {
     usuarioAdmin = await prisma.usuario.update({
-      where: { correo: 'admin@admin.com' },
+      where: { correo: adminCorreo },
       data: {
         contrasena: hashedPassAdmin,
         rol: 'ADMINISTRADOR'
@@ -60,7 +67,7 @@ async function main() {
       }
     });
   }
-  console.log('Administrador admin@admin.com configurado correctamente.');
+  console.log(`Administrador ${adminCorreo} configurado correctamente.`);
 
   // 2. Canciones
   await prisma.cancion.createMany({

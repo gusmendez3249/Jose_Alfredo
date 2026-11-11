@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Solo builds de depuración: permite HTTP para hablar con el backend local en la IP de la PC
+  (celular físico en la misma red Wi-Fi), cuya IP cambia y no se puede listar aquí.
+  El build de release usa src/main/res/xml/network_security_config.xml, que exige HTTPS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
