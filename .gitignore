@@ -28,3 +28,12 @@ replay_pid*.log
 .idea_backup/
 festivaltrack-backend/dist/
 festivaltrack-backend/uploads/
+
+# APKs compilados: se publican como artefacto del CI o en las Releases de GitHub
+*.apk
+*.aab
+apks/
+
+# Configuración personal del IDE (dispositivo seleccionado, emuladores locales)
+/.idea/deploymentTargetSelector.xml
+/.idea/deviceManager.xml

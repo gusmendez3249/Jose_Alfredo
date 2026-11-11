@@ -21,6 +21,63 @@
 
 ---
 
+## 🔎 Para revisar el proyecto
+
+| Qué | Dónde |
+| :--- | :--- |
+| **Versión a revisar** | Rama `main` y la Release más reciente ([Releases](../../releases)). El trabajo en curso está en `develop` |
+| Seguridad y manejo de secretos | [SECURITY.md](./SECURITY.md) |
+| Servicios en la nube y APIs de terceros | [APIs.md](./APIs.md) |
+| Pruebas de seguridad e integración (cómo correrlas y resultados) | [docs/pruebas/seguridad.md](./docs/pruebas/seguridad.md) |
+| Evidencias de las mejoras de seguridad | [evidencias/seguridad](./evidencias/seguridad/README.md) |
+| Proceso Scrum (sprints, dailies, burndown) | [docs/scrum](./docs/scrum/README.md) |
+| CI | Pestaña **Actions**: `Backend CI`, `Android CI`, `Web CI` |
+
+### Estructura del repositorio
+
+| Carpeta | Contenido |
+| :--- | :--- |
+| `app/` | App móvil Android (Kotlin + Compose), incluido el modo automóvil (`auto/`) y la realidad aumentada |
+| `tv/` | App para Android TV (programa, transmisión en vivo) |
+| `wear/` | App para Wear OS (próximos eventos, rutas con OSRM) |
+| `shared/` | Librería común de Android: cliente REST (`data/remote`), base local Room y modelos |
+| `festivaltrack-backend/` | API REST en NestJS + Prisma (integración con Neon y la API de Claude) |
+| `festivaltrack-web/` | Portal web en React + Vite |
+| `docs/`, `evidencias/` | Documentación, pruebas, Scrum y capturas |
+
+### Requisitos
+
+| Herramienta | Versión |
+| :--- | :--- |
+| Android Studio | Ladybug o superior, con JDK 21 |
+| Android SDK | compileSdk 35, minSdk 30 (AGP 8.7.3) |
+| Node.js | 20 LTS o superior (el CI usa 20) |
+| PostgreSQL | Una base en Neon (o PostgreSQL 15+ local) |
+
+### Inicio rápido
+
+```bash
+# 1. Backend
+cd festivaltrack-backend
+cp .env.example .env          # llena los valores (ver SECURITY.md); nunca subas el .env
+npm ci
+npx prisma generate
+npx prisma migrate deploy
+npm run seed                  # crea el admin con SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD
+npm run start:dev             # http://localhost:3001/api/v1
+
+# 2. Pruebas del backend (no necesitan base de datos)
+npx jest --ci
+
+# 3. App Android: abre la carpeta raíz en Android Studio y ejecuta el módulo "app".
+#    En el emulador se conecta sola a 10.0.2.2:3001. Para el backend de Railway:
+./gradlew :app:assembleDebug -PfestivaltrackApiUrl=https://<tu-servicio>.up.railway.app/api/v1/
+```
+
+**Variables de entorno:** la lista completa (cuáles son públicas y cuáles secretas) está en [SECURITY.md § 2](./SECURITY.md#2-inventario-de-secretos). El repositorio solo incluye `.env.example` con valores ficticios.
+
+---
+
 ## 📌 Resumen General del Sistema
 
 La solución permite conectar a organizadores, visitantes presenciales, espectadores remotos y usuarios de Smart TV / Wearables mediante una arquitectura desacoplada y sincronizada en tiempo real.
