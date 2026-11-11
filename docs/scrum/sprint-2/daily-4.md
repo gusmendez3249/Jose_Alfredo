@@ -1,11 +1,13 @@
 # Daily Scrum 4 · Sprint 2
 
-- **Fecha:** 2026-10-26 (lunes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Omar
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Lunes 26 de octubre de 2026 | 13:02 | 15 min | Videollamada | Omar Salinas Salinas |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-4-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-4-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-4-reunion.png" width="900" alt="Daily 4 del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Registrar los tres hallazgos como issues del Sprint 2 y empezar las correcciones en `feature/mejoras-seguridad`.
 - **¿Tengo algún bloqueo?** Para probar sin tocar Neon hace falta una base desechable; se usa PostgreSQL en Docker.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Pantalla de demos del concierto (#30).
 - **¿Qué haré hoy?** Reproductor en segundo plano con Media3 `MediaSessionService` (#31).
@@ -27,6 +29,10 @@
 
 ## Avance mostrado
 
+### Hallazgos registrados
+
+![Hallazgos de seguridad](img/daily-4-hallazgos-seguridad.png)
+
 ### Código que lo hace funcionar
 
 **`app/src/main/java/mx/utng/festivaltrack/app/auto/NavegacionCalculator.kt`**: URI que entiende `CarContext.ACTION_NAVIGATE` para mandar la ruta a Google Maps o Waze en el auto (#39) · **Responsable:** Noé
@@ -39,3 +45,7 @@ fun uriNavegacion(latitud: Double, longitud: Double): String = "geo:$latitud,$lo
 ## Acuerdos
 
 - Las correcciones de seguridad van en su propia rama y se integran a `develop` con PR al cierre del sprint.
+
+---
+
+<p align="center"><sub><a href="daily-3.md">← Daily 3</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="daily-5.md">Daily 5 →</a></sub></p>

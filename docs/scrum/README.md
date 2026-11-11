@@ -2,21 +2,30 @@
 
 Registro de las ceremonias Scrum del Proyecto Integrador (Desarrollo Móvil Integral, GIDS6102).
 
-- **Equipo:** Juan Gustavo Ángel Cruz Méndez · Salinas Salinas Omar · Noé Chavero Martínez
+- **Equipo de desarrollo:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+- **Product Owner:** Armando Vega (asiste a las Sprint Review)
+- **Scrum Master (rota por sprint):** Sprint 1 · Noé Chavero Martínez · Sprint 2 · Omar Salinas Salinas · Sprint 3 · Juan Gustavo Ángel Cruz Méndez
 - **Sprints:** 2 semanas · tablero en [GitHub Projects · Festival Track](https://github.com/users/gusmendez3249/projects/2)
 - **Avance por sprint:** [Milestones del repositorio](https://github.com/gusmendez3249/Jose_Alfredo/milestones)
 
 ## Evidencias por sprint
 
-Cada sprint registra 6 Daily Scrum, 1 Sprint Review, 1 Retrospectiva y 1 Incremento.
+Cada sprint registra **6 Daily Scrum** (tres por semana: lunes, miércoles y viernes, y lunes, miércoles y jueves), **1 Sprint Review** con el Product Owner, **1 Retrospectiva** y **1 Incremento**.
+
+| Ceremonia | Participantes | Duración | Evidencia |
+|---|---|---|---|
+| Daily Scrum | Equipo de desarrollo (3) | 15 min | Avance por integrante, capturas de la app y código |
+| Sprint Review | Equipo + Product Owner (Armando Vega) | 60 min | Milestone, burndown, demostración y tablero |
+| Retrospectiva | Equipo de desarrollo (3) | 45 min | Continuar / Dejar de hacer / Empezar y acciones |
+| Incremento | — | — | Funcionalidades entregadas y Release |
 
 | Sprint | Daily Scrum | Sprint Review | Retrospectiva | Incremento |
 |---|---|---|---|---|
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
-| Sprint 3 | 4 / 6 | Vie 13/11 | Vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
+| Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
 
-> 📷 Las capturas de las reuniones (`daily-N-reunion.png`, `review-reunion.png`, `retro-reunion.png`) siguen pendientes en los tres sprints.
+> 📷 Cada ceremonia incluye la captura de la videollamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`) con la evidencia que se presentó ese día.
 
 ## Sprint 1 · 5 al 16 de octubre de 2026
 

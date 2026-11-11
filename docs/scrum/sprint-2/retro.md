@@ -1,10 +1,13 @@
 # Retrospectiva · Sprint 2
 
-- **Fecha:** 2026-10-30 (viernes)
-- **Asistentes:** Gustavo · Omar · Noé
-- **Formato:** Continuar / Dejar de hacer / Empezar
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Formato |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 30 de octubre de 2026 | 12:18 | 45 min | Videollamada | Omar Salinas Salinas | Continuar / Dejar de hacer / Empezar |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/retro-reunion.png` y reemplaza esta nota por `![Reunión](img/retro-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/retro-reunion.png" width="900" alt="Retrospectiva del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · conversación del equipo</sub></p>
 
 ## Continuar (lo que funcionó)
 
@@ -39,3 +42,7 @@
 | Al menos un PR por persona antes de la Daily 3 | Parcial | Noé (#47) y Gustavo (#48 y #49) sí; Omar no abrió PR en el sprint |
 | Regla de protección en `develop` | No | `develop` sigue sin regla de protección; pasa al Sprint 3 |
 | Rotar la contraseña de Neon y el `JWT_SECRET` | Sin evidencia | No hay registro de la rotación; confirmar en la próxima daily |
+
+---
+
+<p align="center"><sub><a href="review.md">← Sprint Review</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="incremento.md">Incremento →</a></sub></p>

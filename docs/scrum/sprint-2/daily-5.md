@@ -1,11 +1,13 @@
 # Daily Scrum 5 · Sprint 2
 
-- **Fecha:** 2026-10-28 (miércoles)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Omar
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Miércoles 28 de octubre de 2026 | 13:05 | 15 min | Videollamada | Omar Salinas Salinas |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-5-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-5-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-5-reunion.png" width="900" alt="Daily 5 del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Comentar el código de los tres tickets y preparar el PR hacia `develop`.
 - **¿Tengo algún bloqueo?** La rama salió de `main`; hay que confirmar que integra limpio con `develop`.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Reproductor en segundo plano (#31).
 - **¿Qué haré hoy?** Terminar la épica de audio y subir la rama.
@@ -69,7 +71,35 @@ private fun iniciarNavegacion(resumen: ResumenNavegacion) {
 }
 ```
 
+**`festivaltrack-backend/src/boletos/boletos.service.ts`**: el monto sale de la tabla de precios del servidor y el evento debe estar a la venta (#52) · **Responsable:** Gustavo
+
+```ts
+// El monto SIEMPRE sale de la tabla de precios del servidor (#52)
+const montoTotal = PRECIOS_BOLETO[categoria] * cantidad;
+
+const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
+if (!evento) throw new NotFoundException('Evento no encontrado');
+if (evento.estado !== 'PUBLICADO' && evento.estado !== 'EN_CURSO') {
+  throw new BadRequestException(`El evento no está a la venta (estado: ${evento.estado})`);
+}
+```
+
+**`festivaltrack-backend/src/common/guards/app-throttler.guard.ts`**: en el login el límite cuenta por IP + correo, para no bloquear a todo el Wi-Fi del festival (#51) · **Responsable:** Gustavo
+
+```ts
+protected async getTracker(req: Record<string, any>): Promise<string> {
+  const ip = req.ips?.length ? req.ips[0] : req.ip;
+  const esLogin = typeof req.originalUrl === 'string' && req.originalUrl.includes('/auth/login');
+  const correo = typeof req.body?.correo === 'string' ? req.body.correo.trim().toLowerCase() : '';
+  return esLogin && correo ? `${ip}:${correo}` : ip;
+}
+```
+
 ## Acuerdos
 
 - El PR #53 se integra antes del cierre del sprint.
 - Gustavo abre el PR de `feature/mejoras-seguridad` → `develop`.
+
+---
+
+<p align="center"><sub><a href="daily-4.md">← Daily 4</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="daily-6.md">Daily 6 →</a></sub></p>

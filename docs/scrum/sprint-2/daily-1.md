@@ -1,11 +1,13 @@
 # Daily Scrum 1 · Sprint 2
 
-- **Fecha:** 2026-10-19 (lunes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Omar
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Lunes 19 de octubre de 2026 | 13:01 | 15 min | Videollamada | Omar Salinas Salinas |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-1-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-1-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-1-reunion.png" width="900" alt="Daily 1 del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Omar Salinas Salinas</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Revisar qué le falta al modelo `SitioAR` para que sirva como destino del GPS (Plaza Principal y Escenario Principal) y preparar la integración de `develop` a `main` del Sprint 1.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Sprint Planning: se tomaron las sub-tareas de la épica #24 *Demos de audio*: #29 (canciones demo por evento), #30 (pantalla de demos) y #31 (reproductor en segundo plano).
 - **¿Qué haré hoy?** Empezar la #29: cómo relacionar las canciones del catálogo con cada evento en el backend.
@@ -26,6 +28,8 @@
 - **¿Tengo algún bloqueo?** Para la #33 hacen falta las coordenadas de los sitios (#28); mientras tanto se usan las del evento.
 
 ## Avance mostrado
+
+![Sprint Backlog del Sprint 2](img/daily-1-sprint-backlog.png)
 
 Sprint Planning. Objetivo del Sprint 2: **demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla
 "Elige tu destino" del modo automóvil**.
@@ -42,3 +46,7 @@ Sprint Planning. Objetivo del Sprint 2: **demos de audio de cada concierto, cat�
 
 - Cada quien abre su primer PR antes de la Daily 3 (viernes 23/10), según la acción de la retro del Sprint 1.
 - Gustavo integra `develop` → `main` al inicio del sprint para cerrar el incremento del Sprint 1.
+
+---
+
+<p align="center"><sub><a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="daily-2.md">Daily 2 →</a></sub></p>

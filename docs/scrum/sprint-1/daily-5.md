@@ -1,11 +1,13 @@
 # Daily Scrum 5 · Sprint 1
 
-- **Fecha:** 2026-10-14 (miércoles)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):**
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Miércoles 14 de octubre de 2026 | 13:00 | 15 min | Videollamada | Noé Chavero Martínez |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-5-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-5-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-5-reunion.png" width="900" alt="Daily 5 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Tarjeta del sitio identificado (#35), historial de sitios visitados (#23) y ajuste para reconocer el sitio aunque aparezca en un póster o pantalla.
 - **¿Tengo algún bloqueo?** En el emulador el modelo rechazaba la Parroquia vista en un póster; se corrigió el prompt y las pistas visuales.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Galería como foro en la app.
 - **¿Qué haré hoy?** Archivo histórico oficial con la Factory de biografías y botón para mostrar u ocultar la contraseña en login y registro. Subir la rama `feature/GaleriaInteractiva`.
@@ -108,3 +110,7 @@ fun textoSalida(minutosParaSalir: Long): String = when {
 ## Acuerdos
 
 - Integrar las ramas a `develop` antes del cierre del sprint, en este orden: Navegación (#43, #44), Galería (#45) y AR (#46).
+
+---
+
+<p align="center"><sub><a href="daily-4.md">← Daily 4</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="daily-6.md">Daily 6 →</a></sub></p>

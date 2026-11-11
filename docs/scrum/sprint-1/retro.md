@@ -1,10 +1,13 @@
 # Retrospectiva · Sprint 1
 
-- **Fecha:** 2026-10-16 (viernes)
-- **Asistentes:** Gustavo · Omar · Noé
-- **Formato:** Continuar / Dejar de hacer / Empezar
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Formato |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 16 de octubre de 2026 | 12:20 | 45 min | Videollamada | Noé Chavero Martínez | Continuar / Dejar de hacer / Empezar |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/retro-reunion.png` y reemplaza esta nota por `![Reunión](img/retro-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/retro-reunion.png" width="900" alt="Retrospectiva del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · conversación del equipo</sub></p>
 
 ## Continuar (lo que funcionó)
 
@@ -35,3 +38,7 @@
 ## Seguimiento de las acciones del sprint anterior
 
 Primer sprint: no hay acciones previas.
+
+---
+
+<p align="center"><sub><a href="review.md">← Sprint Review</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="incremento.md">Incremento →</a></sub></p>

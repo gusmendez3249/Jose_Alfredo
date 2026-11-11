@@ -1,11 +1,17 @@
 # Sprint Review · Sprint 2
 
-- **Fecha:** 2026-10-30 (viernes)
-- **Periodo del sprint:** 2026-10-19 a 2026-10-30
-- **Asistentes:** Gustavo · Omar · Noé
-- **Objetivo del sprint:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Product Owner |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 30 de octubre de 2026 | 11:04 | 60 min | Videollamada | Omar Salinas Salinas | Armando Vega |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/review-reunion.png` y reemplaza esta nota por `![Reunión](img/review-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez · Armando Vega (Product Owner)
+
+**Periodo del sprint:** 19 al 30 de octubre de 2026
+
+> **Objetivo del sprint:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
+
+<p align="center"><img src="img/review-reunion.png" width="900" alt="Sprint Review del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Resultado del sprint
 
@@ -58,9 +64,9 @@ Todas las tareas del milestone se cerraron. **Sin embargo, no todo el código ce
 |---|---|---|
 | <img src="img/seguridad-50-app-chat-en-vivo.png" width="220"> | Chat en vivo con sesión obligatoria (#50) | Gustavo |
 | <img src="img/seguridad-52-app-checkout-desglose.png" width="220"> | Checkout con el precio del servidor (#52) | Gustavo |
-| 📷 *Captura pendiente*: `img/review-auto-destinos.png` | Pantalla 7 · Elige tu destino en el teléfono (#33) | Noé |
-| 📷 *Captura pendiente*: `img/review-auto-navegacion.png` | Pantalla 8 · Navegación en el Desktop Head Unit (#39). Se toma con celular físico: [guía](../../pruebas/android-auto.md) | Noé |
-| 📷 *Captura pendiente*: `img/review-auto-home.png` | Pantalla 10 · Home del modo automóvil en el DHU (#36) | Noé |
+| <img src="img/review-codigo-destinos.png" width="420"> | Pantalla 7 · Elige tu destino: un destino por escenario, ordenados por cercanía (#33) | Noé |
+| <img src="img/review-codigo-navegacion.png" width="420"> | Pantalla 8 · Navegación: lectura por voz y envío de la ruta al navegador del auto (#39) | Noé |
+| <img src="img/review-codigo-home-auto.png" width="420"> | Pantalla 10 · Home del modo automóvil con sus cuatro tarjetas (#36) | Noé |
 
 ### Evidencia técnica
 
@@ -82,9 +88,13 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 | Done (adelantadas del Sprint 3) | #39, #36 |
 | Continúan en el Sprint 3 | Épica #24 (falta #25) · épica #21 cerrada al completar #39 y #36 |
 
-> 📷 Agrega la captura del tablero como `img/review-tablero.png`.
+![Tablero al cierre del Sprint 2](img/review-tablero.png)
 
 ## Retroalimentación recibida
 
 - Cerrar una tarea debe significar que su código ya está en `develop` y es demostrable; el cierre en el tablero no basta.
 - El modo automóvil ya cubre las cuatro pantallas de la épica #21; falta la prueba con usuarios (#40).
+
+---
+
+<p align="center"><sub><a href="daily-6.md">← Daily 6</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="retro.md">Retrospectiva →</a></sub></p>

@@ -1,25 +1,27 @@
 # Daily Scrum N · Sprint N
 
-- **Fecha:** AAAA-MM-DD
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):**
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Día D de mes de AAAA | 13:00 | 15 min | Videollamada | Nombre del Scrum Master |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-N-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-N-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
 
-## Juan Gustavo Ángel Cruz Méndez
-
-- **¿Qué hice desde la última daily?**
-- **¿Qué haré hoy?**
-- **¿Tengo algún bloqueo?**
-
-## Salinas Salinas Omar
-
-- **¿Qué hice desde la última daily?**
-- **¿Qué haré hoy?**
-- **¿Tengo algún bloqueo?**
+<p align="center"><img src="img/daily-N-reunion.png" width="900" alt="Daily N del Sprint N"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Nombre</sub></p>
 
 ## Noé Chavero Martínez
+
+- **¿Qué hice desde la última daily?**
+- **¿Qué haré hoy?**
+- **¿Tengo algún bloqueo?**
+
+## Omar Salinas Salinas
+
+- **¿Qué hice desde la última daily?**
+- **¿Qué haré hoy?**
+- **¿Tengo algún bloqueo?**
+
+## Juan Gustavo Ángel Cruz Méndez
 
 - **¿Qué hice desde la última daily?**
 - **¿Qué haré hoy?**
@@ -31,11 +33,11 @@
 
 | Captura | Descripción | Responsable |
 |---|---|---|
-| 📷 *Captura pendiente* — captura: agrega `img/.png` | |  |
+| <img src="img/daily-N-app.png" width="220"> | | |
 
 ### Código que lo hace funcionar
 
-**`ruta/del/archivo`** — qué hace este fragmento (#issue)
+**`ruta/del/archivo`**: qué hace este fragmento (#issue) · **Responsable:** Nombre
 
 ```kotlin
 // fragmento relevante

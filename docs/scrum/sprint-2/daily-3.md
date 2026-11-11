@@ -1,11 +1,13 @@
 # Daily Scrum 3 · Sprint 2
 
-- **Fecha:** 2026-10-23 (viernes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Omar
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Viernes 23 de octubre de 2026 | 13:00 | 15 min | Videollamada | Omar Salinas Salinas |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-3-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-3-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-3-reunion.png" width="900" alt="Daily 3 del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Revisión de seguridad del backend en los flujos que el Sprint 1 no cubrió: chat en vivo, compra de boletos y login.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Avance en las canciones demo por evento (#29).
 - **¿Qué haré hoy?** Pantalla de demos en el detalle del evento (#30).
@@ -44,3 +46,7 @@
 
 - Seguimiento de la acción de la retro "un PR por persona antes de la Daily 3": cumplida por Noé (#47) y Gustavo (#48 y #49). Omar queda pendiente.
 - Gustavo registra como issues los hallazgos de seguridad que encuentre.
+
+---
+
+<p align="center"><sub><a href="daily-2.md">← Daily 2</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="daily-4.md">Daily 4 →</a></sub></p>
