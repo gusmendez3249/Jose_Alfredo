@@ -97,8 +97,10 @@ La solución permite conectar a organizadores, visitantes presenciales, espectad
 
 | Rol | Correo Electrónico | Contraseña | Permisos y Acceso |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | `admin@admin.com` | `admin123` | Emisión de streaming por cámara, escaneo QR, CRUD de eventos, gestión total. |
+| **Administrador** | El definido en `SEED_ADMIN_EMAIL` (por defecto `admin@festivaltrack.test`) | La que pongas en `SEED_ADMIN_PASSWORD` de tu `.env` local (no se publica) | Emisión de streaming por cámara, escaneo QR, CRUD de eventos, gestión total. |
 | **Usuario Espectador** | *(Cualquier nuevo registro)* | *(Elegida por el usuario)* | Compra de entradas, chat comunitario, reproductor musical y transmisión. |
+
+> 🔐 El repositorio no publica contraseñas. La cuenta de administrador la crea `npm run seed` con los valores de tu `.env` local. Las reglas de manejo de secretos están en [SECURITY.md](./SECURITY.md).
 
 ---
 
