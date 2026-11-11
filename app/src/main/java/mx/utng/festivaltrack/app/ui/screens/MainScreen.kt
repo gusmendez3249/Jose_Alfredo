@@ -6,6 +6,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -71,18 +74,35 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Reproductor global (#25): la hoja "Reproduciendo" y el permiso de notificaciones (Android 13+)
-    var showNowPlaying by remember { mutableStateOf(false) }
+    // Reproductor global (#25): la pantalla "Reproduciendo" y el permiso de notificaciones (Android 13+)
+    val playerSheet = rememberPlayerSheetState()
     val context = LocalContext.current
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val isPlaying by PlaybackManager.isPlaying.collectAsState()
+    // El permiso se pide una sola vez, la primera vez que suena algo; si se niega no se insiste.
+    var notificationAsked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(isPlaying) {
-        if (isPlaying && Build.VERSION.SDK_INT >= 33 &&
+        if (isPlaying && !notificationAsked && Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        ) {
+            notificationAsked = true
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+    // Los errores de reproducción se avisan en cualquier pantalla, no solo en el concierto.
+    val snackbar = remember { SnackbarHostState() }
+    val playbackError by PlaybackManager.error.collectAsState()
+    LaunchedEffect(playbackError) {
+        playbackError?.let {
+            snackbar.showSnackbar(it)
+            PlaybackManager.dismissError()
+        }
     }
 
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    val screenHeightPx = constraints.maxHeight.toFloat()
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             // Acceso al módulo AR desde Inicio
             if (currentRoute == BottomNavItem.Home.route) {
@@ -100,7 +120,7 @@ fun MainScreen(
             if (currentRoute?.startsWith("ar") == true) return@Scaffold
             Column {
             // Se ve en toda la app mientras haya una demo en la cola
-            GlobalMiniPlayer(onOpen = { showNowPlaying = true })
+            GlobalMiniPlayer(playerSheet, screenHeightPx)
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = Color.White
@@ -108,7 +128,7 @@ fun MainScreen(
                 items.forEach { item ->
                     NavigationBarItem(
                         icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label) },
+                        label = { Text(item.label, fontSize = 9.sp, letterSpacing = 0.sp, maxLines = 1, softWrap = false) },
                         selected = currentRoute == item.route,
                         onClick = {
                             if (item == BottomNavItem.Tickets) ticketsEventId = null
@@ -119,6 +139,7 @@ fun MainScreen(
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = PrimaryGold,
+                            selectedTextColor = PrimaryGold,
                             unselectedIconColor = Color.Gray,
                             unselectedTextColor = Color.Gray
                         )
@@ -128,7 +149,6 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        if (showNowPlaying) NowPlayingSheet(onDismiss = { showNowPlaying = false })
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             NavHost(navController = navController, startDestination = BottomNavItem.Home.route) {
                 composable(BottomNavItem.Home.route) {
@@ -216,5 +236,16 @@ fun MainScreen(
                 }
             }
         }
+    }
+    // Pantalla completa del reproductor: va encima de todo, incluida la barra inferior.
+    NowPlayingScreen(
+        sheet = playerSheet,
+        screenHeightPx = screenHeightPx,
+        onOpenConcert = { eventoId -> navController.navigate("event/$eventoId") { launchSingleTop = true } },
+        onBuyTickets = { eventoId ->
+            ticketsEventId = eventoId
+            navController.navigate(BottomNavItem.Tickets.route) { launchSingleTop = true }
+        }
+    )
     }
 }
