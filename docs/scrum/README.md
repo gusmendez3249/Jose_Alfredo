@@ -3,6 +3,8 @@
 Registro de las ceremonias Scrum del Proyecto Integrador (Desarrollo Móvil Integral, GIDS6102).
 
 - **Equipo:** Juan Gustavo Ángel Cruz Méndez · Salinas Salinas Omar · Noé Chavero Martínez
+- **Product Owner:** Armando Vega (asiste a las Sprint Review)
+- **Scrum Master por sprint:** Sprint 1 · Noé Chavero · Sprint 2 · Omar Salinas · Sprint 3 · Juan Gustavo Cruz
 - **Sprints:** 2 semanas · tablero en [GitHub Projects · Festival Track](https://github.com/users/gusmendez3249/projects/2)
 - **Avance por sprint:** [Milestones del repositorio](https://github.com/gusmendez3249/Jose_Alfredo/milestones)
 
@@ -14,9 +16,9 @@ Cada sprint registra 6 Daily Scrum, 1 Sprint Review, 1 Retrospectiva y 1 Increme
 |---|---|---|---|---|
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
-| Sprint 3 | 4 / 6 | Vie 13/11 | Vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
+| Sprint 3 | 5 / 6 | Vie 13/11 | Vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
 
-> 📷 Las capturas de las reuniones (`daily-N-reunion.png`, `review-reunion.png`, `retro-reunion.png`) siguen pendientes en los tres sprints.
+> 📷 Cada ceremonia incluye la captura de la llamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`). En el Sprint 3 faltan la Daily 6, la Review y la Retro (12 y 13/11).
 
 ## Sprint 1 · 5 al 16 de octubre de 2026
 

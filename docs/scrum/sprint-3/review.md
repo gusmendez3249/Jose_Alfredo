@@ -2,7 +2,9 @@
 
 - **Fecha:** 2026-11-13 (viernes)
 - **Periodo del sprint:** 2026-11-02 a 2026-11-13
-- **Asistentes:** Gustavo · Omar · Noé
+- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
+- **Scrum Master:** Juan Gustavo Cruz
+- **Product Owner:** Armando Vega
 - **Objetivo del sprint:**
 
 > 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/review-reunion.png` y reemplaza esta nota por `![Reunión](img/review-reunion.png)`.

@@ -2,10 +2,12 @@
 
 - **Fecha:** 2026-10-30 (viernes)
 - **Periodo del sprint:** 2026-10-19 a 2026-10-30
-- **Asistentes:** Gustavo · Omar · Noé
+- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
+- **Scrum Master:** Omar Salinas
+- **Product Owner:** Armando Vega
 - **Objetivo del sprint:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/review-reunion.png` y reemplaza esta nota por `![Reunión](img/review-reunion.png)`.
+![Reunión](img/review-reunion.png)
 
 ## Resultado del sprint
 

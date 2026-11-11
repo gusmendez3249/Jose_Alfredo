@@ -2,10 +2,12 @@
 
 - **Fecha:** 2026-10-16 (viernes)
 - **Periodo del sprint:** 2026-10-05 a 2026-10-16
-- **Asistentes:** Gustavo · Omar · Noé
+- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
+- **Scrum Master:** Noé Chavero
+- **Product Owner:** Armando Vega
 - **Objetivo del sprint:** galería interactiva como foro de la comunidad, módulo de realidad aumentada (pantallas 1–3), base del modo automóvil (Android Auto y alerta de salida), seguridad del backend y flujo de trabajo con `develop` y CI.
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/review-reunion.png` y reemplaza esta nota por `![Reunión](img/review-reunion.png)`.
+![Reunión](img/review-reunion.png)
 
 ## Resultado del sprint
 

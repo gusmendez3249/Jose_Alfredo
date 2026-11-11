@@ -3,9 +3,9 @@
 - **Fecha:** 2026-10-15 (jueves)
 - **Duración:** 15 min
 - **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):**
+- **Facilitador (Scrum Master del sprint):** Noé
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-6-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-6-reunion.png)`.
+![Reunión](img/daily-6-reunion.png)
 
 ## Juan Gustavo Ángel Cruz Méndez
 

@@ -5,7 +5,7 @@
 - **Asistentes:** Gustavo · Omar · Noé
 - **Facilitador (Scrum Master del sprint):** Omar
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-2-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-2-reunion.png)`.
+![Reunión](img/daily-2-reunion.png)
 
 ## Juan Gustavo Ángel Cruz Méndez
 

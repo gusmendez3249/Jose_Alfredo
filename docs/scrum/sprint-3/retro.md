@@ -2,6 +2,7 @@
 
 - **Fecha:** 2026-11-13 (viernes)
 - **Asistentes:** Gustavo · Omar · Noé
+- **Scrum Master:** Juan Gustavo Cruz
 - **Formato:** Continuar / Dejar de hacer / Empezar
 
 > 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/retro-reunion.png` y reemplaza esta nota por `![Reunión](img/retro-reunion.png)`.
