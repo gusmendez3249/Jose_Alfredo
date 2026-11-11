@@ -1,13 +1,17 @@
 # Sprint Review · Sprint 1
 
-- **Fecha:** 2026-10-16 (viernes)
-- **Periodo del sprint:** 2026-10-05 a 2026-10-16
-- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
-- **Scrum Master:** Noé Chavero
-- **Product Owner:** Armando Vega
-- **Objetivo del sprint:** galería interactiva como foro de la comunidad, módulo de realidad aumentada (pantallas 1–3), base del modo automóvil (Android Auto y alerta de salida), seguridad del backend y flujo de trabajo con `develop` y CI.
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Product Owner |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 16 de octubre de 2026 | 11:06 | 60 min | Videollamada | Noé Chavero Martínez | Armando Vega |
 
-![Reunión](img/review-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez · Armando Vega (Product Owner)
+
+**Periodo del sprint:** 5 al 16 de octubre de 2026
+
+> **Objetivo del sprint:** galería interactiva como foro de la comunidad, módulo de realidad aumentada (pantallas 1–3), base del modo automóvil (Android Auto y alerta de salida), seguridad del backend y flujo de trabajo con `develop` y CI.
+
+<p align="center"><img src="img/review-reunion.png" width="900" alt="Sprint Review del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Resultado del sprint
 
@@ -87,3 +91,7 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 ## Retroalimentación recibida
 
 -
+
+---
+
+<p align="center"><sub><a href="daily-6.md">← Daily 6</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="retro.md">Retrospectiva →</a></sub></p>

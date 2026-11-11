@@ -1,13 +1,17 @@
 # Sprint Review · Sprint 2
 
-- **Fecha:** 2026-10-30 (viernes)
-- **Periodo del sprint:** 2026-10-19 a 2026-10-30
-- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
-- **Scrum Master:** Omar Salinas
-- **Product Owner:** Armando Vega
-- **Objetivo del sprint:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Product Owner |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 30 de octubre de 2026 | 11:04 | 60 min | Videollamada | Omar Salinas Salinas | Armando Vega |
 
-![Reunión](img/review-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez · Armando Vega (Product Owner)
+
+**Periodo del sprint:** 19 al 30 de octubre de 2026
+
+> **Objetivo del sprint:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
+
+<p align="center"><img src="img/review-reunion.png" width="900" alt="Sprint Review del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Resultado del sprint
 
@@ -90,3 +94,7 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 
 - Cerrar una tarea debe significar que su código ya está en `develop` y es demostrable; el cierre en el tablero no basta.
 - El modo automóvil ya cubre las cuatro pantallas de la épica #21; falta la prueba con usuarios (#40).
+
+---
+
+<p align="center"><sub><a href="daily-6.md">← Daily 6</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="retro.md">Retrospectiva →</a></sub></p>

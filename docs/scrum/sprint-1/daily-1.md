@@ -1,11 +1,13 @@
 # Daily Scrum 1 · Sprint 1
 
-- **Fecha:** 2026-10-05 (lunes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Noé
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Lunes 5 de octubre de 2026 | 13:00 | 15 min | Videollamada | Noé Chavero Martínez |
 
-![Reunión](img/daily-1-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-1-reunion.png" width="900" alt="Daily 1 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Diseñar el flujo AR (apuntar → capturar → reconocer → tarjeta) y el modelo de datos del catálogo de sitios.
 - **¿Tengo algún bloqueo?** Definir qué servicio de visión usar (ML Kit, Cloud Vision o un modelo de IA).
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Sprint Planning: se tomó la #22 *Galería interactiva de los usuarios* y la épica #24 *Demos de audio*.
 - **¿Qué haré hoy?** Definir los criterios de aceptación de la galería como foro de la comunidad (publicar, me gusta, comentar, filtrar).
@@ -61,3 +63,7 @@ model Evento {
 - Sprints de 2 semanas; el Sprint 1 cierra el viernes 16 de octubre con Review y Retrospectiva.
 - Cada épica se trabaja en su propia rama y se integra a `develop` con Pull Request.
 - El tablero de GitHub Projects y los milestones son la fuente de verdad del avance.
+
+---
+
+<p align="center"><sub><a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="daily-2.md">Daily 2 →</a></sub></p>

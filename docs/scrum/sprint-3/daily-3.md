@@ -1,11 +1,13 @@
 # Daily Scrum 3 · Sprint 3
 
-- **Fecha:** 2026-11-06 (viernes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Gustavo
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Viernes 6 de noviembre de 2026 | 13:03 | 15 min | Videollamada | Juan Gustavo Ángel Cruz Méndez |
 
-![Reunión](img/daily-3-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-3-reunion.png" width="900" alt="Daily 3 del Sprint 3"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Revisar con el equipo la #40: qué pruebas faltan en backend (`/ar/sitios`, historial).
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Avance en la #25.
 - **¿Qué haré hoy?** Continuar con la #25.
@@ -48,3 +50,7 @@
 ## Acuerdos
 
 - Seguimiento de la acción "PR de audio antes de la Daily 3": no cumplida; se revisa en la Daily 4.
+
+---
+
+<p align="center"><sub><a href="daily-2.md">← Daily 2</a> · <a href="../README.md#sprint-3--2-al-13-de-noviembre-de-2026">Índice del Sprint 3</a> · <a href="daily-4.md">Daily 4 →</a></sub></p>

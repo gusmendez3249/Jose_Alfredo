@@ -1,9 +1,8 @@
 # Incremento · Sprint 1
 
-- **Fecha de entrega:** 2026-10-16
-- **Versión:** `v4.0-sprint1`
-- **Release:** no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3).
-- **Pull Request develop → main:** #49 (22/10/2026)
+| Fecha de entrega | Versión | Release | PR `develop` → `main` |
+|:--|:--|:--|:--|
+| 2026-10-16 | `v4.0-sprint1` | no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3). | #49 (22/10/2026) |
 
 ## Funcionalidades incluidas
 
@@ -37,3 +36,7 @@
 | <img src="img/daily-6-pruebas-backend.png" width="520"> | 17 pruebas del backend en verde | Equipo |
 | <img src="img/daily-5-pruebas-auto.png" width="520"> | 8 pruebas del modo automóvil en verde | Noé |
 | <img src="img/daily-6-prs-integrados.png" width="520"> | PRs integrados a `develop` con CI en verde | Equipo |
+
+---
+
+<p align="center"><sub><a href="retro.md">← Retrospectiva</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a></sub></p>

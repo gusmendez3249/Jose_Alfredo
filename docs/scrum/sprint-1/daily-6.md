@@ -1,11 +1,13 @@
 # Daily Scrum 6 · Sprint 1
 
-- **Fecha:** 2026-10-15 (jueves)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Noé
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Jueves 15 de octubre de 2026 | 13:04 | 15 min | Videollamada | Noé Chavero Martínez |
 
-![Reunión](img/daily-6-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-6-reunion.png" width="900" alt="Daily 6 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Revisar la integración del PR #46 en `develop`.
 - **¿Tengo algún bloqueo?** Para probar el reconocimiento cada quien necesita `ANTHROPIC_API_KEY` en su `.env`.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Galería interactiva terminada; PR #45 abierto.
 - **¿Qué haré hoy?** Revisar la integración del PR #45 y preparar las tareas de audio del Sprint 2 (#29, #30, #31).
@@ -82,3 +84,7 @@ return Row.Builder()
 
 - Sprint Review y Retrospectiva el viernes 16 de octubre.
 - La #28 (destinos del GPS en el catálogo de sitios) pasa al Sprint 2.
+
+---
+
+<p align="center"><sub><a href="daily-5.md">← Daily 5</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="review.md">Sprint Review →</a></sub></p>

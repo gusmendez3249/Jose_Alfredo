@@ -1,11 +1,13 @@
 # Daily Scrum 2 · Sprint 1
 
-- **Fecha:** 2026-10-07 (miércoles)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Noé
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Miércoles 7 de octubre de 2026 | 13:02 | 15 min | Videollamada | Noé Chavero Martínez |
 
-![Reunión](img/daily-2-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-2-reunion.png" width="900" alt="Daily 2 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Omar Salinas Salinas</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Cargar el catálogo inicial (Mausoleo, Parroquia, Monumento a Hidalgo y Casa Museo) con un seed.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Modelo del foro: `Publicacion`, `ComentarioPublicacion` y `LikePublicacion`.
 - **¿Qué haré hoy?** Migración `add_foro_galeria` y ajustes del proyecto en Android Studio.
@@ -90,3 +92,7 @@ model LikePublicacion {
 ## Acuerdos
 
 - Las migraciones se aplican a la base compartida de Neon y se avisa al equipo.
+
+---
+
+<p align="center"><sub><a href="daily-1.md">← Daily 1</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="daily-3.md">Daily 3 →</a></sub></p>

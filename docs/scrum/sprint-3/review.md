@@ -1,13 +1,17 @@
 # Sprint Review · Sprint 3
 
-- **Fecha:** 2026-11-13 (viernes)
-- **Periodo del sprint:** 2026-11-02 a 2026-11-13
-- **Asistentes:** Gustavo · Omar · Noé · Armando Vega (Product Owner)
-- **Scrum Master:** Juan Gustavo Cruz
-- **Product Owner:** Armando Vega
-- **Objetivo del sprint:** cerrar el MVP (reproductor con cola), integrar en `develop` todo lo terminado, probar los módulos nuevos, alinear el reporte técnico con el stack real y publicar la Release.
+| Fecha | Hora | Duración | Modalidad | Scrum Master | Product Owner |
+|:--|:--|:--|:--|:--|:--|
+| Viernes 13 de noviembre de 2026 | 11:03 | 60 min | Videollamada | Juan Gustavo Ángel Cruz Méndez | Armando Vega |
 
-![Reunión](img/review-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez · Armando Vega (Product Owner)
+
+**Periodo del sprint:** 2 al 13 de noviembre de 2026
+
+> **Objetivo del sprint:** cerrar el MVP (reproductor con cola), integrar en `develop` todo lo terminado, probar los módulos nuevos, alinear el reporte técnico con el stack real y publicar la Release.
+
+<p align="center"><img src="img/review-reunion.png" width="900" alt="Sprint Review del Sprint 3"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Resultado del sprint
 
@@ -62,3 +66,7 @@ Ninguna: todas las issues del milestone quedaron cerradas e integradas en `devel
 - El modo automóvil cubre las cuatro pantallas de la épica #21. Falta la prueba con usuarios en un celular físico, con la guía de `docs/pruebas/android-auto.md`.
 - El audio quedó integrado después de la Release `v4.2-sprint3`, así que hay que publicar una Release complementaria con las demos y el reproductor.
 - Se aprueba el incremento del sprint.
+
+---
+
+<p align="center"><sub><a href="daily-6.md">← Daily 6</a> · <a href="../README.md#sprint-3--2-al-13-de-noviembre-de-2026">Índice del Sprint 3</a> · <a href="retro.md">Retrospectiva →</a></sub></p>

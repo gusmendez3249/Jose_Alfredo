@@ -1,9 +1,8 @@
 # Incremento · Sprint 3
 
-- **Fecha de entrega:** 2026-11-10. La Release se publicó antes del cierre del sprint (13/11) para tener el APK listo en la Sprint Review.
-- **Versión:** `v4.2-sprint3`
-- **Release:** [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3), con el APK adjunto
-- **Pull Request develop → main:** #55
+| Fecha de entrega | Versión | Release | PR `develop` → `main` |
+|:--|:--|:--|:--|
+| 2026-11-10. La Release se publicó antes del cierre del sprint (13/11) para tener el APK listo en la Sprint Review. | `v4.2-sprint3` | [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3), con el APK adjunto | #55 |
 
 Esta Release es el incremento acumulado de la Unidad II: incluye lo de los Sprints 1 y 2, que no tuvieron Release propia.
 
@@ -44,3 +43,7 @@ La tarjeta *Audio en curso* del Home del auto muestra "Sin audio en curso" hasta
 | <img src="img/daily-5-integracion.png" width="420"> | PRs integrados y Release `v4.2-sprint3` (#42) | Equipo |
 
 **Calidad:** Android CI en verde en el PR #55. Pruebas unitarias: 23 de la app (módulo `auto`) y la suite del backend con las pruebas de seguridad.
+
+---
+
+<p align="center"><sub><a href="retro.md">← Retrospectiva</a> · <a href="../README.md#sprint-3--2-al-13-de-noviembre-de-2026">Índice del Sprint 3</a></sub></p>

@@ -1,11 +1,13 @@
 # Daily Scrum 3 · Sprint 1
 
-- **Fecha:** 2026-10-09 (viernes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Noé
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Viernes 9 de octubre de 2026 | 13:01 | 15 min | Videollamada | Noé Chavero Martínez |
 
-![Reunión](img/daily-3-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-3-reunion.png" width="900" alt="Daily 3 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Omar Salinas Salinas</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Fachada `ArReconocimientoFacade` y endpoints `POST /ar/reconocer` y `GET /ar/historial`.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Migración del foro.
 - **¿Qué haré hoy?** Servicio y controlador del foro: publicar, me gusta y comentarios, con guard de JWT opcional para ver sin sesión.
@@ -86,3 +88,7 @@ updateRole(@Param('id') id: string, @Body() dto: RoleUpdateDto) {
 ## Acuerdos
 
 - Ver el foro no requiere sesión; publicar, dar me gusta y comentar sí.
+
+---
+
+<p align="center"><sub><a href="daily-2.md">← Daily 2</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="daily-4.md">Daily 4 →</a></sub></p>

@@ -1,11 +1,13 @@
 # Daily Scrum 5 · Sprint 3
 
-- **Fecha:** 2026-11-11 (miércoles)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Gustavo
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Miércoles 11 de noviembre de 2026 | 13:02 | 15 min | Videollamada | Juan Gustavo Ángel Cruz Méndez |
 
-![Reunión](img/daily-5-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-5-reunion.png" width="900" alt="Daily 5 del Sprint 3"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Omar Salinas Salinas</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Probar el modo automóvil con mi celular en el Desktop Head Unit siguiendo `docs/pruebas/android-auto.md`, y tomar las capturas para la Review.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Integré el audio en `develop`. El PR #57 trae las demos del concierto como playlist, el repertorio por administrador y el reproductor en segundo plano con cola global (#24, #29, #30, #31, #25). El PR #58 corrige la cola, rediseña el reproductor y agrega la subida de canciones del administrador.
 - **¿Qué haré hoy?** Revisar las demos con el backend en el celular y preparar la demostración del reproductor para la Review.
@@ -61,3 +63,7 @@ fun afterError(queueSize: Int, currentIndex: Int, consecutiveErrors: Int,
 
 - El viernes 13/11, después de la Review, se integra `develop` → `main` y se publica una Release con el audio.
 - Gustavo sube las capturas del modo automóvil a `docs/scrum/sprint-3/img/` con los nombres de la guía.
+
+---
+
+<p align="center"><sub><a href="daily-4.md">← Daily 4</a> · <a href="../README.md#sprint-3--2-al-13-de-noviembre-de-2026">Índice del Sprint 3</a> · <a href="daily-6.md">Daily 6 →</a></sub></p>

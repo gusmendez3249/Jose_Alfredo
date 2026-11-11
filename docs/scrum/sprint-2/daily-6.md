@@ -1,11 +1,13 @@
 # Daily Scrum 6 · Sprint 2
 
-- **Fecha:** 2026-10-29 (jueves)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):** Omar
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Jueves 29 de octubre de 2026 | 13:01 | 15 min | Videollamada | Omar Salinas Salinas |
 
-![Reunión](img/daily-6-reunion.png)
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-6-reunion.png" width="900" alt="Daily 6 del Sprint 2"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Noé Chavero Martínez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Abrir el PR `feature/mejoras-seguridad` → `develop`.
 - **¿Tengo algún bloqueo?** Ninguno.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Reporta terminadas las tareas de audio #29, #30 y #31.
 - **¿Qué haré hoy?** Subir la rama de audio y abrir su PR hacia `develop`.
@@ -62,3 +64,7 @@ enviarMensaje(@Body() dto: EnviarMensajeDto, @Request() req: any) {
 
 - Sprint Review y Retrospectiva el viernes 30 de octubre.
 - Antes de cerrar el sprint, el código de seguridad y el de audio deben estar en un PR hacia `develop`.
+
+---
+
+<p align="center"><sub><a href="daily-5.md">← Daily 5</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a> · <a href="review.md">Sprint Review →</a></sub></p>
