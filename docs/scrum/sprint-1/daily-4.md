@@ -1,11 +1,13 @@
 # Daily Scrum 4 · Sprint 1
 
-- **Fecha:** 2026-10-12 (lunes)
-- **Duración:** 15 min
-- **Asistentes:** Gustavo · Omar · Noé
-- **Facilitador (Scrum Master del sprint):**
+| Fecha | Hora | Duración | Modalidad | Scrum Master |
+|:--|:--|:--|:--|:--|
+| Lunes 12 de octubre de 2026 | 13:03 | 15 min | Videollamada | Noé Chavero Martínez |
 
-> 📷 **Captura de la reunión pendiente.** Agrega la captura real de la llamada como `img/daily-4-reunion.png` y reemplaza esta nota por `![Reunión](img/daily-4-reunion.png)`.
+**Asistentes:** Noé Chavero Martínez · Omar Salinas Salinas · Juan Gustavo Ángel Cruz Méndez
+
+<p align="center"><img src="img/daily-4-reunion.png" width="900" alt="Daily 4 del Sprint 1"></p>
+<p align="center"><sub>Captura de la videollamada · presenta Juan Gustavo Ángel Cruz Méndez</sub></p>
 
 ## Juan Gustavo Ángel Cruz Méndez
 
@@ -13,7 +15,7 @@
 - **¿Qué haré hoy?** Pantalla `ArScannerScreen` con CameraX y la `ArFacade` de la app (captura → envío al backend).
 - **¿Tengo algún bloqueo?** Desde un celular físico la app no llega a `10.0.2.2`; se resolverá con la IP de la PC en `local.properties`.
 
-## Salinas Salinas Omar
+## Omar Salinas Salinas
 
 - **¿Qué hice desde la última daily?** Backend del foro terminado.
 - **¿Qué haré hoy?** Pantalla de la galería en la app: vista de foro, filtros por tipo, mosaico de fotos y visor con zoom.
@@ -79,3 +81,7 @@ steps:
 ## Acuerdos
 
 - Cada PR hacia `develop` debe pasar los checks de Backend CI y Android CI.
+
+---
+
+<p align="center"><sub><a href="daily-3.md">← Daily 3</a> · <a href="../README.md#sprint-1--5-al-16-de-octubre-de-2026">Índice del Sprint 1</a> · <a href="daily-5.md">Daily 5 →</a></sub></p>

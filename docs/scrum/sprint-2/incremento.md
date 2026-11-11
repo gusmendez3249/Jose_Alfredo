@@ -1,9 +1,8 @@
 # Incremento · Sprint 2
 
-- **Fecha de entrega:** 2026-10-30
-- **Versión:** `v4.1-sprint2`
-- **Release:** no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3).
-- **Pull Request develop → main:** #49 (22/10/2026). Integró el incremento del Sprint 1 y la pantalla 7; lo demás de este sprint entra con el PR de cierre del Sprint 3 (#42).
+| Fecha de entrega | Versión | Release | PR `develop` → `main` |
+|:--|:--|:--|:--|
+| 2026-10-30 | `v4.1-sprint2` | no se publicó por separado; su contenido se entrega en [v4.2-sprint3](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3). | #49 (22/10/2026). Integró el incremento del Sprint 1 y la pantalla 7; lo demás de este sprint entra con el PR de cierre del Sprint 3 (#42). |
 
 ## Funcionalidades incluidas
 
@@ -22,7 +21,7 @@ Terminado fuera de `develop` (se integra en el Sprint 3):
 | Issue | Funcionalidad | Responsable | Dónde está |
 |---|---|---|---|
 | #50, #51, #52 | Chat con sesión obligatoria, rate limiting y precio del boleto en el servidor | Gustavo | `feature/mejoras-seguridad` |
-| #29, #30, #31 | Demos de audio por concierto y reproductor en segundo plano | Omar | Pendiente de subir |
+| #29, #30, #31 | Demos de audio por concierto y reproductor en segundo plano | Omar | Integrado en el Sprint 3 (PRs #57 y #58) |
 
 ## Cómo probarlo
 
@@ -36,6 +35,10 @@ Terminado fuera de `develop` (se integra en el Sprint 3):
 
 | Captura | Qué se muestra | Responsable |
 |---|---|---|
-| 📷 *Captura pendiente*: agrega `img/incremento-destinos.png` | Pantalla 7 en el teléfono | Noé |
-| 📷 *Captura pendiente*: agrega `img/incremento-auto-home.png` | Home del modo automóvil en el DHU | Noé |
+| <img src="img/review-codigo-destinos.png" width="420"> | Pantalla 7 · Elige tu destino (#33) | Noé |
+| <img src="img/review-codigo-home-auto.png" width="420"> | Pantalla 10 · Home del modo automóvil (#36) | Noé |
 | <img src="img/seguridad-52-app-checkout-desglose.png" width="220"> | Compra con el precio calculado por el servidor (rama de seguridad) | Gustavo |
+
+---
+
+<p align="center"><sub><a href="retro.md">← Retrospectiva</a> · <a href="../README.md#sprint-2--19-al-30-de-octubre-de-2026">Índice del Sprint 2</a></sub></p>
