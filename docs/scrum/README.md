@@ -23,7 +23,7 @@ Cada sprint registra **6 Daily Scrum** (tres por semana: lunes, miércoles y vie
 |---|---|---|---|---|
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
-| Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
+| Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Releases [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) y [`v4.3-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.3-sprint3) |
 
 > 📷 Cada ceremonia incluye la captura de la videollamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`) con la evidencia que se presentó ese día.
 

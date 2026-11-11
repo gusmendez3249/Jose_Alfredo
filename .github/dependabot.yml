@@ -1,0 +1,29 @@
+# Dependabot revisa cada semana las dependencias y abre PRs con las actualizaciones de seguridad.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /festivaltrack-backend
+    schedule:
+      interval: weekly
+    target-branch: develop
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /festivaltrack-web
+    schedule:
+      interval: weekly
+    target-branch: develop
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: develop
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    target-branch: develop

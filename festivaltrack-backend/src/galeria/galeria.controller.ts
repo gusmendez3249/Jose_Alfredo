@@ -8,6 +8,7 @@ const IMAGE_EXT: Record<string, string> = {
   'image/webp': '.webp',
 };
 import { GaleriaService } from './galeria.service';
+import { AddImagenDto } from './dto/add-imagen.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -23,7 +24,7 @@ export class GaleriaController {
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post('imagen')
-  addImagen(@Body() body: any) {
+  addImagen(@Body() body: AddImagenDto) {
     return this.galeriaService.addImagen(body);
   }
 

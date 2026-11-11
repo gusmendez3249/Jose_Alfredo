@@ -1,3 +1,4 @@
+import { StreamStatusBodyDto } from './dto/stream-status.dto';
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -50,7 +51,7 @@ export class StreamStatusController {
    */
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
   @Post()
-  setStatus(@Body() body: { streamUrl: string; isLive: boolean }) {
+  setStatus(@Body() body: StreamStatusBodyDto) {
     this.streamUrl = body.streamUrl || '';
     this.isLive = body.isLive !== false;
     return { ok: true, streamUrl: this.streamUrl, isLive: this.isLive };

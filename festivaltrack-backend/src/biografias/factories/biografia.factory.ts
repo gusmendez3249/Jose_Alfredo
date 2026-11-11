@@ -2,17 +2,19 @@
  * Patrón FACTORY (Creation Factory Pattern) para el alta de biografías
  * por el Administrador en el backend NestJS de FestivalTrack.
  */
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
+/** Datos del alta. Los decoradores validan en el servidor (sin ellos, ValidationPipe descartaba todos los campos). */
 export class BiografiaAltaDto {
-  artistaId?: string;
-  artistaNombre?: string;
-  titulo: string;
-  descripcion: string;
-  citaCelebre?: string;
-  anoOEpoca?: string;
-  imagenUrl?: string;
-  audioUrl?: string;
-  tipo?: string; // "HISTORICO" | "STORAGE_FOTO" | "CURIOSIDAD"
+  @IsOptional() @IsString() artistaId?: string;
+  @IsOptional() @IsString() @MaxLength(150) artistaNombre?: string;
+  @IsString() @IsNotEmpty() @MaxLength(200) titulo: string;
+  @IsString() @IsNotEmpty() @MaxLength(5000) descripcion: string;
+  @IsOptional() @IsString() @MaxLength(500) citaCelebre?: string;
+  @IsOptional() @IsString() @MaxLength(50) anoOEpoca?: string;
+  @IsOptional() @IsString() imagenUrl?: string;
+  @IsOptional() @IsString() audioUrl?: string;
+  @IsOptional() @IsIn(['HISTORICO', 'STORAGE_FOTO', 'CURIOSIDAD']) tipo?: string;
 }
 
 export interface BiografiaGenerada {

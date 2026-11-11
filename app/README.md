@@ -100,7 +100,7 @@ app/
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Jose_Alfredo"
-        android:usesCleartextTraffic="true">
+        android:networkSecurityConfig="@xml/network_security_config"> <!-- release: solo HTTPS; debug: HTTP al backend local (ver src/debug/res/xml) -->
         
         <activity
             android:name=".MainActivity"

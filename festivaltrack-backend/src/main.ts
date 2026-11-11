@@ -1,32 +1,17 @@
 import './load-env'; // carga .env antes de importar cualquier módulo
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { configurarSeguridad } from './configurar-seguridad';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // Detrás del proxy de Railway: usar la IP real del cliente (X-Forwarded-For) para el rate limiting.
   app.set('trust proxy', 1);
 
-  // CORS: permite localhost en desarrollo y el/los frontends de FRONTEND_URL (separados por coma).
-  // Las apps Android no envían Origin, así que no se ven afectadas.
-  const allowedOrigins = (process.env.FRONTEND_URL ?? 'https://festivaltrack-web.up.railway.app')
-    .split(',')
-    .map((url) => url.trim().replace(/\/$/, ''))
-    .filter(Boolean);
-  app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || origin.startsWith('http://localhost') || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(null, false);
-    },
-    credentials: true,
-  });
-
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // helmet, CORS y validación de entradas (ver configurar-seguridad.ts).
+  configurarSeguridad(app);
 
   // Fotos subidas (foro de la galería) accesibles en /uploads/<archivo>
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });

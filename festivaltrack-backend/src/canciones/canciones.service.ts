@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -58,11 +58,8 @@ export class CancionesService {
     let admin = await this.prisma.administrador.findFirst();
     if (!admin) {
       let user = await this.prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } });
-      if (!user) {
-        user = await this.prisma.usuario.create({
-          data: { nombre: 'Admin', correo: 'admin@admin.com', contrasena: 'admin123', rol: 'ADMINISTRADOR' }
-        });
-      }
+      // Nunca crear un admin con contraseña fija: el administrador se crea con el seed (SEED_ADMIN_PASSWORD).
+      if (!user) throw new InternalServerErrorException('No hay administrador registrado. Ejecuta el seed.');
       admin = await this.prisma.administrador.create({ data: { usuarioId: user.id } });
     }
 

@@ -36,6 +36,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Falla si alguna dependencia que llega a producción tiene una vulnerabilidad alta o crítica.
+      # Las de desarrollo (jest, eslint, nest-cli) se revisan aparte: ver SECURITY.md.
+      - name: Auditar dependencias de producción
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Generar cliente de Prisma
         run: npx prisma generate
 

@@ -679,6 +679,7 @@ fun AdminCreateBiographyDialog(
                         coroutineScope.launch {
                             try {
                                 api.altaBiografia(
+                                    token = "Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}",
                                     request = mx.utng.festivaltrack.shared.data.remote.BiografiaAltaDto(
                                         titulo = createdItem.titulo,
                                         descripcion = createdItem.descripcion,
