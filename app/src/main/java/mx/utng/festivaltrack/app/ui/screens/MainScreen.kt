@@ -1,6 +1,17 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import mx.utng.festivaltrack.app.playback.PlaybackManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,6 +25,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +43,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Home : BottomNavItem("home", Icons.Default.Home, "Inicio")
     object Biography : BottomNavItem("biography", Icons.Default.Book, "Biografía")
     object Map : BottomNavItem("map", Icons.Default.Map, "Mapa")
-    object Audio : BottomNavItem("audio", Icons.Default.Audiotrack, "Audio")
+    object Concerts : BottomNavItem("concerts", Icons.Default.Audiotrack, "Conciertos")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
     object Gallery : BottomNavItem("gallery", Icons.Default.PhotoLibrary, "Galería")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
@@ -42,11 +56,13 @@ fun MainScreen(
     onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
+    // Concierto elegido desde su detalle; la compra se hace para ese evento.
+    var ticketsEventId by remember { mutableStateOf<String?>(null) }
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Biography,
         BottomNavItem.Map,
-        BottomNavItem.Audio,
+        BottomNavItem.Concerts,
         BottomNavItem.Tickets,
         BottomNavItem.Gallery,
         BottomNavItem.Profile
@@ -54,6 +70,17 @@ fun MainScreen(
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Reproductor global (#25): la hoja "Reproduciendo" y el permiso de notificaciones (Android 13+)
+    var showNowPlaying by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val isPlaying by PlaybackManager.isPlaying.collectAsState()
+    LaunchedEffect(isPlaying) {
+        if (isPlaying && Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -71,6 +98,9 @@ fun MainScreen(
         bottomBar = {
             // La cámara AR usa pantalla completa
             if (currentRoute?.startsWith("ar") == true) return@Scaffold
+            Column {
+            // Se ve en toda la app mientras haya una demo en la cola
+            GlobalMiniPlayer(onOpen = { showNowPlaying = true })
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = Color.White
@@ -81,6 +111,7 @@ fun MainScreen(
                         label = { Text(item.label) },
                         selected = currentRoute == item.route,
                         onClick = {
+                            if (item == BottomNavItem.Tickets) ticketsEventId = null
                             navController.navigate(item.route) {
                                 popUpTo(navController.graph.startDestinationId)
                                 launchSingleTop = true
@@ -94,8 +125,10 @@ fun MainScreen(
                     )
                 }
             }
+            }
         }
     ) { innerPadding ->
+        if (showNowPlaying) NowPlayingSheet(onDismiss = { showNowPlaying = false })
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             NavHost(navController = navController, startDestination = BottomNavItem.Home.route) {
                 composable(BottomNavItem.Home.route) {
@@ -112,6 +145,9 @@ fun MainScreen(
                         },
                         onNavigateToGallery = {
                             navController.navigate(BottomNavItem.Gallery.route)
+                        },
+                        onNavigateToEvent = { eventoId ->
+                            navController.navigate("event/$eventoId")
                         }
                     )
                 }
@@ -127,13 +163,29 @@ fun MainScreen(
                 composable("destinos") {
                     ElegirDestinoScreen(onNavigateBack = { navController.popBackStack() })
                 }
-                composable(BottomNavItem.Audio.route) {
-                    AudioScreen()
+                composable(BottomNavItem.Concerts.route) {
+                    ConcertsScreen(
+                        eventosViewModel = eventosViewModel,
+                        onOpenEvent = { eventoId -> navController.navigate("event/$eventoId") }
+                    )
                 }
                 composable(BottomNavItem.Tickets.route) {
                     TicketsScreen(
                         eventosViewModel = eventosViewModel,
+                        eventoPreseleccionado = ticketsEventId,
                         onNavigateToCheckout = { eventoId, vip, general -> onNavigateToCheckout(eventoId, vip, general) }
+                    )
+                }
+                composable("event/{eventoId}") { backStackEntry ->
+                    val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
+                    EventDetailScreen(
+                        eventoId = eventoId,
+                        eventosViewModel = eventosViewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onBuyTickets = { id ->
+                            ticketsEventId = id
+                            navController.navigate(BottomNavItem.Tickets.route) { launchSingleTop = true }
+                        }
                     )
                 }
                 composable(BottomNavItem.Gallery.route) {

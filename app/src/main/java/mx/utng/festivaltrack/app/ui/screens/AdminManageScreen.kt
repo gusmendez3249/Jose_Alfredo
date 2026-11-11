@@ -132,6 +132,7 @@ fun AdminManageScreen(
             val context = androidx.compose.ui.platform.LocalContext.current
             val coroutineScope = rememberCoroutineScope()
             val api = remember { mx.utng.festivaltrack.shared.data.remote.FestivalApiService.create() }
+            var repertoireEvent by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.local.entity.EventoEntity?>(null) }
             var cancionesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.CancionDto>>(emptyList()) }
             var imagenesList by remember { mutableStateOf<List<mx.utng.festivaltrack.shared.data.remote.ImagenDto>>(emptyList()) }
 
@@ -147,6 +148,10 @@ fun AdminManageScreen(
 
             LaunchedEffect(Unit) {
                 reloadData()
+            }
+
+            repertoireEvent?.let { ev ->
+                RepertoireDialog(eventoId = ev.id, eventoNombre = ev.nombre, onDismiss = { repertoireEvent = null })
             }
 
             // List Items
@@ -167,6 +172,12 @@ fun AdminManageScreen(
                                 viewModel.deleteEvent(token, evento.id)
                             }
                         )
+                        TextButton(
+                            onClick = { repertoireEvent = evento },
+                            modifier = Modifier.padding(start = 16.dp)
+                        ) {
+                            Text("🎵 Repertorio del concierto", color = PrimaryGold, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             } else if (selectedFilter == "Canciones") {

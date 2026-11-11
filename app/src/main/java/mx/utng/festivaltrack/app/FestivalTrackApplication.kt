@@ -2,6 +2,7 @@ package mx.utng.festivaltrack.app
 
 import android.app.Application
 import mx.utng.festivaltrack.app.di.AppContainer
+import mx.utng.festivaltrack.app.playback.PlaybackManager
 import mx.utng.festivaltrack.app.di.DefaultAppContainer
 
 class FestivalTrackApplication : Application() {
@@ -10,5 +11,6 @@ class FestivalTrackApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = DefaultAppContainer(this)
+        PlaybackManager.init(this)
     }
 }

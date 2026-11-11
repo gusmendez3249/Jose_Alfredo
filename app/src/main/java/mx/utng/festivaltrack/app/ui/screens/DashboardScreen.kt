@@ -29,7 +29,8 @@ fun DashboardScreen(
     onNavigateToTickets: () -> Unit = {},
     onNavigateToLive: (String) -> Unit = {},
     onNavigateToBiography: () -> Unit = {},
-    onNavigateToGallery: () -> Unit = {}
+    onNavigateToGallery: () -> Unit = {},
+    onNavigateToEvent: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
@@ -317,7 +318,10 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 8.dp)
-                .clickable { selectedEventDetail = displayEventTitle },
+                .clickable {
+                    val id = eventos.firstOrNull()?.id
+                    if (id != null) onNavigateToEvent(id) else selectedEventDetail = displayEventTitle
+                },
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2720)),
             shape = RoundedCornerShape(12.dp)
         ) {

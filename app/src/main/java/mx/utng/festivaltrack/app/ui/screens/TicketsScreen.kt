@@ -31,15 +31,16 @@ import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 @Composable
 fun TicketsScreen(
     eventosViewModel: EventosViewModel? = null,
+    /** Concierto elegido desde su detalle; si es null (o no está a la venta) se usa el próximo evento. */
+    eventoPreseleccionado: String? = null,
     onNavigateToCheckout: (eventoId: String, vip: Int, general: Int) -> Unit = { _, _, _ -> }
 ) {
     // Los boletos se compran para el próximo evento a la venta (#52): el backend ahora rechaza
     // eventos inexistentes o cancelados, así que ya no se puede mandar "EVT-001" fijo.
     // Se toma de la caché local (Room), ordenando por fecha ISO-8601 (orden alfabético = cronológico).
     val eventos = eventosViewModel?.eventosLocales?.collectAsState()?.value ?: emptyList()
-    val eventoAVenta = eventos
-        .filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
-        .minByOrNull { it.fechaHora }
+    val enVenta = eventos.filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
+    val eventoAVenta = enVenta.firstOrNull { it.id == eventoPreseleccionado } ?: enVenta.minByOrNull { it.fechaHora }
 
     var selectedDate by remember { mutableStateOf("21") }
     var vipTickets by remember { mutableStateOf(1) }
