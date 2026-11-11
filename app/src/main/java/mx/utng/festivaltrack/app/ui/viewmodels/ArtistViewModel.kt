@@ -81,6 +81,7 @@ class ArtistViewModel(application: Application) : AndroidViewModel(application) 
             // 3. Sincronizar con API REST si está disponible
             try {
                 api.altaBiografia(
+                    token = "Bearer ${mx.utng.festivaltrack.app.data.TokenManager(getApplication()).getToken()}",
                     request = mx.utng.festivaltrack.shared.data.remote.BiografiaAltaDto(
                         titulo = newItem.titulo,
                         descripcion = newItem.descripcion,
