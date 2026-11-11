@@ -7,6 +7,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Detrás del proxy de Railway: usar la IP real del cliente (X-Forwarded-For) para el rate limiting.
+  app.set('trust proxy', 1);
 
   // CORS: permite localhost en desarrollo y el/los frontends de FRONTEND_URL (separados por coma).
   // Las apps Android no envían Origin, así que no se ven afectadas.

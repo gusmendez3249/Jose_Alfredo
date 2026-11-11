@@ -118,11 +118,15 @@ interface FestivalApiService {
     ): List<ChatMessageDto>
 
     /**
-     * Envía un mensaje al chat de la transmisión en vivo.
-     * @param request Mensaje con el ID del evento, nombre del usuario y texto.
+     * Envía un mensaje al chat de la transmisión en vivo (requiere sesión).
+     * El servidor toma el nombre del remitente y si es admin del token, no del body.
+     * @param token Token JWT del usuario en formato "Bearer <token>".
+     * @param request Mensaje con el ID del evento y el texto.
+     * @throws retrofit2.HttpException 401 si no hay sesión válida.
      */
     @retrofit2.http.POST("stream/chat")
     suspend fun sendChatMessage(
+        @retrofit2.http.Header("Authorization") token: String,
         @retrofit2.http.Body request: ChatMessageDto
     )
 
@@ -527,18 +531,29 @@ data class UsuarioDto(
 /**
  * Solicitud de compra de boleto.
  * @property eventoId ID del evento para el que se compra el boleto.
- * @property categoria Tipo de boleto: "GENERAL", "VIP", "PALCO".
- * @property cantidad Número de boletos a comprar.
- * @property precioTotal Precio total en pesos mexicanos (MXN).
- * @property metodoPago Método elegido: "TARJETA", "EFECTIVO", etc.
+ * El monto no se envía: el servidor lo calcula con el precio oficial de la categoría.
+ * @property eventoId ID del evento para el que se compra el boleto (debe existir y estar a la venta).
+ * @property categoria Tipo de boleto: "VIP", "GENERAL" o "ESTUDIANTE".
+ * @property cantidad Número de boletos a comprar (1 a 10).
+ * @property metodoPago "TARJETA_CREDITO", "TARJETA_DEBITO", "TRANSFERENCIA" o "PAYPAL".
  */
 data class CompraBoletoDto(
     val eventoId: String,
     val categoria: String,
     val cantidad: Int,
-    val precioTotal: Int,
     val metodoPago: String
 )
+
+/**
+ * Precios oficiales por boleto en MXN. Solo se usan para mostrarlos en pantalla:
+ * el cobro real lo calcula el backend (`PRECIOS_BOLETO`), así que deben coincidir.
+ */
+object PreciosBoleto {
+    const val VIP = 4500
+    const val GENERAL = 1200
+    /** Máximo de boletos por categoría en una compra (igual que la validación del backend). */
+    const val MAX_POR_COMPRA = 10
+}
 
 /**
  * Boleto generado tras una compra exitosa.
@@ -566,7 +581,7 @@ data class BoletoDto(
  * Mensaje del chat de transmisión en vivo.
  * @property id UUID del mensaje (null al enviarlo, asignado por el servidor).
  * @property eventoId ID del evento al que pertenece el mensaje (debe existir en BD).
- * @property usuarioNombre Nombre visible del remitente.
+ * @property usuarioNombre Nombre visible del remitente (al enviar, el servidor lo reemplaza por el del usuario autenticado).
  * @property mensaje Contenido del mensaje.
  * @property esAdmin Si true, el mensaje es del administrador del festival (se resalta visualmente).
  * @property fechaEnvio Timestamp de envío (null en el request, asignado por el servidor).
