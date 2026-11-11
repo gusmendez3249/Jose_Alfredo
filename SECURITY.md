@@ -51,6 +51,29 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 - El seed exige `SEED_ADMIN_PASSWORD`; ya no hay contraseñas de administrador fijas en el código.
 - Las contraseñas de usuario se guardan con hash `bcrypt`.
 - El CI (`.github/workflows/backend.yml`) usa un `JWT_SECRET` de prueba que no sirve fuera de las pruebas unitarias y no se conecta a la base real.
+- Controles de la API, la app y sus pruebas: ver [docs/pruebas/seguridad.md](docs/pruebas/seguridad.md).
+
+## 4.1 Dependencias y vulnerabilidades
+
+| Módulo | Dónde se declaran | Cómo se instalan |
+| :--- | :--- | :--- |
+| Backend | `festivaltrack-backend/package.json` + `package-lock.json` | `npm ci` |
+| Portal web | `festivaltrack-web/package.json` + `package-lock.json` | `npm ci` |
+| Android (app, tv, wear, shared) | `gradle/libs.versions.toml` y `*/build.gradle.kts` | Android Studio o `./gradlew assembleDebug` (las descarga Gradle) |
+
+**Revisión del 2026-11-11 (`npm audit`):**
+
+| Módulo | Antes | Acción | Después (producción, `--omit=dev`) |
+| :--- | :--- | :--- | :--- |
+| Backend | 31 alertas (2 críticas: `handlebars`, `proxy-addr`; 8 altas, entre ellas `multer`, `body-parser`, `@nestjs/platform-express`) | `npm audit fix` sin cambios mayores; build y 51 pruebas en verde | **0** |
+| Portal web | 8 altas (`axios`, `vite`, `react-router`, `postcss`…) | `npm audit fix`; compila sin errores | **0** |
+
+**Alertas aceptadas (justificación):** el backend conserva 29 alertas bajas, moderadas y una alta (`brace-expansion`), todas **solo en herramientas de desarrollo** (`jest`, `ts-jest`, `@nestjs/cli`, `typescript-eslint`). Solo se usan para compilar y probar: el servidor en producción arranca con `node dist/main` y nunca carga esas herramientas ni les pasa datos de usuarios. Corregirlas exige subir versiones mayores (`jest` 30→29, `@nestjs/cli` 11→12), y eso se hará en un PR aparte con pruebas.
+
+**Automatización:**
+- `backend.yml` y `web.yml` corren `npm audit --omit=dev --audit-level=high`: el PR falla si una dependencia de producción tiene una vulnerabilidad alta o crítica.
+- `.github/dependabot.yml` revisa cada semana npm (backend y web), Gradle y GitHub Actions, y abre PRs hacia `develop`.
+- Las **alertas de Dependabot** se activan en *Settings → Code security* del repositorio (requiere permisos de administrador).
 
 ## 5. Registro de incidentes
 
