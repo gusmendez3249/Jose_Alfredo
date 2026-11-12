@@ -35,7 +35,6 @@
 
 | Estado | Tareas del Sprint 3 |
 |---|---|
-| Done | #36, #39 (en `develop` desde el PR #53) · épica #21 |
 | In progress | #41, #42 |
 | Backlog | #25, #40 |
 

@@ -11,7 +11,7 @@
 
 ## Juan Gustavo Ángel Cruz Méndez
 
-- **¿Qué hice desde la última daily?** Preparé la prueba del modo automóvil en el Desktop Head Unit con mi celular, siguiendo `docs/pruebas/android-auto.md`.
+- **¿Qué hice desde la última daily?** Revisé el PR #59: las pruebas HTTP de autenticación, roles y validación pasan en local, y la auditoría de dependencias del CI quedó en verde.
 - **¿Qué haré hoy?** Organizar la Sprint Review del viernes: agenda, demo por integrante y revisión del milestone con el Product Owner.
 - **¿Tengo algún bloqueo?** Ninguno.
 
@@ -47,7 +47,7 @@
 ## Acuerdos
 
 - Sprint Review con el Product Owner el viernes 13/11 a las 11:00 y Retrospectiva a las 12:15.
-- Orden de la demo: modo automóvil (Noé), audio (Omar), seguridad y pruebas (Gustavo).
+- Orden de la demo: seguridad en la nube (Noé), audio (Omar), seguridad del backend y pruebas (Gustavo).
 
 ---
 

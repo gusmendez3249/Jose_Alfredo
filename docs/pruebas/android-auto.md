@@ -1,4 +1,4 @@
-# Prueba del modo automóvil (Android Auto) · Sprint 3
+# Prueba del modo automóvil (Android Auto) · Sprint 4
 
 Guía para probar las pantallas 8, 9 y 10 del modo automóvil (#39, #37, #36) en el **Desktop Head Unit (DHU)**
 y dejar las capturas que faltan en la Sprint Review y el Incremento.
@@ -11,6 +11,10 @@ Los emuladores no sirven para esta prueba. Se intentó el 10/11/2026 en dos emul
 |---|---|
 | Pixel 9 Pro XL · Android 16 (API 36) | Android Auto viene como *stub* y la Play Store dice *"This app isn't compatible with your device anymore"* |
 | Pixel 7 · Android 14 (API 34) | Mismo mensaje en la Play Store |
+| Celular físico del equipo (12/11/2026) | Android Auto tampoco permitió usar la aplicación |
+
+> **Sprint 4 (#84):** la validación se hará con el emulador de **Android Automotive OS**, que corre las pantallas
+> del auto directamente, sin teléfono, sin Android Auto y sin DHU.
 
 Sin la app real de Android Auto no existe la opción **Iniciar servidor de unidad principal** y el DHU no tiene a qué
 conectarse. No instalar apps parecidas de otros desarrolladores (por ejemplo "Car Play Connect"): no funcionan con el
