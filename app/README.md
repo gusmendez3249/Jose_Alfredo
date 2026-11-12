@@ -6591,9 +6591,9 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
 # =======================================================================
 # COMANDOS DE CONSTRUCCIÓN E INSTALACIÓN
 # FUNCIONALIDAD: Compila e instala el APK móvil en el emulador o dispositivo físico.
-# FLUJO: Ejecuta la tarea Gradle :app:installDebug.
+# FLUJO: Ejecuta la tarea Gradle :app:installMovilDebug (variante del teléfono).
 # =======================================================================
-./gradlew :app:installDebug
+./gradlew :app:installMovilDebug
 
 ```
 
@@ -6608,7 +6608,8 @@ El modo automóvil vive en el paquete `mx.utng.festivaltrack.app.auto` y usa la 
 | Archivo | Responsabilidad |
 |---|---|
 | `FestivalCarAppService.kt` | Servicio que Android Auto llama al conectar el teléfono; crea la sesión del auto |
-| `InicioAutoScreen.kt` | Pantalla 10 · Home del modo automóvil: tarjetas de audio en curso, ruta activa y resumen AR del día (#36) |
+| `InicioAutoScreen.kt` | Pantalla 10 · Home del modo automóvil: audio en curso (sigue al reproductor y pausa/reanuda), ruta activa, elige tu destino, resumen AR y alerta de salida (#36) |
+| `DestinosAutoScreen.kt` | Pantalla 7 desde el auto: elige tu destino sin teléfono (Android Automotive OS); guarda la ruta activa y abre la pantalla 8 |
 | `NavegacionAutoScreen.kt` | Pantalla 8 · Navegación: destino, distancia, tiempo, lectura por voz y botón **Iniciar navegación** (#39) |
 | `AlertaSalidaScreen.kt` | Pantalla 9: próximos eventos, cuándo salir, aviso por voz y navegación al tocar un evento (#37) |
 | `SalidaCalculator.kt` | Lógica pura: distancia, tiempo de traslado y minutos para salir (8 pruebas unitarias) |
@@ -6632,6 +6633,17 @@ Auto:     Home (10) ──► Ruta activa ──► Navegación (8) ──► In
              └────────► Alerta de salida y próximos eventos (9)
 ```
 
+### Variantes de la app: `movil` y `automotive`
+
+| Variante | Dónde corre | Tarea |
+|---|---|---|
+| `movil` (por defecto) | Teléfono; en el auto, con Android Auto | `./gradlew :app:installMovilDebug` |
+| `automotive` | Pantalla del auto con **Android Automotive OS**, sin teléfono | `./gradlew :app:installAutomotiveDebug` |
+
+La variante `automotive` suma `app/src/automotive/AndroidManifest.xml`: declara el hardware de auto, abre las mismas
+pantallas con `CarAppActivity` de la Car App Library (`androidx.car.app:app-automotive`) y quita del lanzador la app del
+teléfono. Guía completa de prueba con el emulador Automotive: [`docs/pruebas/android-auto.md`](../docs/pruebas/android-auto.md).
+
 ### Probar en el emulador de Android Auto (Desktop Head Unit)
 
 > ⚠️ **Se necesita un celular Android físico.** En los emuladores (API 34 y 36, con Google Play) la Play Store marca
@@ -6639,7 +6651,7 @@ Auto:     Home (10) ──► Ruta activa ──► Navegación (8) ──► In
 > [`docs/pruebas/android-auto.md`](../docs/pruebas/android-auto.md).
 
 1. **Instalar el DHU:** Android Studio → *Tools → SDK Manager → SDK Tools* → marcar **Android Auto Desktop Head Unit Emulator**.
-2. **Instalar la app** en el celular: `./gradlew :app:installDebug`.
+2. **Instalar la app** en el celular: `./gradlew :app:installMovilDebug`.
 3. **Activar el modo desarrollador de Android Auto** en ese dispositivo:
    abrir *Ajustes → Apps → Android Auto*,
    tocar 10 veces la versión al final de la pantalla, y en el menú ⋮ elegir **Iniciar servidor de unidad principal**.
@@ -6669,4 +6681,4 @@ El backend debe estar corriendo (`npm run start:dev`) para que la alerta de sali
 | Auto 7 · Elige tu destino | `ui/screens/ElegirDestinoScreen.kt` | #33 | Ver [Modo automóvil](#modo-automóvil-android-auto) |
 | Auto 8, 9 y 10 | paquete `auto/` | #39, #37, #36 | Ver [Modo automóvil](#modo-automóvil-android-auto) |
 
-Pruebas unitarias de la app: `./gradlew :app:testDebugUnitTest` (paquete `auto`, 23 pruebas).
+Pruebas unitarias de la app: `./gradlew :app:testMovilDebugUnitTest`.
