@@ -47,7 +47,7 @@ base del modo automóvil (Android Auto y alerta de salida), seguridad del backen
 ## Sprint 2 · 19 al 30 de octubre de 2026
 
 **Objetivo:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
-Se sumaron las correcciones de seguridad #50–#52 y se adelantaron las pantallas 8 y 10 del auto (#39 y #36).
+Se sumaron las correcciones de seguridad #50–#52 y se adelantó el código de las pantallas 8 y 10 del auto (#39 y #36), que se valida en el Sprint 4.
 
 | Ceremonia | Fecha | Documento |
 |---|---|---|
@@ -77,6 +77,19 @@ alinear el reporte técnico con el stack real y publicar la Release final.
 | Sprint Review | Vie 13/11 | [review.md](sprint-3/review.md) |
 | Retrospectiva | Vie 13/11 | [retro.md](sprint-3/retro.md) |
 | Incremento | Vie 13/11 | [incremento.md](sprint-3/incremento.md) |
+
+## Sprint 4 · 16 al 27 de noviembre de 2026
+
+**Objetivo:** validar el modo automóvil (épica #21, pantallas 8 y 10: #39 y #36) en un head unit con el emulador de
+Android Automotive OS, y hacer la prueba con usuarios. Android Auto no se pudo usar ni en los emuladores con Google Play
+ni en el celular del equipo; el detalle está en #84 y en [`docs/pruebas/android-auto.md`](../pruebas/android-auto.md).
+
+| Issue | Tarea | Responsable |
+|---|---|---|
+| #84 | Validar el modo automóvil en Android Automotive OS y prueba con usuarios | Noé |
+| #39, #36 | Pantallas 8 y 10: evidencia en el head unit | Noé |
+
+Las ceremonias del Sprint 4 se registran en `sprint-4/` conforme se realicen.
 
 ## Burndown
 

@@ -21,7 +21,7 @@ Milestone: [Sprint 2](https://github.com/gusmendez3249/Jose_Alfredo/milestone/2)
 |---|---|---|---|
 | [Sprint 2](https://github.com/gusmendez3249/Jose_Alfredo/milestone/2) | 8 | 0 | 100 % |
 
-Además se adelantaron dos tareas del Sprint 3 (#39 y #36), integradas en `develop` con el PR #53.
+Además se adelantó el código de las pantallas 8 y 10 (#39 y #36), integrado en `develop` con el PR #53; su validación en un head unit queda para el Sprint 4 (#84).
 
 ### Burndown
 
@@ -42,7 +42,7 @@ Gráfica generada con `docs/scrum/herramientas/burndown.py` a partir del campo S
 | #30 | [Audio] Pantalla 4 · Demos del concierto | Omar | Reportada en [Daily 6](daily-6.md) |
 | #31 | [Audio] Pantalla 5 · Reproductor en segundo plano | Omar | Reportada en [Daily 6](daily-6.md) |
 
-Adelantadas del Sprint 3:
+Código adelantado (se valida en el Sprint 4):
 
 | Issue | Tarea | Responsable | Evidencia |
 |---|---|---|---|
@@ -85,8 +85,8 @@ Vista del tablero: [GitHub Projects · Festival Track](https://github.com/users/
 | Estado | Tareas del Sprint 2 |
 |---|---|
 | Done | #28, #29, #30, #31, #33, #50, #51, #52 |
-| Done (adelantadas del Sprint 3) | #39, #36 |
-| Continúan en el Sprint 3 | Épica #24 (falta #25) · épica #21 cerrada al completar #39 y #36 |
+| Código adelantado (validación en el Sprint 4) | #39, #36 |
+| Continúan después | Épica #24 (falta #25) en el Sprint 3 · épica #21 en el Sprint 4 |
 
 ![Tablero al cierre del Sprint 2](img/review-tablero.png)
 

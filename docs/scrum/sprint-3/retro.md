@@ -12,7 +12,7 @@
 ## Continuar (lo que funcionó)
 
 - Integrar con PR y CI en verde: los PRs #54 a #58 entraron a `develop` sin conflictos.
-- Adelantar trabajo cuando sobra capacidad: las pantallas 8 y 10 llegaron desde el Sprint 2.
+- Acompañar cada cambio de seguridad con pruebas HTTP y evidencia, como en #50–#52 y el PR #59.
 - Documentar cada ceremonia el mismo día, con su evidencia (captura de la app o código).
 
 ## Dejar de hacer (lo que no funcionó)
@@ -24,14 +24,14 @@
 
 - Congelar `develop` el jueves de cierre y publicar la Release solo después de integrar todos los PRs del sprint.
 - Subir la rama al remoto al menos una vez al día, aunque el trabajo no esté terminado.
-- Probar el modo automóvil en un celular físico antes de cada Review.
+- Rotar las credenciales en cuanto se detecte que quedaron expuestas en el repositorio.
 
 ## Acciones para el siguiente sprint
 
 | Acción | Responsable | Cómo sabremos que se cumplió |
 |---|---|---|
 | Publicar una Release con el audio (`develop` → `main`) | Noé | Release nueva con el APK que incluye las demos |
-| Prueba del modo automóvil con usuarios en celular físico | Gustavo | Tabla de resultados llena en `docs/pruebas/android-auto.md` |
+| Rotar la contraseña de la base de datos y el `JWT_SECRET` | Gustavo | Las credenciales anteriores dejan de funcionar |
 | Regla de protección en `develop` | Gustavo | Settings → Branches muestra la regla activa |
 
 ## Seguimiento de las acciones del sprint anterior
