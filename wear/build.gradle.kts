@@ -68,7 +68,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Serialización JSON
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
 
     // ViewModel + Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
