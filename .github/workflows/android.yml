@@ -23,7 +23,7 @@ jobs:
     name: Compilar APK
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-java@v4
         with:
@@ -35,11 +35,11 @@ jobs:
       - name: Pruebas unitarias y APK de la app móvil
         run: |
           chmod +x gradlew
-          ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon -Dorg.gradle.jvmargs=-Xmx4g
+          ./gradlew :app:testMovilDebugUnitTest :app:assembleDebug :wear:assembleDebug :tv:assembleDebug --no-daemon -Dorg.gradle.jvmargs=-Xmx4g
 
       - name: Subir APK como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: festivaltrack-app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/**/*.apk
           retention-days: 14

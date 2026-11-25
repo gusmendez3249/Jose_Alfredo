@@ -19,7 +19,7 @@ npx jest src/seguridad.http.spec.ts --verbose   # solo las de seguridad HTTP (14
 ### App Android (JUnit) — no necesita emulador
 
 ```bash
-./gradlew :app:testDebugUnitTest
+./gradlew :app:testMovilDebugUnitTest
 ```
 
 ### Prueba de integración contra una base real (opcional)
@@ -99,7 +99,7 @@ Las capturas de las mejoras #50, #51 y #52 están en [evidencias/seguridad](../.
 | :--- | :--- | :--- |
 | `.github/workflows/backend.yml` | `npm ci`, `npm audit --omit=dev --audit-level=high`, verificación de tipos y `jest` (incluye las pruebas de seguridad) | PR y push a `develop`/`main` con cambios en el backend |
 | `.github/workflows/web.yml` | `npm ci`, `npm audit --omit=dev --audit-level=high` y compilación del portal | PR y push a `develop`/`main` con cambios en el portal web |
-| `.github/workflows/android.yml` | `:app:testDebugUnitTest` y compilación del APK | PR y push a `develop`/`main` con cambios en Android |
+| `.github/workflows/android.yml` | `:app:testMovilDebugUnitTest` y compilación de los APK (móvil y automotive) | PR y push a `develop`/`main` con cambios en Android |
 | `.github/dependabot.yml` | Revisa cada semana dependencias de npm, Gradle y Actions | Semanal |
 
 El CI usa un `JWT_SECRET` de prueba en texto, sin valor real, y no se conecta a la base de datos.

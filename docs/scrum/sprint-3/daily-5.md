@@ -12,7 +12,7 @@
 ## Juan Gustavo Ángel Cruz Méndez
 
 - **¿Qué hice desde la última daily?** El PR #56 integró en `develop` y `main` las correcciones de seguridad #50, #51 y #52, con Backend CI y Android CI en verde.
-- **¿Qué haré hoy?** Probar el modo automóvil con mi celular en el Desktop Head Unit siguiendo `docs/pruebas/android-auto.md`, y tomar las capturas para la Review.
+- **¿Qué haré hoy?** Revisar el PR #59 de seguridad en la nube: validación de entradas, token cifrado y pruebas HTTP.
 - **¿Tengo algún bloqueo?** Ninguno.
 
 ## Omar Salinas Salinas
@@ -57,12 +57,12 @@ fun afterError(queueSize: Int, currentIndex: Int, consecutiveErrors: Int,
 
 | Estado | Tareas del Sprint 3 |
 |---|---|
-| Done | #25, #36, #39, #40, #41, #42 · épicas #21 y #24 |
+| Done | #25, #40, #41, #42 · épica #24 |
 
 ## Acuerdos
 
 - El viernes 13/11, después de la Review, se integra `develop` → `main` y se publica una Release con el audio.
-- Gustavo sube las capturas del modo automóvil a `docs/scrum/sprint-3/img/` con los nombres de la guía.
+- Gustavo revisa el PR #59 antes de la Review.
 
 ---
 

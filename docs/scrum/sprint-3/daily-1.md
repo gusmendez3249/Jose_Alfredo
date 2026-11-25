@@ -23,8 +23,8 @@
 
 ## Noé Chavero Martínez
 
-- **¿Qué hice desde la última daily?** Sprint Planning. Como #39 y #36 se adelantaron en el Sprint 2, se toman la #41 (alinear el reporte técnico con el stack real) y la #42 (integración y Release del incremento).
-- **¿Qué haré hoy?** Validar #39 y #36 en el Desktop Head Unit y revisar qué secciones del reporte mencionan Firebase.
+- **¿Qué hice desde la última daily?** Sprint Planning: se toman la #41 (alinear el reporte técnico con el stack real) y la #42 (integración y Release del incremento).
+- **¿Qué haré hoy?** Revisar qué secciones del reporte técnico mencionan Firebase y preparar el plan de la Release.
 - **¿Tengo algún bloqueo?** Ninguno.
 
 ## Avance mostrado
@@ -36,8 +36,6 @@ Sprint Planning. Objetivo del Sprint 3: **cerrar el MVP (reproductor con cola), 
 | Issue | Tarea | Responsable | Estimate |
 |---|---|---|---|
 | #25 | Reproductor y cola de reproducción | Omar | 3 |
-| #36 | [Auto] Pantalla 10 · Home del modo automóvil (adelantada, ya en `develop`) | Noé | 3 |
-| #39 | [Auto] Pantalla 8 · Navegación (adelantada, ya en `develop`) | Noé | 5 |
 | #40 | [QA] Pruebas unitarias y e2e de los módulos nuevos | Equipo | 3 |
 | #41 | [Docs] Alinear el reporte técnico con el stack real | Noé | 2 |
 | #42 | [Release] `develop` → `main` y Release | Noé | 1 |

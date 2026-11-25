@@ -85,5 +85,8 @@ class SalidaCalculatorTest {
         assertEquals("Sal en 25 min", SalidaCalculator.textoSalida(25))
         assertEquals("Sal en 1 h", SalidaCalculator.textoSalida(60))
         assertEquals("Sal en 1 h 20 min", SalidaCalculator.textoSalida(80))
+        assertEquals("Sal en 23 h 59 min", SalidaCalculator.textoSalida(1439))
+        assertEquals("Sal en 1 día", SalidaCalculator.textoSalida(1440))
+        assertEquals("Sal en 8 días", SalidaCalculator.textoSalida(209 * 60 + 20))
     }
 }

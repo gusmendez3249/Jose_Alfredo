@@ -24,7 +24,7 @@
 ## Noé Chavero Martínez
 
 - **¿Qué hice desde la última daily?** Secciones 12, 14 y 15 del reporte redactadas con el stack real.
-- **¿Qué haré hoy?** Actualizar los READMEs con las pantallas del modo automóvil y del AR.
+- **¿Qué haré hoy?** Actualizar los READMEs con las pantallas del AR y de la galería.
 - **¿Tengo algún bloqueo?** Ninguno.
 
 ## Avance mostrado
@@ -43,7 +43,6 @@
 | Backend           | NestJS (Node.js + TypeScript)        | API REST: autenticación, eventos, boletos con QR, chat, AR |
 | Base de datos     | PostgreSQL en Neon + Prisma ORM      | Usuarios, eventos, boletos, canciones y sitios culturales  |
 | Realidad aumentada| CameraX + reconocimiento visual (IA) | La app captura la foto y el backend identifica el sitio    |
-| Integración auto  | Android Auto · Car App Library       | Home, Navegación y Alerta de salida con plantillas         |
 | Streaming y audio | Media3 (ExoPlayer) con RTSP          | Transmisión en vivo y reproducción de audio                |
 ```
 

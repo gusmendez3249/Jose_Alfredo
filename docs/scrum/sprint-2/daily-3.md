@@ -24,7 +24,7 @@
 ## Noé Chavero Martínez
 
 - **¿Qué hice desde la última daily?** Burndown por sprint y workflow diario (`.github/workflows/burndown.yml`) que sube la imagen a `docs/scrum-sprints`.
-- **¿Qué haré hoy?** Hay capacidad libre en el sprint, así que se adelanta la #39 *Pantalla 8 · Navegación en Android Auto* del Sprint 3.
+- **¿Qué haré hoy?** Hay capacidad libre en el sprint, así que se adelanta el código de la #39 *Pantalla 8 · Navegación en Android Auto*.
 - **¿Tengo algún bloqueo?** Ninguno.
 
 ## Avance mostrado

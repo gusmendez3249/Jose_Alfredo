@@ -18,6 +18,20 @@ android {
 
     buildFeatures { compose = true }
 
+    // Dos variantes de la misma app: "movil" (teléfono + Android Auto, la de siempre) y
+    // "automotive" (Android Automotive OS: corre directo en la pantalla del auto, sin teléfono).
+    flavorDimensions += "plataforma"
+    productFlavors {
+        create("movil") {
+            dimension = "plataforma"
+            isDefault = true
+        }
+        create("automotive") {
+            dimension = "plataforma"
+            versionNameSuffix = "-automotive"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -81,6 +95,8 @@ dependencies {
 
     // Android Auto (Car App Library)
     implementation("androidx.car.app:app:1.4.0")
+    // Host de plantillas para Android Automotive OS (solo en la variante automotive)
+    "automotiveImplementation"("androidx.car.app:app-automotive:1.4.0")
 
     testImplementation("junit:junit:4.13.2")
 }

@@ -23,7 +23,8 @@ Cada sprint registra **6 Daily Scrum** (tres por semana: lunes, miércoles y vie
 |---|---|---|---|---|
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
-| Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Release [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) (10/11) |
+| Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Releases [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) y [`v4.3-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.3-sprint3) |
+| Sprint 4 | 4 / 6 | Vie 27/11 | Vie 27/11 | Pendiente: `v4.4-sprint4` |
 
 > 📷 Cada ceremonia incluye la captura de la videollamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`) con la evidencia que se presentó ese día.
 
@@ -47,7 +48,7 @@ base del modo automóvil (Android Auto y alerta de salida), seguridad del backen
 ## Sprint 2 · 19 al 30 de octubre de 2026
 
 **Objetivo:** demos de audio de cada concierto, catálogo de sitios para el GPS y la pantalla "Elige tu destino" del modo automóvil.
-Se sumaron las correcciones de seguridad #50–#52 y se adelantaron las pantallas 8 y 10 del auto (#39 y #36).
+Se sumaron las correcciones de seguridad #50–#52 y se adelantó el código de las pantallas 8 y 10 del auto (#39 y #36), que se valida en el Sprint 4.
 
 | Ceremonia | Fecha | Documento |
 |---|---|---|
@@ -77,6 +78,36 @@ alinear el reporte técnico con el stack real y publicar la Release final.
 | Sprint Review | Vie 13/11 | [review.md](sprint-3/review.md) |
 | Retrospectiva | Vie 13/11 | [retro.md](sprint-3/retro.md) |
 | Incremento | Vie 13/11 | [incremento.md](sprint-3/incremento.md) |
+
+## Sprint 4 · 16 al 27 de noviembre de 2026
+
+**Objetivo:** validar el modo automóvil (épica #21, pantallas 8 y 10: #39 y #36) en un head unit con el emulador de
+Android Automotive OS, y hacer la prueba con usuarios. Android Auto no se pudo usar ni en los emuladores con Google Play
+ni en el celular del equipo; el detalle está en #84 y en [`docs/pruebas/android-auto.md`](../pruebas/android-auto.md).
+
+| Issue | Tarea | Responsable |
+|---|---|---|
+| #84 | Validar el modo automóvil en Android Automotive OS y prueba con usuarios | Noé |
+| #39, #36 | Pantallas 8 y 10: evidencia en el head unit | Noé |
+| #90 | Release `v4.4-sprint4` con APK móvil y automotive | Noé |
+| #91 | Ordenar las actualizaciones de Dependabot | Noé |
+| #92 | Ícono de FestivalTrack en el teléfono | Noé |
+| #93 | Dividir el bundle del portal web | Noé |
+| #94 | Regla de protección en `develop` y `main` | Gustavo |
+
+**Scrum Master:** Noé Chavero Martínez.
+
+| Ceremonia | Fecha | Documento |
+|---|---|---|
+| Daily Scrum 1 | Lun 16/11 | [daily-1.md](sprint-4/daily-1.md) |
+| Daily Scrum 2 | Mié 18/11 | [daily-2.md](sprint-4/daily-2.md) |
+| Daily Scrum 3 | Vie 20/11 | [daily-3.md](sprint-4/daily-3.md) |
+| Daily Scrum 4 | Lun 23/11 | [daily-4.md](sprint-4/daily-4.md) |
+| Daily Scrum 5 | Mié 25/11 | Pendiente |
+| Daily Scrum 6 | Jue 26/11 | Pendiente |
+| Sprint Review | Vie 27/11 | Pendiente |
+| Retrospectiva | Vie 27/11 | Pendiente |
+| Incremento | Vie 27/11 | Pendiente: Release `v4.4-sprint4` (#90) |
 
 ## Burndown
 

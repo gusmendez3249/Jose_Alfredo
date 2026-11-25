@@ -23,7 +23,7 @@
 
 ## Noé Chavero Martínez
 
-- **¿Qué hice desde la última daily?** Sprint Planning: se tomó la #33 *Pantalla 7 · Elige tu destino*. Si sobra capacidad, se adelantan la #39 (pantalla 8) y la #36 (pantalla 10) del Sprint 3.
+- **¿Qué hice desde la última daily?** Sprint Planning: se tomó la #33 *Pantalla 7 · Elige tu destino*. Si sobra capacidad, se adelanta el código de la #39 (pantalla 8) y la #36 (pantalla 10).
 - **¿Qué haré hoy?** Actualizar `feat/NaveagionGPSCarPlay` con `develop`, que ya trae la galería y el AR del Sprint 1, como se acordó en la retro.
 - **¿Tengo algún bloqueo?** Para la #33 hacen falta las coordenadas de los sitios (#28); mientras tanto se usan las del evento.
 
