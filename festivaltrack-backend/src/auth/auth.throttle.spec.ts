@@ -19,7 +19,10 @@ describe('Rate limiting de /auth/login', () => {
       imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }])],
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: { login: jest.fn().mockResolvedValue({ token: 't' }) } },
+        {
+          provide: AuthService,
+          useValue: { login: jest.fn().mockResolvedValue({ token: 't' }) },
+        },
         { provide: APP_GUARD, useClass: AppThrottlerGuard },
       ],
     }).compile();
@@ -30,10 +33,13 @@ describe('Rate limiting de /auth/login', () => {
   afterEach(() => app.close());
 
   const login = (correo: string) =>
-    request(app.getHttpServer()).post('/auth/login').send({ correo, contrasena: 'x' });
+    request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ correo, contrasena: 'x' });
 
   it('responde 429 al 6.º intento contra la misma cuenta en un minuto', async () => {
-    for (let i = 0; i < 5; i++) expect((await login('ana@test.com')).status).toBe(201);
+    for (let i = 0; i < 5; i++)
+      expect((await login('ana@test.com')).status).toBe(201);
     expect((await login('ana@test.com')).status).toBe(429);
   });
 

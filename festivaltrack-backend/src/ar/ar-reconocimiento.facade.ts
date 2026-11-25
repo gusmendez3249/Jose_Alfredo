@@ -2,7 +2,10 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArCatalogoService } from './ar-catalogo.service';
 import { RECONOCEDOR_VISUAL } from './vision/reconocedor-visual';
-import type { MediaTypeImagen, ReconocedorVisual } from './vision/reconocedor-visual';
+import type {
+  MediaTypeImagen,
+  ReconocedorVisual,
+} from './vision/reconocedor-visual';
 
 /** Debajo de este umbral se considera que no se reconoció ningún sitio. */
 export const CONFIANZA_MINIMA = 0.6;
@@ -12,9 +15,26 @@ export const CONFIANZA_MINIMA = 0.6;
  * manda el cliente (o la extensión) puede no coincidir con el contenido.
  */
 export function detectarMediaType(foto: Buffer): MediaTypeImagen | null {
-  if (foto.length > 3 && foto[0] === 0xff && foto[1] === 0xd8 && foto[2] === 0xff) return 'image/jpeg';
-  if (foto.length > 8 && foto.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
-  if (foto.length > 12 && foto.toString('ascii', 0, 4) === 'RIFF' && foto.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  if (
+    foto.length > 3 &&
+    foto[0] === 0xff &&
+    foto[1] === 0xd8 &&
+    foto[2] === 0xff
+  )
+    return 'image/jpeg';
+  if (
+    foto.length > 8 &&
+    foto
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  )
+    return 'image/png';
+  if (
+    foto.length > 12 &&
+    foto.toString('ascii', 0, 4) === 'RIFF' &&
+    foto.toString('ascii', 8, 12) === 'WEBP'
+  )
+    return 'image/webp';
   return null;
 }
 
@@ -36,17 +56,27 @@ export class ArReconocimientoFacade {
   async reconocer(foto: Buffer | undefined, usuarioId: string) {
     if (!foto?.length) throw new BadRequestException('Foto no proporcionada');
     const mediaType = detectarMediaType(foto);
-    if (!mediaType) throw new BadRequestException('Formato no soportado: usa JPEG, PNG o WebP');
+    if (!mediaType)
+      throw new BadRequestException(
+        'Formato no soportado: usa JPEG, PNG o WebP',
+      );
 
     const sitios = await this.catalogo.activos();
     if (sitios.length === 0) {
-      return { reconocido: false as const, mensaje: 'El catálogo de sitios está vacío' };
+      return {
+        reconocido: false as const,
+        mensaje: 'El catálogo de sitios está vacío',
+      };
     }
 
     const visual = await this.reconocedor.identificar(
       foto,
       mediaType,
-      sitios.map((s) => ({ id: s.id, nombre: s.nombre, pistasVisuales: s.pistasVisuales })),
+      sitios.map((s) => ({
+        id: s.id,
+        nombre: s.nombre,
+        pistasVisuales: s.pistasVisuales,
+      })),
     );
 
     // Solo se aceptan IDs que existan en el catálogo: el modelo no puede inventar sitios.
@@ -54,7 +84,8 @@ export class ArReconocimientoFacade {
     if (!sitio || visual.confianza < CONFIANZA_MINIMA) {
       return {
         reconocido: false as const,
-        mensaje: 'No reconocimos ningún sitio del festival. Acércate o intenta con otro ángulo.',
+        mensaje:
+          'No reconocimos ningún sitio del festival. Acércate o intenta con otro ángulo.',
       };
     }
 
@@ -62,6 +93,8 @@ export class ArReconocimientoFacade {
       data: { sitioId: sitio.id, usuarioId, confianza: visual.confianza },
     });
 
+    // pistasVisuales son internas del motor de visión: no se envían a la app
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { pistasVisuales, ...publico } = sitio;
     return {
       reconocido: true as const,
@@ -80,7 +113,9 @@ export class ArReconocimientoFacade {
         id: true,
         fechaVisita: true,
         confianza: true,
-        sitio: { select: { id: true, nombre: true, ubicacion: true, imagenUrl: true } },
+        sitio: {
+          select: { id: true, nombre: true, ubicacion: true, imagenUrl: true },
+        },
       },
     });
   }

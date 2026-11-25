@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { BiografiaAltaDto, BiografiaFactoryProducer } from './factories/biografia.factory';
+import {
+  BiografiaAltaDto,
+  BiografiaFactoryProducer,
+} from './factories/biografia.factory';
 
 @Injectable()
 export class BiografiasService {
@@ -39,7 +42,9 @@ export class BiografiasService {
       artista = await this.prisma.artista.create({
         data: {
           nombre: dto.artistaNombre || 'José Alfredo Jiménez',
-          imagenUrl: dto.imagenUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4',
+          imagenUrl:
+            dto.imagenUrl ||
+            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4',
           activo: true,
         },
       });
@@ -51,7 +56,9 @@ export class BiografiasService {
     });
 
     if (biografiaExistente) {
-      const hitosActuales = Array.isArray(biografiaExistente.hitos) ? (biografiaExistente.hitos as any[]) : [];
+      const hitosActuales = Array.isArray(biografiaExistente.hitos)
+        ? biografiaExistente.hitos
+        : [];
       const nuevosHitos = [...hitosActuales, ...generada.hitos];
 
       return this.prisma.biografia.update({

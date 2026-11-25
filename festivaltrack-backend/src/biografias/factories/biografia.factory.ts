@@ -2,7 +2,14 @@
  * Patrón FACTORY (Creation Factory Pattern) para el alta de biografías
  * por el Administrador en el backend NestJS de FestivalTrack.
  */
-import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Prisma } from '@prisma/client';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 /** Datos del alta. Los decoradores validan en el servidor (sin ellos, ValidationPipe descartaba todos los campos). */
 export class BiografiaAltaDto {
@@ -14,15 +21,18 @@ export class BiografiaAltaDto {
   @IsOptional() @IsString() @MaxLength(50) anoOEpoca?: string;
   @IsOptional() @IsString() imagenUrl?: string;
   @IsOptional() @IsString() audioUrl?: string;
-  @IsOptional() @IsIn(['HISTORICO', 'STORAGE_FOTO', 'CURIOSIDAD']) tipo?: string;
+  @IsOptional()
+  @IsIn(['HISTORICO', 'STORAGE_FOTO', 'CURIOSIDAD'])
+  tipo?: string;
 }
 
 export interface BiografiaGenerada {
   artistaId: string;
   descripcion: string;
   citaCelebre?: string;
-  hitos: any[];
-  discografia: any[];
+  // Se guardan como JSON en la base (columnas `hitos` y `discografia`)
+  hitos: Prisma.InputJsonObject[];
+  discografia: Prisma.InputJsonObject[];
   metadata: {
     tipo: string;
     titulo: string;
@@ -77,7 +87,9 @@ export class HitoHistoricoFactory implements IBiografiaFactory {
  */
 export class FotoStorageFactory implements IBiografiaFactory {
   crear(dto: BiografiaAltaDto): BiografiaGenerada {
-    const url = dto.imagenUrl || 'gs://festival-josealfredo.appspot.com/biografias/archivo_historico.jpg';
+    const url =
+      dto.imagenUrl ||
+      'gs://festival-josealfredo.appspot.com/biografias/archivo_historico.jpg';
     return {
       artistaId: dto.artistaId || 'art_jose_alfredo',
       descripcion: dto.descripcion,

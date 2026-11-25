@@ -6,7 +6,9 @@
 export function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET no está definida. Configúrala en el .env o en las variables de Railway.');
+    throw new Error(
+      'JWT_SECRET no está definida. Configúrala en el .env o en las variables de Railway.',
+    );
   }
   return secret;
 }

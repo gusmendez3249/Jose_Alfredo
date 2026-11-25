@@ -49,7 +49,8 @@ export class StreamStatusController {
   /**
    * El admin móvil registra la URL del stream al iniciar o detener la transmisión.
    */
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Post()
   setStatus(@Body() body: StreamStatusBodyDto) {
     this.streamUrl = body.streamUrl || '';

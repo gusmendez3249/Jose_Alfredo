@@ -140,7 +140,10 @@ describe('AuthService - Pruebas Unitarias', () => {
 
       // Act & Assert
       await expect(
-        service.login({ correo: 'test@test.com', contrasena: 'contrasena_incorrecta' }),
+        service.login({
+          correo: 'test@test.com',
+          contrasena: 'contrasena_incorrecta',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

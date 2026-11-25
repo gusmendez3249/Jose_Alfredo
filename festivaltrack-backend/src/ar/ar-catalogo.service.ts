@@ -8,7 +8,10 @@ export class ArCatalogoService {
   constructor(private prisma: PrismaService) {}
 
   activos() {
-    return this.prisma.sitioAR.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } });
+    return this.prisma.sitioAR.findMany({
+      where: { activo: true },
+      orderBy: { nombre: 'asc' },
+    });
   }
 
   async porId(id: string) {

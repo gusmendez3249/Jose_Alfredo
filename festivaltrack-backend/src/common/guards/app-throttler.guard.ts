@@ -18,12 +18,23 @@ export class AppThrottlerGuard extends ThrottlerGuard {
    * @param req Petición HTTP de Express.
    * @returns La IP del cliente, o `IP:correo` cuando es un intento de login.
    */
-  protected async getTracker(req: Record<string, any>): Promise<string> {
+  protected getTracker(req: Record<string, any>): Promise<string> {
+    const peticion = req as {
+      ips?: string[];
+      ip?: string;
+      originalUrl?: unknown;
+      body?: { correo?: unknown };
+    };
     // Con `trust proxy` activo, req.ips trae la cadena de X-Forwarded-For; la primera es el cliente real.
-    const ip = req.ips?.length ? req.ips[0] : req.ip;
+    const ip = peticion.ips?.length ? peticion.ips[0] : (peticion.ip ?? '');
     // El correo se normaliza para que "Ana@Test.com" y "ana@test.com" cuenten como la misma cuenta.
-    const esLogin = typeof req.originalUrl === 'string' && req.originalUrl.includes('/auth/login');
-    const correo = typeof req.body?.correo === 'string' ? req.body.correo.trim().toLowerCase() : '';
-    return esLogin && correo ? `${ip}:${correo}` : ip;
+    const esLogin =
+      typeof peticion.originalUrl === 'string' &&
+      peticion.originalUrl.includes('/auth/login');
+    const correo =
+      typeof peticion.body?.correo === 'string'
+        ? peticion.body.correo.trim().toLowerCase()
+        : '';
+    return Promise.resolve(esLogin && correo ? `${ip}:${correo}` : ip);
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ComprarBoletoDto, PRECIOS_BOLETO } from './dto/comprar-boleto.dto';
 
@@ -41,10 +45,14 @@ export class BoletosService {
     const montoTotal = PRECIOS_BOLETO[categoria] * cantidad;
 
     // El evento debe existir; antes se usaba el primero de la BD o se creaba uno (y un admin falso)
-    const evento = await this.prisma.evento.findUnique({ where: { id: dto.eventoId } });
+    const evento = await this.prisma.evento.findUnique({
+      where: { id: dto.eventoId },
+    });
     if (!evento) throw new NotFoundException('Evento no encontrado');
     if (evento.estado !== 'PUBLICADO' && evento.estado !== 'EN_CURSO') {
-      throw new BadRequestException(`El evento no está a la venta (estado: ${evento.estado})`);
+      throw new BadRequestException(
+        `El evento no está a la venta (estado: ${evento.estado})`,
+      );
     }
     const realEventoId = evento.id;
 
@@ -67,19 +75,19 @@ export class BoletosService {
           monto: montoTotal,
           metodo: metodoPago,
           estado: 'COMPLETADO',
-          referencia: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-        }
+          referencia: `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        },
       });
 
       // 3. Generar la firma única del código QR
       const qrFirma = `FESTIVAL-TICKET-2024::${boleto.id}`;
-      
+
       const boletoFinal = await tx.boleto.update({
         where: { id: boleto.id },
         data: { codigoQR: qrFirma },
-        include: { pago: true }
+        include: { pago: true },
       });
-      
+
       return boletoFinal;
     });
 
@@ -118,7 +126,7 @@ export class BoletosService {
   async validarQr(qr: string) {
     const boleto = await this.prisma.boleto.findUnique({
       where: { codigoQR: qr },
-      include: { evento: true, usuario: true }
+      include: { evento: true, usuario: true },
     });
 
     if (!boleto) {
@@ -130,15 +138,22 @@ export class BoletosService {
     }
 
     if (boleto.estado !== 'ACTIVO') {
-      throw new BadRequestException('El boleto no es válido (estado: ' + boleto.estado + ')');
+      throw new BadRequestException(
+        'El boleto no es válido (estado: ' + boleto.estado + ')',
+      );
     }
 
     // Actualiza a estado USADO para evitar doble ingreso
     await this.prisma.boleto.update({
       where: { id: boleto.id },
-      data: { estado: 'USADO' }
+      data: { estado: 'USADO' },
     });
 
-    return { status: "APPROVED", message: "Acceso Concedido", evento: boleto.evento.nombre, usuario: boleto.usuario.nombre };
+    return {
+      status: 'APPROVED',
+      message: 'Acceso Concedido',
+      evento: boleto.evento.nombre,
+      usuario: boleto.usuario.nombre,
+    };
   }
 }

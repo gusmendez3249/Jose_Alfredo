@@ -4,7 +4,9 @@ import { IsBoolean, IsOptional, IsString, Matches } from 'class-validator';
 export class StreamStatusBodyDto {
   @IsOptional()
   @IsString()
-  @Matches(/^(rtsp:\/\/.+)?$/, { message: 'streamUrl debe ser una URL rtsp://' })
+  @Matches(/^(rtsp:\/\/.+)?$/, {
+    message: 'streamUrl debe ser una URL rtsp://',
+  })
   streamUrl?: string;
 
   @IsOptional() @IsBoolean() isLive?: boolean;

@@ -1,4 +1,10 @@
-import { IsString, IsDateString, IsInt, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 import { EstadoEvento } from '@prisma/client';
 
 export class CreateEventoDto {

@@ -15,7 +15,8 @@ export class BiografiasController {
   }
 
   // Solo administradores pueden dar de alta biografías.
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Post('alta')
   altaBiografia(@Body() body: BiografiaAltaDto) {
     return this.biografiasService.altaConFactory(body);
