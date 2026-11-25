@@ -25,6 +25,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
+import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.rtspserver.RtspServerCamera1
 import com.pedro.rtspserver.server.ClientListener
 import com.pedro.rtspserver.server.ServerClient
@@ -301,10 +302,13 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     coroutineScope.launch {
                                         val listo = kotlinx.coroutines.withContext(Dispatchers.Default) {
                                             runCatching {
-                                                // Códecs de audio y video con resolución compatible 640x480
+                                                // Códecs de audio y video con resolución compatible 640x480.
+                                                // La rotación sigue la orientación de la cámara y de la pantalla:
+                                                // con 0 fijo, el video llegaba girado a quien lo veía.
+                                                val rotacion = CameraHelper.getCameraOrientation(context)
                                                 val audio = servidor?.prepareAudio() ?: false
                                                 // Cuadro clave cada 1 s (antes ~5 s): quien se conecta ve imagen casi de inmediato.
-                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, INTERVALO_CUADRO_CLAVE_S, 0) ?: false }
+                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, INTERVALO_CUADRO_CLAVE_S, rotacion) ?: false }
                                                     .getOrElse { servidor?.prepareVideo() ?: false }
                                                 if (audio && video) servidor?.startStream()
                                                 audio && video

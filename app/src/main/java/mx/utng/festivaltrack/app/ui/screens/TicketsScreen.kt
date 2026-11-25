@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,10 +43,12 @@ fun TicketsScreen(
     // Solo eventos que todavía no terminan; cada fecha del selector corresponde a un concierto real.
     val eventos = eventosViewModel?.eventosProximos?.collectAsState()?.value ?: emptyList()
     val enVenta = eventos.filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
-    var eventoElegidoId by remember { mutableStateOf(eventoPreseleccionado) }
+    // rememberSaveable: el concierto y las cantidades se conservan al regresar de Pago
+    // (esa pantalla está fuera de MainScreen y, con remember, se reiniciaban).
+    var eventoElegidoId by rememberSaveable(eventoPreseleccionado) { mutableStateOf(eventoPreseleccionado) }
     val eventoAVenta = enVenta.firstOrNull { it.id == eventoElegidoId } ?: enVenta.firstOrNull()
-    var vipTickets by remember { mutableStateOf(1) }
-    var generalTickets by remember { mutableStateOf(0) }
+    var vipTickets by rememberSaveable { mutableStateOf(1) }
+    var generalTickets by rememberSaveable { mutableStateOf(0) }
 
     val vipPrice = PreciosBoleto.VIP
     val generalPrice = PreciosBoleto.GENERAL

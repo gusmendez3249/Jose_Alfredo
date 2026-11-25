@@ -64,9 +64,13 @@ fun UserLiveStreamScreen(
     LaunchedEffect(eventoId) { viewModel.startLiveStream(eventoId) }
     DisposableEffect(Unit) { onDispose { viewModel.stopLiveStream() } }
 
+    // MainScreen ya deja el espacio de la barra de estado: sin WindowInsets(0) se sumaba otra
+    // vez y quedaba una franja vacía arriba (se nota en Android 15+, de borde a borde).
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("Transmisión en vivo", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
