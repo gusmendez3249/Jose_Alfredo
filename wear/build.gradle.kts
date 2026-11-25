@@ -65,7 +65,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // WorkManager (sync periódico en background)
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
 
     // Serialización JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
