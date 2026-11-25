@@ -24,6 +24,7 @@ describe('AuthService - Pruebas Unitarias', () => {
       create: jest.fn(),
       update: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn(),
     },
   };
 
@@ -165,6 +166,33 @@ describe('AuthService - Pruebas Unitarias', () => {
       expect(prismaMock.usuario.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'user-123' } }),
       );
+    });
+
+    it('no deja que un admin se quite el rol a sí mismo', async () => {
+      await expect(
+        service.updateRole('admin-1', 'USUARIO', 'admin-1'),
+      ).rejects.toThrow(
+        'No puedes quitarte el rol de administrador a ti mismo',
+      );
+    });
+
+    it('no deja al festival sin administradores', async () => {
+      prismaMock.usuario.count.mockResolvedValue(1);
+      await expect(
+        service.updateRole('admin-2', 'USUARIO', 'admin-1'),
+      ).rejects.toThrow('Debe quedar al menos un administrador');
+    });
+
+    it('quita el rol a otro admin si quedan más', async () => {
+      prismaMock.usuario.count.mockResolvedValue(2);
+      prismaMock.usuario.update.mockResolvedValue({
+        id: 'admin-2',
+        nombre: 'Otro',
+        correo: 'otro@test.com',
+        rol: 'USUARIO',
+      });
+      const result = await service.updateRole('admin-2', 'USUARIO', 'admin-1');
+      expect(result.rol).toBe('USUARIO');
     });
 
     it('debe lanzar ConflictException si el rol es inválido', async () => {

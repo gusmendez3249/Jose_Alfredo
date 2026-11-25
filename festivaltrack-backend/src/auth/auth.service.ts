@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   UnauthorizedException,
   ConflictException,
@@ -168,10 +169,23 @@ export class AuthService {
   /**
    * Cambia el rol de un usuario existente.
    */
-  async updateRole(id: string, rol: string) {
-    console.log('Update role called with:', { id, rol });
+  async updateRole(id: string, rol: string, actorId?: string) {
     if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
       throw new ConflictException(`Rol inválido recibido: ${rol}`);
+    }
+    if (rol === 'USUARIO') {
+      // Un admin no puede quitarse el rol a sí mismo ni dejar el festival sin administradores.
+      if (actorId && id === actorId) {
+        throw new BadRequestException(
+          'No puedes quitarte el rol de administrador a ti mismo',
+        );
+      }
+      const admins = await this.prisma.usuario.count({
+        where: { rol: Rol.ADMINISTRADOR },
+      });
+      if (admins <= 1) {
+        throw new BadRequestException('Debe quedar al menos un administrador');
+      }
     }
     return this.prisma.usuario.update({
       where: { id },

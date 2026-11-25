@@ -64,7 +64,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMINISTRADOR')
   @Put('usuarios/:id/rol')
-  updateRole(@Param('id') id: string, @Body() dto: RoleUpdateDto) {
-    return this.authService.updateRole(id, dto.rol);
+  updateRole(
+    @Param('id') id: string,
+    @Body() dto: RoleUpdateDto,
+    @Request() req: RequestConUsuario,
+  ) {
+    return this.authService.updateRole(id, dto.rol, req.user.id);
   }
 }
