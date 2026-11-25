@@ -24,7 +24,7 @@ Cada sprint registra **6 Daily Scrum** (tres por semana: lunes, miércoles y vie
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Releases [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) y [`v4.3-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.3-sprint3) |
-| Sprint 4 | 6 / 6 | Vie 27/11 | Vie 27/11 | Pendiente: `v4.4-sprint4` |
+| Sprint 4 | 6 / 6 | ✅ vie 27/11 | ✅ vie 27/11 | ✅ Release [`v4.4-sprint4`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.4-sprint4) |
 
 > 📷 Cada ceremonia incluye la captura de la videollamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`) con la evidencia que se presentó ese día.
 
@@ -105,9 +105,9 @@ ni en el celular del equipo; el detalle está en #84 y en [`docs/pruebas/android
 | Daily Scrum 4 | Lun 23/11 | [daily-4.md](sprint-4/daily-4.md) |
 | Daily Scrum 5 | Mié 25/11 | [daily-5.md](sprint-4/daily-5.md) |
 | Daily Scrum 6 | Jue 26/11 | [daily-6.md](sprint-4/daily-6.md) |
-| Sprint Review | Vie 27/11 | Pendiente |
-| Retrospectiva | Vie 27/11 | Pendiente |
-| Incremento | Vie 27/11 | Release [`v4.4-sprint4`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.4-sprint4) publicada el 26/11 |
+| Sprint Review | Vie 27/11 | [review.md](sprint-4/review.md) |
+| Retrospectiva | Vie 27/11 | [retro.md](sprint-4/retro.md) |
+| Incremento | Vie 27/11 | [incremento.md](sprint-4/incremento.md) · Release [`v4.4-sprint4`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.4-sprint4) |
 
 ## Burndown
 
