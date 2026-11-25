@@ -278,6 +278,17 @@ private fun ReproductorEnVivo(urls: List<String>) {
                     if (intento == 0) "Conectando con la transmisión…" else "Reconectando con la transmisión…",
                     color = Color.White, fontSize = 13.sp
                 )
+                // Tras probar todas las direcciones sin éxito: casi siempre es la red.
+                if (intento >= urls.size) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "No llega el video de ${urls.first().removePrefix("rtsp://")}. Conéctate al mismo Wi-Fi " +
+                            "que el teléfono que transmite (las redes escolares suelen bloquear la conexión entre teléfonos; " +
+                            "prueben con el hotspot de uno de ellos).",
+                        color = Color.LightGray, fontSize = 12.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
             }
         }
     }

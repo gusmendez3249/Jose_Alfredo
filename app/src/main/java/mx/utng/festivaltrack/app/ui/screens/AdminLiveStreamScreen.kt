@@ -2,7 +2,6 @@ package mx.utng.festivaltrack.app.ui.screens
 
 import android.Manifest
 import android.content.Context
-import android.net.wifi.WifiManager
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import androidx.compose.foundation.background
@@ -39,36 +38,6 @@ import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 
 /**
- * Obtiene la dirección IP local del dispositivo dentro de la red Wi-Fi.
- *
- * Esta función consulta el [WifiManager] de Android para calcular la IP en formato `X.X.X.X`.
- * Si el dispositivo se encuentra dentro del emulador Android o la IP es nula, retorna
- * por defecto `"10.0.2.2"` (alias del host en emuladores).
- *
- * @param context Contexto de la aplicación.
- * @return Dirección IP en formato String para la URL del servidor RTSP.
- */
-fun getLocalIpAddress(context: Context): String {
-    return try {
-        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-        val ipAddress = wifiManager?.connectionInfo?.ipAddress ?: 0
-        if (ipAddress != 0) {
-            String.format(
-                "%d.%d.%d.%d",
-                ipAddress and 0xff,
-                ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff,
-                ipAddress shr 24 and 0xff
-            )
-        } else {
-            "10.0.2.2"
-        }
-    } catch (e: Exception) {
-        "10.0.2.2"
-    }
-}
-
-/**
  * Pantalla de Emisión de Transmisión en Vivo para Administradores ([AdminLiveStreamScreen]).
  *
  * Implementa un servidor RTSP nativo utilizando la librería `Root-less RTSP Server` de Pedro.
@@ -103,7 +72,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
     var cambiando by remember { mutableStateOf(false) }
-    var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
+    var streamUrl by remember { mutableStateOf("") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
     // Concierto al que pertenece la transmisión: los usuarios la ven en la pantalla de ese concierto.
@@ -138,8 +107,23 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
         }
-        val wifiIp = getLocalIpAddress(context)
-        streamUrl = "rtsp://$wifiIp:1935"
+    }
+
+    // IP real del teléfono en la red (Wi-Fi o hotspot). Se revisa cada pocos segundos por si el
+    // admin se conecta a la red con la pantalla abierta.
+    LaunchedEffect(Unit) {
+        while (true) {
+            if (!isStreaming) {
+                val ip = mx.utng.festivaltrack.app.ui.utils.IpLocal.paraTransmitir()
+                streamUrl = ip?.let { "rtsp://$it:1935" } ?: ""
+                if (ip == null) {
+                    statusText = "Sin red Wi-Fi: conecta este teléfono al mismo Wi-Fi que los asistentes o comparte tu hotspot"
+                } else if (statusText.startsWith("Sin red Wi-Fi")) {
+                    statusText = "Listo para transmitir"
+                }
+            }
+            delay(5_000)
+        }
     }
 
     // Efecto de limpieza: se ejecuta cuando la pantalla se destruye o el usuario navega fuera
@@ -248,7 +232,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                     ) {
                         Text(statusText, color = Color.White, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Text(if (streamUrl.isBlank()) "Sin dirección de video" else "Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                         Spacer(modifier = Modifier.height(12.dp))
                         Box {
                             OutlinedButton(
@@ -315,7 +299,8 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     }
                                 }
                             },
-                            enabled = !cambiando,
+                            // Sin IP en la red nadie podría ver el video: no se deja iniciar.
+                            enabled = !cambiando && (isStreaming || streamUrl.isNotBlank()),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isStreaming) Color.Red else PrimaryGold,
                                 contentColor = if (isStreaming) Color.White else Color.Black
