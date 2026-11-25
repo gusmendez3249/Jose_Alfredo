@@ -12,14 +12,20 @@ export function configurarSeguridad(app: INestApplication) {
 
   // CORS: localhost solo fuera de producción; en producción, únicamente los frontends de FRONTEND_URL.
   // Las apps Android no envían Origin, así que no se ven afectadas.
-  const allowedOrigins = (process.env.FRONTEND_URL ?? 'https://festivaltrack-web.up.railway.app')
+  const allowedOrigins = (
+    process.env.FRONTEND_URL ?? 'https://festivaltrack-web.up.railway.app'
+  )
     .split(',')
     .map((url) => url.trim().replace(/\/$/, ''))
     .filter(Boolean);
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       const esLocal =
-        process.env.NODE_ENV !== 'production' && /^http:\/\/localhost(:\d+)?$/.test(origin ?? '');
+        process.env.NODE_ENV !== 'production' &&
+        /^http:\/\/localhost(:\d+)?$/.test(origin ?? '');
       if (!origin || esLocal || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

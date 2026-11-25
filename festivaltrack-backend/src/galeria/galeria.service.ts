@@ -10,10 +10,10 @@ export class GaleriaService {
     return this.prisma.galeria.findMany({
       include: {
         imagenes: {
-          orderBy: { createdAt: 'desc' }
-        }
+          orderBy: { createdAt: 'desc' },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -22,22 +22,35 @@ export class GaleriaService {
     if (!galeria) {
       let admin = await this.prisma.administrador.findFirst();
       if (!admin) {
-        let user = await this.prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } });
+        const user = await this.prisma.usuario.findFirst({
+          where: { rol: 'ADMINISTRADOR' },
+        });
         // Nunca crear un admin con contraseña fija: el administrador se crea con el seed (SEED_ADMIN_PASSWORD).
-        if (!user) throw new InternalServerErrorException('No hay administrador registrado. Ejecuta el seed.');
-        admin = await this.prisma.administrador.create({ data: { usuarioId: user.id } });
+        if (!user)
+          throw new InternalServerErrorException(
+            'No hay administrador registrado. Ejecuta el seed.',
+          );
+        admin = await this.prisma.administrador.create({
+          data: { usuarioId: user.id },
+        });
       }
       galeria = await this.prisma.galeria.create({
-        data: { nombre: 'Golden Era', categoria: 'GOLDEN_ERA', administradorId: admin.id }
+        data: {
+          nombre: 'Golden Era',
+          categoria: 'GOLDEN_ERA',
+          administradorId: admin.id,
+        },
       });
     }
 
     return this.prisma.imagen.create({
       data: {
         galeriaId: galeria.id,
-        url: dto.url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+        url:
+          dto.url ||
+          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
         titulo: dto.titulo || 'Nueva Foto del Festival',
-      }
+      },
     });
   }
 

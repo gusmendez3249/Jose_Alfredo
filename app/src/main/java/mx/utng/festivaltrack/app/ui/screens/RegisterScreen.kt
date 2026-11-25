@@ -63,6 +63,8 @@ fun RegisterScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
+            .imePadding()
             .padding(horizontal = 32.dp)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally

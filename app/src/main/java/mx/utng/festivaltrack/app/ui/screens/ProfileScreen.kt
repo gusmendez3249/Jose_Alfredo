@@ -27,26 +27,50 @@ import mx.utng.festivaltrack.app.ui.viewmodels.ProfileViewModel
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onLogout: () -> Unit = {},
+    onComprarBoletos: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel()
 ) {
     val profileState by viewModel.profileState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val nombre = remember { mx.utng.festivaltrack.app.data.TokenManager(context).getUserName() }
+    var confirmarSalida by remember { mutableStateOf(false) }
+
+    if (confirmarSalida) {
+        AlertDialog(
+            onDismissRequest = { confirmarSalida = false },
+            containerColor = Color(0xFF1E1E1E),
+            title = { Text("¿Cerrar sesión?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Tendrás que volver a escribir tu correo y contraseña para entrar.", color = Color.Gray) },
+            confirmButton = {
+                Button(
+                    onClick = { confirmarSalida = false; onLogout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC51111))
+                ) { Text("Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarSalida = false }) { Text("Cancelar", color = Color.Gray) }
+            }
+        )
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
-                title = { Text("Mi Perfil", color = PrimaryGold, fontWeight = FontWeight.Bold) },
+                windowInsets = WindowInsets(0),
+                title = { Text("Mi perfil", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = Color.White)
                     }
                 },
                 actions = {
-                    TextButton(onClick = onLogout) {
-                        Text("Cerrar Sesión", color = Color.Red, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { confirmarSalida = true }) {
+                        Text("Cerrar sesión", color = Color(0xFFFF8A80), fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -60,7 +84,11 @@ fun ProfileScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            nombre?.let {
+                Text("Hola, $it", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             when (profileState) {
                 is ProfileState.Loading -> {
@@ -69,11 +97,28 @@ fun ProfileScreen(
                     }
                 }
                 is ProfileState.Error -> {
-                    Text(
-                        text = (profileState as ProfileState.Error).message,
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    val error = profileState as ProfileState.Error
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Default.QrCode, contentDescription = null, tint = PrimaryGold, modifier = Modifier.size(56.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(error.message, color = Color.White, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        if (error.requiereLogin) {
+                            // onLogout borra el token y lleva a la pantalla de inicio de sesión
+                            Button(
+                                onClick = onLogout,
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold)
+                            ) { Text("Iniciar sesión", color = Color.Black, fontWeight = FontWeight.Bold) }
+                        } else {
+                            Button(
+                                onClick = { viewModel.loadProfile() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold)
+                            ) { Text("Reintentar", color = Color.Black, fontWeight = FontWeight.Bold) }
+                        }
+                    }
                 }
                 is ProfileState.Success -> {
                     val boletos = (profileState as ProfileState.Success).boletos
@@ -83,6 +128,11 @@ fun ProfileScreen(
                     
                     if (boletos.isEmpty()) {
                         Text("No has comprado ningún boleto aún.", color = Color.Gray)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onComprarBoletos,
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black)
+                        ) { Text("Comprar boletos", fontWeight = FontWeight.Bold) }
                     } else {
                         var selectedBoleto by remember { mutableStateOf<mx.utng.festivaltrack.shared.data.remote.BoletoDto?>(null) }
                         
@@ -109,7 +159,7 @@ fun ProfileScreen(
                                         Column {
                                             Text("Evento: ${boleto.evento?.nombre ?: "Festival"}", color = Color.White, fontWeight = FontWeight.Bold)
                                             Text("Categoría: ${boleto.categoria}", color = Color.Gray, fontSize = 14.sp)
-                                            Text("Código: ${boleto.codigoQR}", color = PrimaryGold, fontSize = 12.sp)
+                                            Text("Toca para ver el código QR", color = PrimaryGold, fontSize = 12.sp)
                                         }
                                     }
                                 }

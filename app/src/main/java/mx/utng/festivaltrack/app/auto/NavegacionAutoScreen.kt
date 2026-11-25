@@ -28,7 +28,7 @@ class NavegacionAutoScreen(
     private val ruta: RutaActiva
 ) : Screen(carContext), DefaultLifecycleObserver {
 
-    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("America/Mexico_City"))
 
     private var resumen: ResumenNavegacion? = null
     private var ubicacionAproximada = true

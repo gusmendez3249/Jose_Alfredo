@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -18,7 +23,10 @@ import { Rol } from '@prisma/client';
  */
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+  ) {}
 
   /**
    * Registra un nuevo usuario en el sistema.
@@ -34,13 +42,20 @@ export class AuthService {
    * @throws ConflictException si el correo ya está registrado (HTTP 409).
    */
   async register(dto: RegisterDto) {
-    const existe = await this.prisma.usuario.findUnique({ where: { correo: dto.correo } });
+    const existe = await this.prisma.usuario.findUnique({
+      where: { correo: dto.correo },
+    });
     if (existe) throw new ConflictException('El correo ya está registrado');
     const hash = await bcrypt.hash(dto.contrasena, 10);
     const usuario = await this.prisma.usuario.create({
       data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash },
     });
-    return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
+    return this.firmarToken(
+      usuario.id,
+      usuario.nombre,
+      usuario.correo,
+      usuario.rol,
+    );
   }
 
   /**
@@ -60,11 +75,18 @@ export class AuthService {
    * si el correo existe o no en el sistema (seguridad contra enumeración).
    */
   async login(dto: LoginDto) {
-    const usuario = await this.prisma.usuario.findUnique({ where: { correo: dto.correo } });
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { correo: dto.correo },
+    });
     if (!usuario) throw new UnauthorizedException('Credenciales inválidas');
     const valida = await bcrypt.compare(dto.contrasena, usuario.contrasena);
     if (!valida) throw new UnauthorizedException('Credenciales inválidas');
-    return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
+    return this.firmarToken(
+      usuario.id,
+      usuario.nombre,
+      usuario.correo,
+      usuario.rol,
+    );
   }
 
   /**
@@ -87,7 +109,7 @@ export class AuthService {
     return {
       accessToken: token,
       token,
-      usuario: { id, nombre, correo, rol }
+      usuario: { id, nombre, correo, rol },
     };
   }
 
@@ -101,9 +123,13 @@ export class AuthService {
    * @param body Objeto con tvToken (ID único de la TV) y userId (ID del usuario).
    * @returns Objeto con status, mensaje de confirmación y el tvToken.
    */
-  async tvSync(body: { tvToken: string, userId: string }) {
+  tvSync(body: { tvToken: string; userId: string }) {
     // TODO: Implementar persistencia real de sesiones TV o WebSockets
-    return { status: 'SUCCESS', message: 'Smart TV vinculada correctamente', tvToken: body.tvToken };
+    return {
+      status: 'SUCCESS',
+      message: 'Smart TV vinculada correctamente',
+      tvToken: body.tvToken,
+    };
   }
   /**
    * Obtiene todos los usuarios registrados.
@@ -111,7 +137,7 @@ export class AuthService {
   async getUsuarios() {
     return this.prisma.usuario.findMany({
       select: { id: true, nombre: true, correo: true, rol: true },
-      orderBy: { rol: 'asc' }
+      orderBy: { rol: 'asc' },
     });
   }
 
@@ -119,27 +145,52 @@ export class AuthService {
    * Registra un nuevo administrador.
    */
   async registerAdmin(dto: RegisterDto) {
-    const existe = await this.prisma.usuario.findUnique({ where: { correo: dto.correo } });
+    const existe = await this.prisma.usuario.findUnique({
+      where: { correo: dto.correo },
+    });
     if (existe) throw new ConflictException('El correo ya está registrado');
     const hash = await bcrypt.hash(dto.contrasena, 10);
     const usuario = await this.prisma.usuario.create({
-      data: { nombre: dto.nombre, correo: dto.correo, contrasena: hash, rol: Rol.ADMINISTRADOR },
+      data: {
+        nombre: dto.nombre,
+        correo: dto.correo,
+        contrasena: hash,
+        rol: Rol.ADMINISTRADOR,
+      },
     });
-    return this.firmarToken(usuario.id, usuario.nombre, usuario.correo, usuario.rol);
+    return this.firmarToken(
+      usuario.id,
+      usuario.nombre,
+      usuario.correo,
+      usuario.rol,
+    );
   }
 
   /**
    * Cambia el rol de un usuario existente.
    */
-  async updateRole(id: string, rol: string) {
-    console.log('Update role called with:', { id, rol });
+  async updateRole(id: string, rol: string, actorId?: string) {
     if (rol !== 'USUARIO' && rol !== 'ADMINISTRADOR') {
       throw new ConflictException(`Rol inválido recibido: ${rol}`);
     }
+    if (rol === 'USUARIO') {
+      // Un admin no puede quitarse el rol a sí mismo ni dejar el festival sin administradores.
+      if (actorId && id === actorId) {
+        throw new BadRequestException(
+          'No puedes quitarte el rol de administrador a ti mismo',
+        );
+      }
+      const admins = await this.prisma.usuario.count({
+        where: { rol: Rol.ADMINISTRADOR },
+      });
+      if (admins <= 1) {
+        throw new BadRequestException('Debe quedar al menos un administrador');
+      }
+    }
     return this.prisma.usuario.update({
       where: { id },
-      data: { rol: Rol[rol as keyof typeof Rol] },
-      select: { id: true, nombre: true, correo: true, rol: true }
+      data: { rol: Rol[rol] },
+      select: { id: true, nombre: true, correo: true, rol: true },
     });
   }
 }

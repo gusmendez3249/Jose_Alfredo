@@ -54,9 +54,9 @@ dependencies {
     debugImplementation(libs.ui.tooling)
 
     // Room (base de datos local offline)
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.5")
+    implementation("androidx.room:room-ktx:2.8.5")
+    kapt("androidx.room:room-compiler:2.8.5")
 
     // Wearable Data Layer (comunicación con el teléfono via BLE)
     implementation("com.google.android.gms:play-services-wearable:18.2.0")

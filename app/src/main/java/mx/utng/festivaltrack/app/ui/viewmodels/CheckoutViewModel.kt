@@ -7,123 +7,100 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.data.TokenManager
+import mx.utng.festivaltrack.app.ui.utils.FormatoPago
+import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CompraBoletoDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 
 /**
  * Estado de pago — patrón Sealed Class para representar el flujo de checkout.
  *
- * La UI observa [CheckoutViewModel.checkoutState] y reacciona a cada estado:
  * - [Idle]: pantalla en reposo, esperando que el usuario inicie el pago.
  * - [Processing]: pago en proceso, muestra un indicador de carga.
- * - [Success]: pago completado con éxito, navegación a pantalla de éxito.
- * - [Error]: muestra un mensaje de error si el pago falla.
+ * - [Success]: pago completado; trae los boletos reales que generó el servidor (con su QR).
+ * - [Error]: mensaje para el usuario si la validación o el pago fallan.
  */
 sealed class CheckoutState {
-    /** Estado inicial o en reposo. */
     object Idle : CheckoutState()
-    
-    /** El pago está siendo procesado por el servidor. */
     object Processing : CheckoutState()
-    
-    /** Pago exitoso. */
-    object Success : CheckoutState()
-    
-    /**
-     * Error durante el proceso de pago.
-     * @property message Mensaje de error para mostrar al usuario.
-     */
+    data class Success(val boletos: List<BoletoDto>) : CheckoutState()
     data class Error(val message: String) : CheckoutState()
 }
 
 /**
- * ViewModel que gestiona la lógica de compra de boletos para el evento.
+ * Boletos de la última compra, para la pantalla de "¡Pago exitoso!".
+ * Vive en memoria: si la app se cierra, los boletos siguen en "Mis boletos".
+ */
+object UltimaCompra {
+    var boletos: List<BoletoDto> = emptyList()
+}
+
+/**
+ * ViewModel que gestiona la compra de boletos de un evento.
  *
- * Responsabilidades:
- * - Validar los datos de la tarjeta (simulación local).
- * - Enviar la petición de compra al backend llamando a `POST /boletos/comprar`.
- * - Exponer el estado actual del checkout mediante [StateFlow].
- *
- * @param application La instancia de la aplicación, requerida para [TokenManager].
+ * Valida la tarjeta (pago simulado: los datos de la tarjeta no se mandan al servidor) y crea una
+ * compra por categoría con `POST /boletos/comprar`; el backend calcula el monto oficial.
  */
 class CheckoutViewModel(application: Application) : AndroidViewModel(application) {
-    
-    /** Gestiona el token JWT. */
+
     private val tokenManager = TokenManager(application)
-    
-    /** Cliente HTTP Retrofit para llamadas al backend. */
     private val api = FestivalApiService.create()
 
     private val _checkoutState = MutableStateFlow<CheckoutState>(CheckoutState.Idle)
-    
-    /** Estado de checkout observable por la UI. */
     val checkoutState: StateFlow<CheckoutState> = _checkoutState
 
-    /**
-     * Procesa el pago de boletos validando la tarjeta y llamando al API.
-     *
-     * Se hace una compra por categoría (VIP y General); el backend calcula el monto de cada una.
-     *
-     * @param eventoId ID del evento para el cual se compran boletos.
-     * @param vipTickets Cantidad de boletos VIP.
-     * @param generalTickets Cantidad de boletos General.
-     * @param tarjetaNumero Número de la tarjeta de crédito/débito.
-     * @param tarjetaVencimiento Fecha de expiración de la tarjeta.
-     * @param tarjetaCVV Código de seguridad de la tarjeta.
-     */
     fun procesarPago(
         eventoId: String,
         vipTickets: Int,
         generalTickets: Int,
+        titular: String,
         tarjetaNumero: String,
         tarjetaVencimiento: String,
         tarjetaCVV: String
     ) {
-        if (tarjetaNumero.isBlank() || tarjetaVencimiento.isBlank() || tarjetaCVV.isBlank()) {
-            _checkoutState.value = CheckoutState.Error("Llena todos los datos de la tarjeta")
+        FormatoPago.validar(titular, tarjetaNumero, tarjetaVencimiento, tarjetaCVV)?.let {
+            _checkoutState.value = CheckoutState.Error(it)
             return
         }
-        
-        // Simular validación básica
-        if (tarjetaNumero.length < 15) {
-            _checkoutState.value = CheckoutState.Error("Número de tarjeta inválido")
-            return
-        }
-
-        val token = tokenManager.getToken()
-        if (token == null) {
-            _checkoutState.value = CheckoutState.Error("Sesión no encontrada. Inicia sesión nuevamente.")
+        val token = tokenManager.getToken() ?: run {
+            _checkoutState.value = CheckoutState.Error("Tu sesión terminó. Inicia sesión de nuevo para comprar.")
             return
         }
 
         viewModelScope.launch {
             _checkoutState.value = CheckoutState.Processing
             try {
-                // Al ser un simulador, usamos cualquier método
-                // Una petición por categoría con boletos (#52): el backend cobra cada una con su
-                // precio oficial. Antes se mandaba todo como VIP con el total calculado en la app.
-                listOf("VIP" to vipTickets, "GENERAL" to generalTickets)
+                // Una compra por categoría (#52): el backend cobra cada una con su precio oficial.
+                val boletos = listOf("VIP" to vipTickets, "GENERAL" to generalTickets)
                     .filter { (_, cantidad) -> cantidad > 0 }
-                    .forEach { (categoria, cantidad) ->
-                        val dto = CompraBoletoDto(
-                            eventoId = eventoId,
-                            categoria = categoria,
-                            cantidad = cantidad,
-                            metodoPago = "TARJETA_CREDITO"
+                    .map { (categoria, cantidad) ->
+                        api.comprarBoleto(
+                            "Bearer $token",
+                            CompraBoletoDto(eventoId = eventoId, categoria = categoria, cantidad = cantidad, metodoPago = "TARJETA_CREDITO")
                         )
-                        api.comprarBoleto("Bearer $token", dto)
                     }
-                _checkoutState.value = CheckoutState.Success
+                UltimaCompra.boletos = boletos
+                _checkoutState.value = CheckoutState.Success(boletos)
+            } catch (e: retrofit2.HttpException) {
+                _checkoutState.value = CheckoutState.Error(
+                    when (e.code()) {
+                        401 -> "Tu sesión terminó. Inicia sesión de nuevo para comprar."
+                        400 -> "Este concierto ya no está a la venta."
+                        404 -> "El concierto ya no existe."
+                        else -> "No se pudo completar la compra. Intenta de nuevo."
+                    }
+                )
             } catch (e: Exception) {
-                val detail = e.localizedMessage ?: "Error desconocido"
-                _checkoutState.value = CheckoutState.Error("Error al procesar compra: $detail")
+                _checkoutState.value = CheckoutState.Error("Sin conexión con el servidor. Revisa tu internet e intenta de nuevo.")
             }
         }
     }
-    
-    /**
-     * Reinicia el estado de checkout a [CheckoutState.Idle].
-     */
+
+    /** Quita el mensaje de error (por ejemplo, cuando el usuario corrige un campo). */
+    fun limpiarError() {
+        if (_checkoutState.value is CheckoutState.Error) _checkoutState.value = CheckoutState.Idle
+    }
+
     fun resetState() {
         _checkoutState.value = CheckoutState.Idle
     }

@@ -50,8 +50,10 @@ fun ArHistoryScreen(
     LaunchedEffect(Unit) { viewModel.cargarHistorial() }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("Sitios visitados", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -120,7 +122,7 @@ private fun VisitaItem(visita: VisitaSitioDto) {
 }
 
 private fun formatear(iso: String): String = try {
-    Instant.parse(iso).atZone(ZoneId.systemDefault()).format(formatoFecha)
+    Instant.parse(iso).atZone(ZoneId.of("America/Mexico_City")).format(formatoFecha)
 } catch (e: Exception) {
     iso
 }

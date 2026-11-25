@@ -1,8 +1,17 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
-import { MediaTypeImagen, ReconocedorVisual, ResultadoVisual, SitioCandidato } from './reconocedor-visual';
+import {
+  MediaTypeImagen,
+  ReconocedorVisual,
+  ResultadoVisual,
+  SitioCandidato,
+} from './reconocedor-visual';
 
 const RespuestaSchema = z.object({
   sitioId: z.string().nullable(),
@@ -31,7 +40,11 @@ export class ClaudeReconocedor implements ReconocedorVisual {
   // Las keys que no están ligadas a un workspace exigen el header anthropic-workspace-id.
   private readonly client = new Anthropic(
     process.env.ANTHROPIC_WORKSPACE_ID
-      ? { defaultHeaders: { 'anthropic-workspace-id': process.env.ANTHROPIC_WORKSPACE_ID } }
+      ? {
+          defaultHeaders: {
+            'anthropic-workspace-id': process.env.ANTHROPIC_WORKSPACE_ID,
+          },
+        }
       : {},
   );
   private readonly model = process.env.ANTHROPIC_MODEL || 'claude-opus-5-5';
@@ -42,10 +55,17 @@ export class ClaudeReconocedor implements ReconocedorVisual {
     candidatos: SitioCandidato[],
   ): Promise<ResultadoVisual> {
     const catalogo = candidatos
-      .map((c) => `- id: ${c.id}\n  nombre: ${c.nombre}\n  cómo se ve: ${c.pistasVisuales}`)
+      .map(
+        (c) =>
+          `- id: ${c.id}\n  nombre: ${c.nombre}\n  cómo se ve: ${c.pistasVisuales}`,
+      )
       .join('\n');
 
-    let response;
+    // Tipo mínimo de la respuesta de `messages.parse` que se usa aquí.
+    let response: {
+      stop_reason: string | null;
+      parsed_output: z.infer<typeof RespuestaSchema> | null;
+    };
     try {
       response = await this.client.beta.messages.parse({
         model: this.model,
@@ -53,28 +73,53 @@ export class ClaudeReconocedor implements ReconocedorVisual {
         // Si el modelo declina por política, la API reintenta con otro modelo en la misma llamada.
         betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
-        output_config: { effort: 'low', format: zodOutputFormat(RespuestaSchema) },
+        output_config: {
+          effort: 'low',
+          format: zodOutputFormat(RespuestaSchema),
+        },
         system: SYSTEM,
         messages: [
           {
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imagen.toString('base64') } },
-              { type: 'text', text: `Catálogo de sitios:\n${catalogo}\n\n¿Qué sitio aparece en la foto?` },
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType,
+                  data: imagen.toString('base64'),
+                },
+              },
+              {
+                type: 'text',
+                text: `Catálogo de sitios:\n${catalogo}\n\n¿Qué sitio aparece en la foto?`,
+              },
             ],
           },
         ],
       });
     } catch (e) {
       this.logger.error(`Fallo al llamar a Claude: ${(e as Error).message}`);
-      throw new ServiceUnavailableException('El servicio de reconocimiento no está disponible');
+      throw new ServiceUnavailableException(
+        'El servicio de reconocimiento no está disponible',
+      );
     }
 
     if (response.stop_reason === 'refusal' || !response.parsed_output) {
-      return { sitioId: null, confianza: 0, razon: 'El modelo no devolvió una respuesta válida' };
+      return {
+        sitioId: null,
+        confianza: 0,
+        razon: 'El modelo no devolvió una respuesta válida',
+      };
     }
     const r = response.parsed_output;
-    this.logger.log(`Reconocimiento: sitio=${r.sitioId} confianza=${r.confianza} razón="${r.razon}"`);
-    return { sitioId: r.sitioId, confianza: Math.max(0, Math.min(1, r.confianza)), razon: r.razon };
+    this.logger.log(
+      `Reconocimiento: sitio=${r.sitioId} confianza=${r.confianza} razón="${r.razon}"`,
+    );
+    return {
+      sitioId: r.sitioId,
+      confianza: Math.max(0, Math.min(1, r.confianza)),
+      razon: r.razon,
+    };
   }
 }

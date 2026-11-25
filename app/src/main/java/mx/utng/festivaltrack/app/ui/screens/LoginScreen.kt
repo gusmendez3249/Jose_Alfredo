@@ -2,7 +2,6 @@ package mx.utng.festivaltrack.app.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +38,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+    var mostrarAyuda by remember { mutableStateOf(false) }
     
     val authState by viewModel.authState.collectAsState()
     
@@ -134,7 +134,8 @@ fun LoginScreen(
             fontSize = 12.sp,
             modifier = Modifier
                 .align(Alignment.End)
-                .clickable { /* TODO: Forgot Password */ },
+                .clickable { mostrarAyuda = true }
+                .padding(vertical = 8.dp),
             textAlign = TextAlign.End
         )
 
@@ -187,45 +188,21 @@ fun LoginScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Divider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.2f))
-            Text(
-                text = "O ENTRA CON",
-                color = Color.White.copy(alpha = 0.5f),
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Divider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.2f))
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Simulated Google Button
-        Row(
-            modifier = Modifier
-                .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                .clickable { /* TODO: Google Auth */ }
-                .padding(horizontal = 32.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "G",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "GOOGLE",
-                color = Color.White,
-                fontSize = 16.sp,
-                letterSpacing = 2.sp
+        if (mostrarAyuda) {
+            AlertDialog(
+                onDismissRequest = { mostrarAyuda = false },
+                containerColor = Color(0xFF1E1E1E),
+                title = { Text("¿Olvidaste tu contraseña?", color = Color.White, fontWeight = FontWeight.Bold) },
+                text = {
+                    Text(
+                        "Pide al equipo del festival que restablezca tu acceso desde el panel de administración, " +
+                            "o crea una cuenta nueva con otro correo.",
+                        color = Color.Gray
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { mostrarAyuda = false }) { Text("Entendido", color = PrimaryGold) }
+                }
             )
         }
     }

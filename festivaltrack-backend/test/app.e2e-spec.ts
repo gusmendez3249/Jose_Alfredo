@@ -30,7 +30,9 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     app.setGlobalPrefix('api/v1');
     await app.init();
   });
@@ -48,7 +50,7 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
         .send({
           nombre: 'Usuario E2E',
           correo: correoTest,
-          contrasena: 'password123',
+          contrasena: 'Password123',
         })
         .expect(201);
 
@@ -63,7 +65,7 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
         .send({
           nombre: 'Duplicado',
           correo: correoTest,
-          contrasena: 'otrapass',
+          contrasena: 'OtraPass123',
         })
         .expect(409);
     });
@@ -80,7 +82,7 @@ describe('FestivalTrack API — Pruebas de Integración (E2E)', () => {
     it('debe iniciar sesión con credenciales válidas y retornar JWT (201)', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
-        .send({ correo: correoTest, contrasena: 'password123' })
+        .send({ correo: correoTest, contrasena: 'Password123' })
         .expect(201);
 
       expect(response.body).toHaveProperty('accessToken');

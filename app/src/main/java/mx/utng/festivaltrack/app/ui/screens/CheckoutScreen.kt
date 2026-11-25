@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mx.utng.festivaltrack.app.ui.utils.FormatoPago
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.CheckoutViewModel
@@ -45,6 +46,7 @@ fun CheckoutScreen(
     eventoId: String = "",
     vipTickets: Int = 1,
     generalTickets: Int = 0,
+    eventoNombre: String? = null,
     onNavigateBack: () -> Unit = {},
     onPaymentSuccess: () -> Unit = {},
     viewModel: CheckoutViewModel = viewModel()
@@ -95,7 +97,7 @@ fun CheckoutScreen(
                     if (checkoutState is CheckoutState.Error) {
                         Text(
                             text = (checkoutState as CheckoutState.Error).message,
-                            color = Color.Red,
+                            color = Color(0xFFFF8A80),
                             fontSize = 14.sp,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -106,6 +108,7 @@ fun CheckoutScreen(
                                 eventoId = eventoId,
                                 vipTickets = vipTickets,
                                 generalTickets = generalTickets,
+                                titular = cardHolder,
                                 tarjetaNumero = cardNumber,
                                 tarjetaVencimiento = expiryDate,
                                 tarjetaCVV = cvv
@@ -126,7 +129,7 @@ fun CheckoutScreen(
                             CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
                         } else {
                             Text(
-                                text = "CONFIRMAR PAGO - $$totalPrice MXN",
+                                text = "CONFIRMAR PAGO · ${FormatoPago.precio(totalPrice)} MXN",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -154,6 +157,9 @@ fun CheckoutScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Resumen del Pedido", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    eventoNombre?.let {
+                        Text(it, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp))
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     // Desglose por categoría (antes mostraba todo como "x VIP")
                     if (vipTickets > 0) {
@@ -162,7 +168,7 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Accesos ($vipTickets x VIP)", color = Color.White)
-                            Text("$${vipTickets * PreciosBoleto.VIP} MXN", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("${FormatoPago.precio(vipTickets * PreciosBoleto.VIP)} MXN", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                     if (generalTickets > 0) {
@@ -171,7 +177,7 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Accesos ($generalTickets x General)", color = Color.White)
-                            Text("$${generalTickets * PreciosBoleto.GENERAL} MXN", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("${FormatoPago.precio(generalTickets * PreciosBoleto.GENERAL)} MXN", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -194,7 +200,7 @@ fun CheckoutScreen(
             // Nombre del Titular
             OutlinedTextField(
                 value = cardHolder,
-                onValueChange = { cardHolder = it },
+                onValueChange = { cardHolder = it.take(60); viewModel.limpiarError() },
                 label = { Text("Nombre del Titular") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -214,8 +220,9 @@ fun CheckoutScreen(
             // Número de Tarjeta
             OutlinedTextField(
                 value = cardNumber,
-                onValueChange = { if (it.length <= 16) cardNumber = it },
-                label = { Text("Número de Tarjeta (16 dígitos)") },
+                onValueChange = { cardNumber = FormatoPago.digitos(it, 16); viewModel.limpiarError() },
+                label = { Text("Número de tarjeta") },
+                visualTransformation = FormatoPago.numeroTarjeta,
                 trailingIcon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = PrimaryGold) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -237,8 +244,9 @@ fun CheckoutScreen(
                 // Fecha de Expiración
                 OutlinedTextField(
                     value = expiryDate,
-                    onValueChange = { if (it.length <= 5) expiryDate = it },
-                    label = { Text("MM/AA") },
+                    onValueChange = { expiryDate = FormatoPago.digitos(it, 4); viewModel.limpiarError() },
+                    label = { Text("Vence (MM/AA)") },
+                    visualTransformation = FormatoPago.vencimiento,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
@@ -256,7 +264,7 @@ fun CheckoutScreen(
                 // Código CVV
                 OutlinedTextField(
                     value = cvv,
-                    onValueChange = { if (it.length <= 4) cvv = it },
+                    onValueChange = { cvv = FormatoPago.digitos(it, 4); viewModel.limpiarError() },
                     label = { Text("CVV") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -279,7 +287,7 @@ fun CheckoutScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PrimaryGold, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Transacción encriptada con tecnología SSL de 256 bits.", color = Color.Gray, fontSize = 12.sp)
+                Text("Pago simulado para la demostración: no se hace ningún cargo a tu tarjeta.", color = Color.Gray, fontSize = 12.sp)
             }
         }
     }

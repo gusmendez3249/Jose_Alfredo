@@ -99,8 +99,14 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
                 api.registerAdmin(token, RegisterDto(nombre, correo, contrasena))
                 _actionMessage.value = "Administrador registrado exitosamente"
                 loadUsers() // Reload list
+            } catch (e: retrofit2.HttpException) {
+                _actionMessage.value = when (e.code()) {
+                    409 -> "Ese correo ya está registrado"
+                    400 -> REGLA_CONTRASENA
+                    else -> "No se pudo registrar al administrador"
+                }
             } catch (e: Exception) {
-                _actionMessage.value = "Error al registrar administrador: ${e.message}"
+                _actionMessage.value = "Sin conexión con el servidor"
             }
         }
     }
@@ -130,8 +136,11 @@ class AdminUsersViewModel(application: Application) : AndroidViewModel(applicati
                     _uiState.value = AdminUsersState.Success(updatedUsers)
                 }
                 _actionMessage.value = "Rol actualizado correctamente"
+            } catch (e: retrofit2.HttpException) {
+                _actionMessage.value = if (e.code() == 400) "No se puede: debe quedar al menos un administrador y no puedes quitarte tu propio rol"
+                else "No se pudo cambiar el rol. Intenta de nuevo."
             } catch (e: Exception) {
-                _actionMessage.value = "Error al cambiar rol: ${e.message}"
+                _actionMessage.value = "Sin conexión con el servidor"
             }
         }
     }

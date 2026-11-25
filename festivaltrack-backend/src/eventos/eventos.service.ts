@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EstadoEvento, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventoDto } from './dto/create-evento.dto';
 
@@ -65,7 +66,11 @@ export class EventosService {
     // la creamos automáticamente (primera vez que crea un evento).
     if (!administrador) {
       administrador = await this.prisma.administrador.create({
-        data: { usuarioId, nivel: 1, permisos: ['CREAR_EVENTOS', 'EDITAR_EVENTOS', 'ELIMINAR_EVENTOS'] },
+        data: {
+          usuarioId,
+          nivel: 1,
+          permisos: ['CREAR_EVENTOS', 'EDITAR_EVENTOS', 'ELIMINAR_EVENTOS'],
+        },
       });
     }
 
@@ -85,11 +90,18 @@ export class EventosService {
       }
     }
 
-    const fechaHoraParsed = dto.fechaHora ? new Date(dto.fechaHora) : new Date('2026-11-23T20:00:00Z');
-    const estadoParsed = (dto.estado as any) === 'ACTIVO' ? 'PUBLICADO' : (dto.estado || 'PUBLICADO');
+    const fechaHoraParsed = dto.fechaHora
+      ? new Date(dto.fechaHora)
+      : new Date('2026-11-23T20:00:00Z');
+    // La app antigua mandaba "ACTIVO"; equivale a PUBLICADO.
+    const estadoTexto = dto.estado as string | undefined;
+    const estadoParsed: EstadoEvento =
+      estadoTexto === 'ACTIVO' || !estadoTexto
+        ? EstadoEvento.PUBLICADO
+        : (estadoTexto as EstadoEvento);
 
-    return this.prisma.evento.create({ 
-      data: { 
+    return this.prisma.evento.create({
+      data: {
         nombre: dto.nombre,
         fechaHora: fechaHoraParsed,
         ubicacion: dto.ubicacion,
@@ -98,10 +110,12 @@ export class EventosService {
         capacidad: dto.capacidad,
         bannerUrl: dto.bannerUrl,
         artistaId: dto.artistaId,
-        estado: estadoParsed as any,
+        latitud: dto.latitud,
+        longitud: dto.longitud,
+        estado: estadoParsed,
         id: nuevoId,
         administradorId: adminId,
-      } 
+      },
     });
   }
 
@@ -114,12 +128,12 @@ export class EventosService {
    */
   async update(id: string, dto: Partial<CreateEventoDto>) {
     await this.findOne(id);
-    const dataToUpdate: any = { ...dto };
+    const dataToUpdate: Prisma.EventoUncheckedUpdateInput = { ...dto };
     if (dto.fechaHora) {
       dataToUpdate.fechaHora = new Date(dto.fechaHora);
     }
-    if ((dto.estado as any) === 'ACTIVO') {
-      dataToUpdate.estado = 'PUBLICADO';
+    if ((dto.estado as string | undefined) === 'ACTIVO') {
+      dataToUpdate.estado = EstadoEvento.PUBLICADO;
     }
     return this.prisma.evento.update({ where: { id }, data: dataToUpdate });
   }
@@ -133,6 +147,9 @@ export class EventosService {
    */
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.evento.update({ where: { id }, data: { estado: 'CANCELADO' } });
+    return this.prisma.evento.update({
+      where: { id },
+      data: { estado: 'CANCELADO' },
+    });
   }
 }

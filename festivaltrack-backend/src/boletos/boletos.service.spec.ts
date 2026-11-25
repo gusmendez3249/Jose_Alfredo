@@ -26,31 +26,52 @@ describe('BoletosService.comprar - Pruebas Unitarias', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BoletosService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        BoletosService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
     service = module.get<BoletosService>(BoletosService);
     jest.clearAllMocks();
   });
 
   it('calcula el monto con el precio oficial e ignora precioTotal del cliente', async () => {
-    prismaMock.evento.findUnique.mockResolvedValue({ id: 'EVT-001', estado: 'PUBLICADO' });
-    const dto: any = { eventoId: 'EVT-001', categoria: 'VIP', cantidad: 2, precioTotal: 1 };
+    prismaMock.evento.findUnique.mockResolvedValue({
+      id: 'EVT-001',
+      estado: 'PUBLICADO',
+    });
+    const dto: any = {
+      eventoId: 'EVT-001',
+      categoria: 'VIP',
+      cantidad: 2,
+      precioTotal: 1,
+    };
     await service.comprar('u1', dto);
     expect(tx.boleto.create).toHaveBeenCalledWith({
-      data: { eventoId: 'EVT-001', usuarioId: 'u1', categoria: 'VIP', precio: 9000 },
+      data: {
+        eventoId: 'EVT-001',
+        usuarioId: 'u1',
+        categoria: 'VIP',
+        precio: 9000,
+      },
     });
     expect(tx.pago.create.mock.calls[0][0].data.monto).toBe(9000);
   });
 
   it('usa GENERAL × 1 por defecto', async () => {
-    prismaMock.evento.findUnique.mockResolvedValue({ id: 'EVT-001', estado: 'EN_CURSO' });
+    prismaMock.evento.findUnique.mockResolvedValue({
+      id: 'EVT-001',
+      estado: 'EN_CURSO',
+    });
     await service.comprar('u1', { eventoId: 'EVT-001' });
     expect(tx.boleto.create.mock.calls[0][0].data.precio).toBe(1200);
   });
 
   it('responde 404 si el evento no existe y no crea nada', async () => {
     prismaMock.evento.findUnique.mockResolvedValue(null);
-    await expect(service.comprar('u1', { eventoId: 'NOPE' })).rejects.toThrow(NotFoundException);
+    await expect(service.comprar('u1', { eventoId: 'NOPE' })).rejects.toThrow(
+      NotFoundException,
+    );
     expect(prismaMock.evento.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.evento.create).not.toHaveBeenCalled();
     expect(prismaMock.usuario.create).not.toHaveBeenCalled();
@@ -58,8 +79,13 @@ describe('BoletosService.comprar - Pruebas Unitarias', () => {
   });
 
   it('responde 400 si el evento está cancelado', async () => {
-    prismaMock.evento.findUnique.mockResolvedValue({ id: 'EVT-002', estado: 'CANCELADO' });
-    await expect(service.comprar('u1', { eventoId: 'EVT-002' })).rejects.toThrow(BadRequestException);
+    prismaMock.evento.findUnique.mockResolvedValue({
+      id: 'EVT-002',
+      estado: 'CANCELADO',
+    });
+    await expect(
+      service.comprar('u1', { eventoId: 'EVT-002' }),
+    ).rejects.toThrow(BadRequestException);
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,11 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 import { ForoService } from './foro.service';
+import type { CrearPublicacionDto } from './foro.service';
+import type {
+  RequestConUsuario,
+  RequestConUsuarioOpcional,
+} from '../common/request-con-usuario';
 
 @Controller('foro')
 export class ForoController {
@@ -20,35 +25,39 @@ export class ForoController {
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
   listar(
-    @Req() req: any,
+    @Req() req: RequestConUsuarioOpcional,
     @Query('tipo') tipo?: string,
     @Query('before') before?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.foro.listar(req.user, { tipo, before, limit: Number(limit) });
+    return this.foro.listar(req.user ?? null, {
+      tipo,
+      before,
+      limit: Number(limit),
+    });
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  crear(@Req() req: any, @Body() body: any) {
+  crear(@Req() req: RequestConUsuario, @Body() body: CrearPublicacionDto) {
     return this.foro.crear(req.user, body);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('comentarios/:id')
-  eliminarComentario(@Req() req: any, @Param('id') id: string) {
+  eliminarComentario(@Req() req: RequestConUsuario, @Param('id') id: string) {
     return this.foro.eliminarComentario(req.user, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  eliminar(@Req() req: any, @Param('id') id: string) {
+  eliminar(@Req() req: RequestConUsuario, @Param('id') id: string) {
     return this.foro.eliminar(req.user, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/like')
-  like(@Req() req: any, @Param('id') id: string) {
+  like(@Req() req: RequestConUsuario, @Param('id') id: string) {
     return this.foro.toggleLike(req.user, id);
   }
 
@@ -59,7 +68,11 @@ export class ForoController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/comentarios')
-  comentar(@Req() req: any, @Param('id') id: string, @Body('texto') texto?: string) {
+  comentar(
+    @Req() req: RequestConUsuario,
+    @Param('id') id: string,
+    @Body('texto') texto?: string,
+  ) {
     return this.foro.comentar(req.user, id, texto);
   }
 }

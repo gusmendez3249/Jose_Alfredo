@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.shared.data.remote.PreciosBoleto
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 
+import mx.utng.festivaltrack.app.ui.utils.ProximosEventos
 import mx.utng.festivaltrack.app.ui.viewmodels.EventosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,11 +39,11 @@ fun TicketsScreen(
     // Los boletos se compran para el próximo evento a la venta (#52): el backend ahora rechaza
     // eventos inexistentes o cancelados, así que ya no se puede mandar "EVT-001" fijo.
     // Se toma de la caché local (Room), ordenando por fecha ISO-8601 (orden alfabético = cronológico).
-    val eventos = eventosViewModel?.eventosLocales?.collectAsState()?.value ?: emptyList()
+    // Solo eventos que todavía no terminan; cada fecha del selector corresponde a un concierto real.
+    val eventos = eventosViewModel?.eventosProximos?.collectAsState()?.value ?: emptyList()
     val enVenta = eventos.filter { it.estado == "PUBLICADO" || it.estado == "EN_CURSO" }
-    val eventoAVenta = enVenta.firstOrNull { it.id == eventoPreseleccionado } ?: enVenta.minByOrNull { it.fechaHora }
-
-    var selectedDate by remember { mutableStateOf("21") }
+    var eventoElegidoId by remember { mutableStateOf(eventoPreseleccionado) }
+    val eventoAVenta = enVenta.firstOrNull { it.id == eventoElegidoId } ?: enVenta.firstOrNull()
     var vipTickets by remember { mutableStateOf(1) }
     var generalTickets by remember { mutableStateOf(0) }
 
@@ -57,8 +58,10 @@ fun TicketsScreen(
     val fieldColor = Color(0xFF1E2720)
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("Boletos", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { /* TODO: Go back */ }) {
@@ -88,7 +91,7 @@ fun TicketsScreen(
                         Column {
                             Text("TOTAL A PAGAR", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text("$${totalPrice}", color = PrimaryGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                                Text(mx.utng.festivaltrack.app.ui.utils.FormatoPago.precio(totalPrice), color = PrimaryGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                                 Text(" MXN", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp, start = 4.dp))
                             }
                         }
@@ -139,9 +142,8 @@ fun TicketsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val dates = listOf("21", "22", "23", "24")
-                dates.forEach { date ->
-                    val isSelected = selectedDate == date
+                enVenta.take(4).forEach { evento ->
+                    val isSelected = evento.id == eventoAVenta?.id
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -151,12 +153,13 @@ fun TicketsScreen(
                                 color = if (isSelected) PrimaryGold else Color(0xFF1E1E1E),
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .clickable { selectedDate = date },
+                            .clickable { eventoElegidoId = evento.id },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("NOV", color = if (isSelected) Color.Black else Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            Text(date, color = if (isSelected) Color.Black else Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Text(ProximosEventos.mesCorto(evento), color = if (isSelected) Color.Black else Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(ProximosEventos.dia(evento), color = if (isSelected) Color.Black else Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                            Text(ProximosEventos.hora(evento), color = if (isSelected) Color.Black else Color.Gray, fontSize = 11.sp)
                         }
                     }
                 }
@@ -164,6 +167,15 @@ fun TicketsScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
+            // Concierto al que corresponde la fecha elegida
+            Text(
+                text = eventoAVenta?.let { "${it.nombre} · ${it.ubicacion}" } ?: "Por ahora no hay conciertos a la venta",
+                color = if (eventoAVenta != null) PrimaryGold else Color.Gray,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
             // VIP Ticket Card
             Card(
                 modifier = Modifier.fillMaxWidth().border(1.dp, PrimaryGold.copy(alpha = 0.5f), RoundedCornerShape(16.dp)),

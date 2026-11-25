@@ -22,5 +22,4 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   console.log(`FestivalTrack API corriendo en puerto ${port}`);
 }
-bootstrap();
-
+void bootstrap();

@@ -31,6 +31,13 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # Requieren Kotlin 2.2+ o compileSdk 36 (el proyecto usa Kotlin 2.0.21 y AGP 8.7.3): se suben al migrar Kotlin/AGP.
+      - dependency-name: "androidx.camera:*"
+        versions: [">= 1.5.0"]
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-serialization-json"
+        versions: [">= 1.7.0"]
+      - dependency-name: "com.google.android.gms:play-services-location"
+        versions: [">= 21.4.0"]
 
   - package-ecosystem: github-actions
     directory: /

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -29,14 +34,20 @@ export class CancionesService {
    * arreglo es el orden de reproducción. Crea la transmisión del evento si aún no existe.
    */
   async setRepertorio(eventoId: string, cancionIds: string[]) {
-    if (!Array.isArray(cancionIds)) throw new BadRequestException('cancionIds debe ser una lista');
+    if (!Array.isArray(cancionIds))
+      throw new BadRequestException('cancionIds debe ser una lista');
     const ids = [...new Set(cancionIds)];
 
-    const evento = await this.prisma.evento.findUnique({ where: { id: eventoId } });
+    const evento = await this.prisma.evento.findUnique({
+      where: { id: eventoId },
+    });
     if (!evento) throw new NotFoundException('Evento no encontrado');
 
-    const existentes = await this.prisma.cancion.count({ where: { id: { in: ids } } });
-    if (existentes !== ids.length) throw new BadRequestException('Alguna canción no existe');
+    const existentes = await this.prisma.cancion.count({
+      where: { id: { in: ids } },
+    });
+    if (existentes !== ids.length)
+      throw new BadRequestException('Alguna canción no existe');
 
     await this.prisma.$transaction(async (tx) => {
       const transmision = await tx.transmision.upsert({
@@ -44,23 +55,43 @@ export class CancionesService {
         create: { eventoId, titulo: evento.nombre },
         update: {},
       });
-      await tx.cancionTransmision.deleteMany({ where: { transmisionId: transmision.id } });
+      await tx.cancionTransmision.deleteMany({
+        where: { transmisionId: transmision.id },
+      });
       if (ids.length > 0) {
         await tx.cancionTransmision.createMany({
-          data: ids.map((cancionId, orden) => ({ cancionId, transmisionId: transmision.id, orden })),
+          data: ids.map((cancionId, orden) => ({
+            cancionId,
+            transmisionId: transmision.id,
+            orden,
+          })),
         });
       }
     });
     return this.findByEvento(eventoId);
   }
 
-  async create(dto: { titulo: string; artista?: string; duracion?: number; archivoUrl?: string; portadaUrl?: string; genero?: string }) {
+  async create(dto: {
+    titulo: string;
+    artista?: string;
+    duracion?: number;
+    archivoUrl?: string;
+    portadaUrl?: string;
+    genero?: string;
+  }) {
     let admin = await this.prisma.administrador.findFirst();
     if (!admin) {
-      let user = await this.prisma.usuario.findFirst({ where: { rol: 'ADMINISTRADOR' } });
+      const user = await this.prisma.usuario.findFirst({
+        where: { rol: 'ADMINISTRADOR' },
+      });
       // Nunca crear un admin con contraseña fija: el administrador se crea con el seed (SEED_ADMIN_PASSWORD).
-      if (!user) throw new InternalServerErrorException('No hay administrador registrado. Ejecuta el seed.');
-      admin = await this.prisma.administrador.create({ data: { usuarioId: user.id } });
+      if (!user)
+        throw new InternalServerErrorException(
+          'No hay administrador registrado. Ejecuta el seed.',
+        );
+      admin = await this.prisma.administrador.create({
+        data: { usuarioId: user.id },
+      });
     }
 
     return this.prisma.cancion.create({
@@ -68,12 +99,14 @@ export class CancionesService {
         titulo: dto.titulo,
         artista: dto.artista || 'José Alfredo Jiménez',
         duracion: dto.duracion || 180,
-        archivoUrl: dto.archivoUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        archivoUrl:
+          dto.archivoUrl ||
+          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
         portadaUrl: dto.portadaUrl || null,
         genero: dto.genero || 'Ranchera',
         estado: 'PUBLICADA',
         administradorId: admin.id,
-      }
+      },
     });
   }
 

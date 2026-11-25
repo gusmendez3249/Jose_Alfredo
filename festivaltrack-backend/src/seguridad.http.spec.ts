@@ -29,10 +29,28 @@ import { BoletosService } from './boletos/boletos.service';
 import { configurarSeguridad } from './configurar-seguridad';
 
 // Usuarios ficticios que "existen" en la base de datos simulada.
-const USUARIOS: Record<string, { id: string; correo: string; rol: string; activo: boolean }> = {
-  'u-admin': { id: 'u-admin', correo: 'admin@ejemplo.test', rol: 'ADMINISTRADOR', activo: true },
-  'u-normal': { id: 'u-normal', correo: 'usuario@ejemplo.test', rol: 'USUARIO', activo: true },
-  'u-baja': { id: 'u-baja', correo: 'baja@ejemplo.test', rol: 'USUARIO', activo: false },
+const USUARIOS: Record<
+  string,
+  { id: string; correo: string; rol: string; activo: boolean }
+> = {
+  'u-admin': {
+    id: 'u-admin',
+    correo: 'admin@ejemplo.test',
+    rol: 'ADMINISTRADOR',
+    activo: true,
+  },
+  'u-normal': {
+    id: 'u-normal',
+    correo: 'usuario@ejemplo.test',
+    rol: 'USUARIO',
+    activo: true,
+  },
+  'u-baja': {
+    id: 'u-baja',
+    correo: 'baja@ejemplo.test',
+    rol: 'USUARIO',
+    activo: false,
+  },
 };
 
 describe('Seguridad de la API (HTTP)', () => {
@@ -40,7 +58,11 @@ describe('Seguridad de la API (HTTP)', () => {
   let jwt: JwtService;
 
   const prismaMock = {
-    usuario: { findUnique: jest.fn(({ where }) => Promise.resolve(USUARIOS[where.id] ?? null)) },
+    usuario: {
+      findUnique: jest.fn(({ where }) =>
+        Promise.resolve(USUARIOS[where.id] ?? null),
+      ),
+    },
   };
   const authService = { tvSync: jest.fn((b) => ({ status: 'SUCCESS', ...b })) };
   const biografiasService = {
@@ -68,8 +90,16 @@ describe('Seguridad de la API (HTTP)', () => {
 
   beforeAll(async () => {
     @Module({
-      imports: [PassportModule, JwtModule.register({ secret: process.env.JWT_SECRET })],
-      controllers: [AuthController, BiografiasController, EventosController, BoletosController],
+      imports: [
+        PassportModule,
+        JwtModule.register({ secret: process.env.JWT_SECRET }),
+      ],
+      controllers: [
+        AuthController,
+        BiografiasController,
+        EventosController,
+        BoletosController,
+      ],
       providers: [
         JwtStrategy,
         { provide: PrismaService, useValue: prismaMock },
@@ -81,7 +111,9 @@ describe('Seguridad de la API (HTTP)', () => {
     })
     class ModuloPrueba {}
 
-    const moduleRef = await Test.createTestingModule({ imports: [ModuloPrueba] }).compile();
+    const moduleRef = await Test.createTestingModule({
+      imports: [ModuloPrueba],
+    }).compile();
     app = moduleRef.createNestApplication({ logger: false });
     configurarSeguridad(app);
     app.setGlobalPrefix('api/v1');
@@ -97,7 +129,10 @@ describe('Seguridad de la API (HTTP)', () => {
 
   describe('Autenticación', () => {
     it('rechaza con 401 una petición protegida sin token', async () => {
-      await request(app.getHttpServer()).post('/api/v1/boletos/comprar').send({ eventoId: 'evt-1' }).expect(401);
+      await request(app.getHttpServer())
+        .post('/api/v1/boletos/comprar')
+        .send({ eventoId: 'evt-1' })
+        .expect(401);
       expect(boletosService.comprar).not.toHaveBeenCalled();
     });
 
@@ -118,14 +153,20 @@ describe('Seguridad de la API (HTTP)', () => {
     });
 
     it('vincular una TV exige sesión y usa el usuario del token, no el del cuerpo', async () => {
-      await request(app.getHttpServer()).post('/api/v1/auth/tv-sync').send({ tvToken: 'tv-123' }).expect(401);
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/tv-sync')
+        .send({ tvToken: 'tv-123' })
+        .expect(401);
 
       await request(app.getHttpServer())
         .post('/api/v1/auth/tv-sync')
         .set('Authorization', token('u-normal'))
         .send({ tvToken: 'tv-123', userId: 'u-admin' })
         .expect(201);
-      expect(authService.tvSync).toHaveBeenCalledWith({ tvToken: 'tv-123', userId: 'u-normal' });
+      expect(authService.tvSync).toHaveBeenCalledWith({
+        tvToken: 'tv-123',
+        userId: 'u-normal',
+      });
     });
   });
 
@@ -134,14 +175,22 @@ describe('Seguridad de la API (HTTP)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/eventos')
         .set('Authorization', token('u-normal'))
-        .send({ nombre: 'X', fechaHora: '2026-12-01T20:00:00Z', ubicacion: 'Dolores', capacidad: 10 })
+        .send({
+          nombre: 'X',
+          fechaHora: '2026-12-01T20:00:00Z',
+          ubicacion: 'Dolores',
+          capacidad: 10,
+        })
         .expect(403);
       expect(eventosService.create).not.toHaveBeenCalled();
     });
 
     it('alta de biografía: 401 sin sesión, 403 para USUARIO, 201 para ADMINISTRADOR', async () => {
       const body = { titulo: 'Hito', descripcion: 'Descripción de prueba' };
-      await request(app.getHttpServer()).post('/api/v1/biografias/alta').send(body).expect(401);
+      await request(app.getHttpServer())
+        .post('/api/v1/biografias/alta')
+        .send(body)
+        .expect(401);
       await request(app.getHttpServer())
         .post('/api/v1/biografias/alta')
         .set('Authorization', token('u-normal'))
@@ -202,9 +251,17 @@ describe('Seguridad de la API (HTTP)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/boletos/comprar')
         .set('Authorization', token('u-normal'))
-        .send({ eventoId: 'evt-1', cantidad: 2, precioTotal: 1, usuarioId: 'u-admin' })
+        .send({
+          eventoId: 'evt-1',
+          cantidad: 2,
+          precioTotal: 1,
+          usuarioId: 'u-admin',
+        })
         .expect(201);
-      expect(boletosService.comprar).toHaveBeenCalledWith('u-normal', { eventoId: 'evt-1', cantidad: 2 });
+      expect(boletosService.comprar).toHaveBeenCalledWith('u-normal', {
+        eventoId: 'evt-1',
+        cantidad: 2,
+      });
     });
   });
 
@@ -219,7 +276,9 @@ describe('Seguridad de la API (HTTP)', () => {
     });
 
     it('incluye cabeceras de seguridad de helmet y oculta X-Powered-By', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/eventos').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/eventos')
+        .expect(200);
       expect(res.headers['x-content-type-options']).toBe('nosniff');
       expect(res.headers['strict-transport-security']).toBeDefined();
       expect(res.headers['x-powered-by']).toBeUndefined();
