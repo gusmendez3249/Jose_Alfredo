@@ -33,7 +33,7 @@ import java.util.Locale
 class AlertaSalidaScreen(carContext: CarContext) : Screen(carContext), DefaultLifecycleObserver {
 
     private val api = FestivalApiService.create()
-    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("America/Mexico_City"))
 
     private var salidas: List<SalidaEvento> = emptyList()
     private var cargando = true

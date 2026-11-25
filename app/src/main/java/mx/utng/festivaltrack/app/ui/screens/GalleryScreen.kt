@@ -82,6 +82,7 @@ fun GalleryScreen(viewModel: ForumViewModel = viewModel()) {
     val visiblePosts = if (mosaic) posts.filter { !it.imagenUrl.isNullOrBlank() } else posts
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         containerColor = ForumBg,
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {

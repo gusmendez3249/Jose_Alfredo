@@ -92,6 +92,7 @@ fun EventDetailScreen(
     LaunchedEffect(eventoId) { viewModel.load(eventoId) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         containerColor = AudioBg,
         bottomBar = {
             Button(
@@ -165,7 +166,6 @@ fun EventDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(barColor)
-                    .statusBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -206,7 +206,6 @@ private fun PlaylistHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(Brush.verticalGradient(listOf(accent, accent.copy(alpha = 0.5f), AudioBg)))
-            .statusBarsPadding()
             .padding(top = 56.dp, start = 20.dp, end = 20.dp, bottom = 10.dp)
     ) {
         CoverCollage(

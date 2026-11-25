@@ -46,7 +46,10 @@ fun AdminMainScreen(
     onNavigateToUsers: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
+
+    // "Atrás" en Subir, Gestionar o Perfil regresa al inicio del admin antes de salir de la app.
+    androidx.activity.compose.BackHandler(enabled = selectedTab != 0) { selectedTab = 0 }
 
     Scaffold(
         bottomBar = {
@@ -113,13 +116,16 @@ fun AdminMainScreen(
             when (selectedTab) {
                 0 -> AdminDashboardScreen(
                     onNavigateToLivePanel = onNavigateToLivePanel,
-                    onNavigateToUsers = onNavigateToUsers
+                    onNavigateToUsers = onNavigateToUsers,
+                    onIrASubir = { selectedTab = 1 },
+                    onIrAGestionar = { selectedTab = 2 }
                 )
                 1 -> AdminUploadScreen()
                 2 -> AdminManageScreen(
                     viewModel = adminManageViewModel,
                     onNavigateToCreateEvent = onNavigateToCreateEvent,
-                    onEditEvent = onEditEvent
+                    onEditEvent = onEditEvent,
+                    onNavigateToUsers = onNavigateToUsers
                 )
                 3 -> AdminProfileTab(onLogout = onLogout)
             }

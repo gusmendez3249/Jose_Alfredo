@@ -40,11 +40,12 @@ import mx.utng.festivaltrack.app.ui.viewmodels.AdminManageViewModel
 fun AdminManageScreen(
     viewModel: AdminManageViewModel,
     onNavigateToCreateEvent: () -> Unit = {},
-    onEditEvent: (mx.utng.festivaltrack.shared.data.local.entity.EventoEntity) -> Unit = {}
+    onEditEvent: (mx.utng.festivaltrack.shared.data.local.entity.EventoEntity) -> Unit = {},
+    onNavigateToUsers: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("Eventos") }
+    var searchQuery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    var selectedFilter by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("Eventos") }
     var showCreateBioDialog by remember { mutableStateOf(false) }
     
     val eventos by viewModel.eventos.collectAsState()
@@ -63,21 +64,19 @@ fun AdminManageScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = PrimaryGold)
-                Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("José Alfredo", color = PrimaryGold, fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
                     Text("Jiménez", color = PrimaryGold, fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
                 }
-                Box(
+                IconButton(
+                    onClick = onNavigateToUsers,
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF1E2720))
-                        .border(1.dp, PrimaryGold, CircleShape),
-                    contentAlignment = Alignment.Center
+                        .border(1.dp, PrimaryGold, CircleShape)
                 ) {
-                    Icon(Icons.Default.PersonAdd, contentDescription = "Profile", tint = PrimaryGold, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.PersonAdd, contentDescription = "Gestionar usuarios", tint = PrimaryGold, modifier = Modifier.size(20.dp))
                 }
             }
             
@@ -99,7 +98,7 @@ fun AdminManageScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar canciones o imágenes...") },
+                placeholder = { Text("Buscar por nombre...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar", tint = Color.Gray) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -120,11 +119,11 @@ fun AdminManageScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { FilterChipItem("Eventos", selectedFilter == "Eventos") { selectedFilter = "Eventos" } }
-                item { FilterChipItem("Biografía (Factory)", selectedFilter == "Biografía") { selectedFilter = "Biografía" } }
-                item { FilterChipItem("Todos", selectedFilter == "Todos") { selectedFilter = "Todos" } }
+                item { FilterChipItem("Conciertos", selectedFilter == "Eventos") { selectedFilter = "Eventos" } }
                 item { FilterChipItem("Canciones", selectedFilter == "Canciones") { selectedFilter = "Canciones" } }
                 item { FilterChipItem("Galería", selectedFilter == "Galería") { selectedFilter = "Galería" } }
+                item { FilterChipItem("Biografía", selectedFilter == "Biografía") { selectedFilter = "Biografía" } }
+                item { FilterChipItem("Todos", selectedFilter == "Todos") { selectedFilter = "Todos" } }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -155,16 +154,22 @@ fun AdminManageScreen(
             }
 
             // List Items
+            fun coincide(vararg textos: String?) =
+                searchQuery.isBlank() || textos.any { it?.contains(searchQuery.trim(), ignoreCase = true) == true }
+
             if (selectedFilter == "Eventos") {
-                if (eventos.isEmpty()) {
-                    Text("No hay eventos disponibles.", color = Color.Gray, modifier = Modifier.padding(16.dp))
+                val proximos = mx.utng.festivaltrack.app.ui.utils.ProximosEventos.filtrar(eventos)
+                val ordenados = (proximos + eventos.filter { it !in proximos }.sortedByDescending { it.fechaHora })
+                    .filter { coincide(it.nombre, it.ubicacion, it.escenario) }
+                if (ordenados.isEmpty()) {
+                    Text(if (eventos.isEmpty()) "No hay conciertos registrados." else "Ningún concierto coincide con la búsqueda.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
-                    eventos.forEach { evento ->
+                    ordenados.forEach { evento ->
                         ManageItemCard(
                             status = evento.estado,
                             isDraft = evento.estado == "BORRADOR",
                             title = evento.nombre,
-                            subtitle = "${evento.ubicacion} • ${evento.fechaHora}",
+                            subtitle = "${evento.ubicacion} • ${formatConcertDateTime(evento.fechaHora)}",
                             iconType = "event",
                             onEdit = { onEditEvent(evento) },
                             onDelete = {
@@ -184,14 +189,13 @@ fun AdminManageScreen(
                 if (cancionesList.isEmpty()) {
                     Text("No hay canciones registradas en el catálogo.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
-                    cancionesList.forEach { cancion ->
+                    cancionesList.filter { coincide(it.titulo, it.artista) }.forEach { cancion ->
                         ManageItemCard(
                             status = "PUBLICADO",
                             isDraft = false,
                             title = cancion.titulo,
                             subtitle = "${cancion.artista} • ${cancion.duracion}s",
                             iconType = "music",
-                            onEdit = {},
                             onDelete = {
                                 coroutineScope.launch {
                                     try {
@@ -234,7 +238,7 @@ fun AdminManageScreen(
                         }
                         Spacer(modifier = Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Alta de Biografía (Factory Pattern)", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("Agregar a la biografía", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             Text("Crear hito, foto en Storage o curiosidad", color = Color.LightGray, fontSize = 11.sp)
                         }
                         Text(
@@ -254,14 +258,13 @@ fun AdminManageScreen(
                 if (bioItems.isEmpty()) {
                     Text("No hay elementos biográficos registrados.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
-                    bioItems.forEach { item ->
+                    bioItems.filter { coincide(it.titulo, it.categoria) }.forEach { item ->
                         ManageItemCard(
                             status = "FIRESTORE",
                             isDraft = false,
                             title = item.titulo,
                             subtitle = "${item.anoOEepoca} • ${item.categoria}",
                             iconType = "image",
-                            onEdit = {},
                             onDelete = {
                                 firestoreService.deleteBiographyItem(item.id)
                                 android.widget.Toast.makeText(context, "Elemento eliminado de Firestore", android.widget.Toast.LENGTH_SHORT).show()
@@ -273,14 +276,13 @@ fun AdminManageScreen(
                 if (imagenesList.isEmpty()) {
                     Text("No hay fotos en la galería.", color = Color.Gray, modifier = Modifier.padding(16.dp))
                 } else {
-                    imagenesList.forEach { imagen ->
+                    imagenesList.filter { coincide(it.titulo) }.forEach { imagen ->
                         ManageItemCard(
                             status = "PUBLICADO",
                             isDraft = false,
                             title = imagen.titulo ?: "Foto de Galería",
                             subtitle = "Galería del Festival",
                             iconType = "image",
-                            onEdit = {},
                             onDelete = {
                                 coroutineScope.launch {
                                     try {
@@ -297,14 +299,13 @@ fun AdminManageScreen(
                 }
             } else {
                 // Todos (Canciones + Galería)
-                cancionesList.forEach { cancion ->
+                cancionesList.filter { coincide(it.titulo, it.artista) }.forEach { cancion ->
                     ManageItemCard(
                         status = "PUBLICADO",
                         isDraft = false,
                         title = cancion.titulo,
                         subtitle = "Canción • ${cancion.artista}",
                         iconType = "music",
-                        onEdit = {},
                         onDelete = {
                             coroutineScope.launch {
                                 try {
@@ -316,14 +317,13 @@ fun AdminManageScreen(
                         }
                     )
                 }
-                imagenesList.forEach { imagen ->
+                imagenesList.filter { coincide(it.titulo) }.forEach { imagen ->
                     ManageItemCard(
                         status = "PUBLICADO",
                         isDraft = false,
                         title = imagen.titulo ?: "Foto de Galería",
                         subtitle = "Imagen de Galería",
                         iconType = "image",
-                        onEdit = {},
                         onDelete = {
                             coroutineScope.launch {
                                 try {
@@ -395,14 +395,30 @@ fun ManageItemCard(
     title: String,
     subtitle: String,
     iconType: String,
-    onEdit: () -> Unit = {},
+    onEdit: (() -> Unit)? = null,
     onDelete: () -> Unit = {}
 ) {
+    var confirmar by remember { mutableStateOf(false) }
+    if (confirmar) {
+        AlertDialog(
+            onDismissRequest = { confirmar = false },
+            containerColor = Color(0xFF1E1E1E),
+            title = { Text("¿Eliminar «$title»?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Se borrará para todos los usuarios y no se puede deshacer.", color = Color.Gray) },
+            confirmButton = {
+                Button(
+                    onClick = { confirmar = false; onDelete() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC51111))
+                ) { Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { confirmar = false }) { Text("Cancelar", color = Color.Gray) } }
+        )
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable { onEdit() },
+            .then(if (onEdit != null) Modifier.clickable { onEdit() } else Modifier),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171A18)),
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold.copy(alpha = 0.5f))
@@ -462,23 +478,14 @@ fun ManageItemCard(
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            Icon(
-                Icons.Default.Edit,
-                contentDescription = "Editar",
-                tint = PrimaryGold,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onEdit() }
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = "Eliminar",
-                tint = Color(0xFFE57373),
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onDelete() }
-            )
+            if (onEdit != null) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = PrimaryGold)
+                }
+            }
+            IconButton(onClick = { confirmar = true }) {
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFE57373))
+            }
         }
     }
 }

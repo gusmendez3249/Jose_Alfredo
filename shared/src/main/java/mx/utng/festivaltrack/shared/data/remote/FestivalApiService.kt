@@ -478,8 +478,12 @@ data class EventoCreateDto(
     val fechaHora: String,
     val ubicacion: String,
     val escenario: String?,
-    val capacidad: Int,
-    val estado: String
+    val capacidad: Int?,
+    val estado: String?,
+    /** Los campos null no se envían (Gson los omite): al editar, el servidor conserva su valor. */
+    val descripcion: String? = null,
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )
 
 /**
@@ -686,7 +690,10 @@ data class StreamStatusDto(
     val streamUrl: String = "",
     val emulatorUrl: String = "",
     val isLive: Boolean = false,
-    val port: Int = 1935
+    val port: Int = 1935,
+    /** Concierto que se transmite (null si no hay transmisión o no se indicó). */
+    val eventoId: String? = null,
+    val eventoNombre: String? = null
 )
 
 /**

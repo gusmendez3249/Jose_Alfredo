@@ -3,13 +3,23 @@ package mx.utng.festivaltrack.app.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.ui.utils.LugarFestival
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.EventoCreateDto
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
+
+/** Estado del guardado del formulario de conciertos. */
+sealed class GuardadoEvento {
+    object Inactivo : GuardadoEvento()
+    object Guardando : GuardadoEvento()
+    object Listo : GuardadoEvento()
+    data class Error(val mensaje: String) : GuardadoEvento()
+}
 
 /**
  * ViewModel encargado de la gestión de eventos por parte del administrador.
@@ -39,55 +49,60 @@ class AdminManageViewModel(private val repository: FestivalRepository) : ViewMod
         }
     }
 
+    private val _guardado = MutableStateFlow<GuardadoEvento>(GuardadoEvento.Inactivo)
+
+    /** Resultado del último guardado del formulario de conciertos. */
+    val guardado: StateFlow<GuardadoEvento> = _guardado
+
     /**
-     * Guarda o actualiza un evento.
-     * 
-     * @param token Token JWT del administrador (opcional si ya está inyectado).
-     * @param id ID del evento si es actualización, o null si es creación.
-     * @param title Título o nombre del evento.
-     * @param date Fecha del evento en formato texto o ISO.
-     * @param location Ubicación del evento.
-     * @param price Precio base del evento (como texto).
+     * Crea o actualiza un concierto. Al editar, los campos null no se envían y el servidor
+     * conserva su valor (capacidad, descripción, estado).
+     *
+     * @param id ID del concierto si es edición, o null si es alta.
+     * @param fechaIso Inicio en UTC (ver [mx.utng.festivaltrack.app.ui.utils.FormularioEvento.fechaIso]).
      */
-    fun saveEvent(token: String? = null, id: String?, title: String, date: String, location: String, price: String) {
+    fun guardarEvento(
+        token: String?,
+        id: String?,
+        nombre: String,
+        fechaIso: String,
+        lugar: LugarFestival,
+        capacidad: Int?,
+        descripcion: String?
+    ) {
+        _guardado.value = GuardadoEvento.Guardando
         viewModelScope.launch {
-            // Attempt to create an ISO string if the user typed something simple
-            var isoDate = date
-            try {
-                if (!date.contains("T")) {
-                    val sdf = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
-                    val parsed = sdf.parse(date)
-                    if (parsed != null) {
-                        val sdfOut = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault())
-                        isoDate = sdfOut.format(parsed)
-                    }
-                }
-            } catch (e: Exception) {
-                // Fallback to current ISO timestamp
-                isoDate = "2026-11-23T20:00:00Z"
-            }
-
-            val finalId = id.takeIf { !it.isNullOrEmpty() } ?: java.util.UUID.randomUUID().toString()
-
             val dto = EventoCreateDto(
-                nombre = title,
-                fechaHora = isoDate, 
-                ubicacion = location,
-                escenario = "Principal",
-                capacidad = 1000,
-                estado = "PUBLICADO"
+                nombre = nombre.trim(),
+                fechaHora = fechaIso,
+                ubicacion = lugar.ubicacion,
+                escenario = lugar.escenario,
+                capacidad = capacidad,
+                estado = if (id.isNullOrEmpty()) "PUBLICADO" else null,
+                descripcion = descripcion?.trim()?.takeIf { it.isNotEmpty() },
+                latitud = lugar.latitud,
+                longitud = lugar.longitud
             )
-            
-            try {
-                if (id.isNullOrEmpty()) {
-                    repository.addEvento(token, finalId, dto)
-                } else {
-                    repository.updateEvento(token, id, dto)
-                }
+            _guardado.value = try {
+                if (id.isNullOrEmpty()) repository.addEvento(token, java.util.UUID.randomUUID().toString(), dto)
+                else repository.updateEvento(token, id, dto)
+                GuardadoEvento.Listo
+            } catch (e: retrofit2.HttpException) {
+                GuardadoEvento.Error(
+                    when (e.code()) {
+                        401, 403 -> "Tu sesión de administrador terminó. Vuelve a iniciar sesión."
+                        400 -> "El servidor rechazó los datos. Revisa el formulario."
+                        else -> "No se pudo guardar el concierto. Intenta de nuevo."
+                    }
+                )
             } catch (e: Exception) {
-                e.printStackTrace()
+                GuardadoEvento.Error("Sin conexión: el concierto quedó guardado solo en este teléfono.")
             }
         }
+    }
+
+    fun reiniciarGuardado() {
+        _guardado.value = GuardadoEvento.Inactivo
     }
 
     /**

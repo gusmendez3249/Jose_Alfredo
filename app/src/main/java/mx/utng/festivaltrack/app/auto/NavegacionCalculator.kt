@@ -27,7 +27,7 @@ data class ResumenNavegacion(
  */
 object NavegacionCalculator {
 
-    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("America/Mexico_City"))
 
     fun resumen(
         ruta: RutaActiva,

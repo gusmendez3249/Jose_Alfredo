@@ -138,6 +138,8 @@ class MainActivity : ComponentActivity() {
                                 eventoId = eventoId,
                                 vipTickets = vip,
                                 generalTickets = general,
+                                eventoNombre = eventosViewModel.eventosProximos.collectAsState().value
+                                    .firstOrNull { it.id == eventoId }?.nombre,
                                 onNavigateBack = { navController.popBackStack() },
                                 onPaymentSuccess = {
                                     navController.navigate("success") {
@@ -149,10 +151,16 @@ class MainActivity : ComponentActivity() {
 
                         // ─── CONFIRMACIÓN DE COMPRA EXITOSA ─────────────────────────────
                         composable("success") {
-                            mx.utng.festivaltrack.app.ui.screens.TicketSuccessScreen(
-                                onNavigateHome = {
-                                    navController.popBackStack("main", inclusive = false)
+                            // Vuelve a crear la pantalla principal para abrir la pestaña pedida.
+                            fun abrirPestana(ruta: String) {
+                                mx.utng.festivaltrack.app.ui.screens.PestanaPendiente.ruta = ruta
+                                navController.navigate("main") {
+                                    popUpTo("main") { inclusive = true }
                                 }
+                            }
+                            mx.utng.festivaltrack.app.ui.screens.TicketSuccessScreen(
+                                onNavigateHome = { abrirPestana(mx.utng.festivaltrack.app.ui.screens.BottomNavItem.Home.route) },
+                                onVerMisBoletos = { abrirPestana(mx.utng.festivaltrack.app.ui.screens.BottomNavItem.Profile.route) }
                             )
                         }
 
@@ -210,11 +218,7 @@ class MainActivity : ComponentActivity() {
                             val eventToEdit = eventosList.find { it.id == eventId }
 
                             mx.utng.festivaltrack.app.ui.screens.AdminCreateEventScreen(
-                                eventId = eventId,
-                                initialTitle = eventToEdit?.nombre ?: "",
-                                initialDate = eventToEdit?.fechaHora ?: "",
-                                initialLocation = eventToEdit?.ubicacion ?: "",
-                                initialPrice = "4500",
+                                evento = eventToEdit,
                                 viewModel = adminManageViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )

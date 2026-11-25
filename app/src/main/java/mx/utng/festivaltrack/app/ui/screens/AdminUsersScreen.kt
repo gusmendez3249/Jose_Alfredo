@@ -45,6 +45,36 @@ fun AdminUsersScreen(
     val actionMessage by viewModel.actionMessage.collectAsState()
     
     var showCreateDialog by remember { mutableStateOf(false) }
+    val miId = remember { mx.utng.festivaltrack.app.data.TokenManager(context).getUserId() }
+    var cambioPendiente by remember { mutableStateOf<UsuarioDto?>(null) }
+
+    cambioPendiente?.let { usuario ->
+        val hacerAdmin = usuario.rol != "ADMINISTRADOR"
+        AlertDialog(
+            onDismissRequest = { cambioPendiente = null },
+            containerColor = Color(0xFF1E1E1E),
+            title = {
+                Text(
+                    if (hacerAdmin) "¿Hacer administrador a ${usuario.nombre}?" else "¿Quitar el rol de administrador a ${usuario.nombre}?",
+                    color = Color.White, fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    if (hacerAdmin) "Podrá crear y borrar conciertos, canciones y usuarios, y transmitir en vivo."
+                    else "Ya no podrá entrar al panel de administración.",
+                    color = Color.Gray
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.toggleRole(usuario.id, usuario.rol); cambioPendiente = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black)
+                ) { Text(if (hacerAdmin) "Hacer administrador" else "Quitar rol", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { cambioPendiente = null }) { Text("Cancelar", color = Color.Gray) } }
+        )
+    }
 
     LaunchedEffect(actionMessage) {
         if (actionMessage != null) {
@@ -107,7 +137,8 @@ fun AdminUsersScreen(
                             items(state.users) { usuario ->
                                 UserCard(
                                     usuario = usuario,
-                                    onToggleRole = { viewModel.toggleRole(usuario.id, usuario.rol) }
+                                    esTuCuenta = usuario.id == miId,
+                                    onToggleRole = { cambioPendiente = usuario }
                                 )
                             }
                         }
@@ -129,7 +160,7 @@ fun AdminUsersScreen(
 }
 
 @Composable
-fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
+fun UserCard(usuario: UsuarioDto, esTuCuenta: Boolean = false, onToggleRole: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2F23)),
@@ -154,8 +185,11 @@ fun UserCard(usuario: UsuarioDto, onToggleRole: () -> Unit) {
                 Text(usuario.nombre, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text(usuario.correo, color = Color.LightGray, fontSize = 14.sp)
             }
-            
-            Button(
+
+            // Tu propia cuenta no muestra el botón: no puedes quitarte el rol a ti mismo.
+            if (esTuCuenta) {
+                Text("Tú", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            } else Button(
                 onClick = onToggleRole,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (usuario.rol == "ADMINISTRADOR") Color(0xFF121212) else PrimaryGold,

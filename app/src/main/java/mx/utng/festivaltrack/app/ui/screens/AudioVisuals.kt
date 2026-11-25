@@ -272,14 +272,14 @@ internal fun formatDuration(seconds: Int): String {
 /** "2026-11-21T02:00:00Z" -> "20 de noviembre, 20:00 hrs" (hora local); vacío si no se puede leer. */
 internal fun formatConcertDateTime(iso: String?): String = try {
     val fmt = DateTimeFormatter.ofPattern("d 'de' MMMM, HH:mm 'hrs'", Locale("es", "MX"))
-    fmt.format(Instant.parse(iso).atZone(ZoneId.systemDefault()))
+    fmt.format(Instant.parse(iso).atZone(ZoneId.of("America/Mexico_City")))
 } catch (e: Exception) {
     ""
 }
 
 /** Día y mes abreviado para la etiqueta de fecha de una tarjeta: ("20", "NOV"). */
 internal fun concertDayAndMonth(iso: String?): Pair<String, String>? = try {
-    val date = Instant.parse(iso).atZone(ZoneId.systemDefault())
+    val date = Instant.parse(iso).atZone(ZoneId.of("America/Mexico_City"))
     val month = DateTimeFormatter.ofPattern("MMM", Locale("es", "MX")).format(date).trimEnd('.').uppercase()
     date.dayOfMonth.toString() to month
 } catch (e: Exception) {

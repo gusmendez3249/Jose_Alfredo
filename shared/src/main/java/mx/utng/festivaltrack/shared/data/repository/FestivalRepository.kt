@@ -145,11 +145,11 @@ class FestivalRepository(
                 ubicacion = eventoCreateDto.ubicacion,
                 escenario = eventoCreateDto.escenario,
                 bannerUrl = null,
-                estado = eventoCreateDto.estado,
+                estado = eventoCreateDto.estado ?: "PUBLICADO",
                 artistaId = null,
                 artistaNombre = null,
-                latitud = null,
-                longitud = null,
+                latitud = eventoCreateDto.latitud,
+                longitud = eventoCreateDto.longitud,
                 updatedAt = System.currentTimeMillis()
             )
             eventoDao.upsert(localEntity)
@@ -165,8 +165,8 @@ class FestivalRepository(
                 // 3. Guardar la versión oficial del servidor en Room
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
-                e.printStackTrace()
-                // Si falla la red, ya quedó guardado localmente en Room
+                // Queda guardado en Room; se avisa para que el admin sepa que no llegó al servidor.
+                throw e
             }
         }
     }
@@ -191,11 +191,11 @@ class FestivalRepository(
                 ubicacion = eventoCreateDto.ubicacion,
                 escenario = eventoCreateDto.escenario,
                 bannerUrl = null,
-                estado = eventoCreateDto.estado,
+                estado = eventoCreateDto.estado ?: "PUBLICADO",
                 artistaId = null,
                 artistaNombre = null,
-                latitud = null,
-                longitud = null,
+                latitud = eventoCreateDto.latitud,
+                longitud = eventoCreateDto.longitud,
                 updatedAt = System.currentTimeMillis()
             )
             eventoDao.upsert(localEntity)
@@ -206,7 +206,7 @@ class FestivalRepository(
                 val remoteEvent = apiService.updateEvento(authToken, id, eventoCreateDto)
                 eventoDao.upsert(remoteEvent.toEntity())
             } catch (e: Exception) {
-                e.printStackTrace()
+                throw e
             }
         }
     }
