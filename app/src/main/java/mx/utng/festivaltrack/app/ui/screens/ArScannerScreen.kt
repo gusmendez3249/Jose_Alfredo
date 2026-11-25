@@ -146,7 +146,8 @@ private fun BoxScope.ArCamara(viewModel: ArViewModel, onVerGaleria: () -> Unit) 
     }
 
     // Pasos del flujo
-    PasosFlujo(state, Modifier.align(Alignment.TopCenter).padding(top = 72.dp))
+    // Debajo de la barra de título: se respeta la barra de estado para no encimarse con "Explorar con AR"
+    PasosFlujo(state, Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 64.dp))
 
     // Parte inferior: botón de captura / mensajes / tarjeta de resultado
     Column(
