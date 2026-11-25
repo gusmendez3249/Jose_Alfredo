@@ -10,6 +10,9 @@ export default defineConfig({
     outDir: 'dist',
     // Genera sourcemaps para facilitar debugging en producción
     sourcemap: false,
+    // Las páginas se cargan bajo demanda (#93). El bloque más grande es el de la página del mapa:
+    // leaflet-routing-machine pesa ~550 kB por sí sola y solo se descarga al abrir /events/map.
+    chunkSizeWarningLimit: 800,
   },
   server: {
     port: 5173,

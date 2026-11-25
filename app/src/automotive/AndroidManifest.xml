@@ -14,7 +14,7 @@
     <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" tools:replace="android:required" />
 
-    <application android:icon="@drawable/ic_festival_auto">
+    <application>
         <!-- En el auto la entrada es CarAppActivity, no la app del teléfono -->
         <activity android:name=".MainActivity">
             <intent-filter tools:node="removeAll" />
