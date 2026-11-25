@@ -13,7 +13,8 @@ import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 sealed class ProfileState {
     object Loading : ProfileState()
     data class Success(val boletos: List<BoletoDto>, val userName: String) : ProfileState()
-    data class Error(val message: String) : ProfileState()
+    /** [requiereLogin] = no hay sesión o ya venció: la pantalla ofrece iniciar sesión en lugar de reintentar. */
+    data class Error(val message: String, val requiereLogin: Boolean = false) : ProfileState()
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -26,7 +27,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun loadProfile() {
         val token = tokenManager.getToken()
         if (token == null) {
-            _profileState.value = ProfileState.Error("No estás autenticado")
+            _profileState.value = ProfileState.Error("Inicia sesión para ver tus boletos", requiereLogin = true)
             return
         }
 
@@ -40,8 +41,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 val userName = tokenManager.getUserName() ?: "Usuario" 
                 
                 _profileState.value = ProfileState.Success(boletos, userName)
+            } catch (e: retrofit2.HttpException) {
+                // 401: el token guardado ya venció o es de otra sesión; se borra para pedir login de nuevo
+                if (e.code() == 401) {
+                    tokenManager.clear()
+                    _profileState.value = ProfileState.Error("Tu sesión expiró. Inicia sesión de nuevo", requiereLogin = true)
+                } else {
+                    _profileState.value = ProfileState.Error("No se pudieron cargar tus boletos")
+                }
             } catch (e: Exception) {
-                _profileState.value = ProfileState.Error("Error al cargar tu perfil")
+                _profileState.value = ProfileState.Error("No se pudieron cargar tus boletos. Revisa tu conexión")
             }
         }
     }

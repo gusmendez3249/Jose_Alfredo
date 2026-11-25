@@ -35,7 +35,7 @@ fun DashboardScreen(
     val scrollState = rememberScrollState()
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
     
-    val eventos by eventosViewModel?.eventosLocales?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
+    val eventos by eventosViewModel?.eventosProximos?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
 
     Column(
         modifier = Modifier
@@ -311,8 +311,8 @@ fun DashboardScreen(
         
         Spacer(modifier = Modifier.height(8.dp))
 
-        val displayEventTitle = eventos.firstOrNull()?.nombre ?: "Gran Gala Mariachi"
-        val displayEventLocation = eventos.firstOrNull()?.ubicacion ?: "23 de Noviembre, 20:00 hrs • Escenario Principal"
+        val displayEventTitle = eventos.firstOrNull()?.nombre ?: "Próximamente nuevos eventos"
+        val displayEventLocation = eventos.firstOrNull()?.ubicacion ?: "Consulta la cartelera del festival"
 
         Card(
             modifier = Modifier

@@ -69,11 +69,28 @@ fun ProfileScreen(
                     }
                 }
                 is ProfileState.Error -> {
-                    Text(
-                        text = (profileState as ProfileState.Error).message,
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    val error = profileState as ProfileState.Error
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Default.QrCode, contentDescription = null, tint = PrimaryGold, modifier = Modifier.size(56.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(error.message, color = Color.White, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        if (error.requiereLogin) {
+                            // onLogout borra el token y lleva a la pantalla de inicio de sesión
+                            Button(
+                                onClick = onLogout,
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold)
+                            ) { Text("Iniciar sesión", color = Color.Black, fontWeight = FontWeight.Bold) }
+                        } else {
+                            Button(
+                                onClick = { viewModel.loadProfile() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold)
+                            ) { Text("Reintentar", color = Color.Black, fontWeight = FontWeight.Bold) }
+                        }
+                    }
                 }
                 is ProfileState.Success -> {
                     val boletos = (profileState as ProfileState.Success).boletos

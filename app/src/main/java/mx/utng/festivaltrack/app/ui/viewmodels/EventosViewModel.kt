@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.ui.utils.ProximosEventos
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 
@@ -14,6 +16,15 @@ class EventosViewModel(private val repository: FestivalRepository) : ViewModel()
 
     // Flujo reactivo con todos los eventos para la vista normal
     val eventosLocales: StateFlow<List<EventoEntity>> = repository.getEventosLocales()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    /** Cartelera pública: solo los eventos que todavía no terminan, del más próximo al más lejano. */
+    val eventosProximos: StateFlow<List<EventoEntity>> = repository.getEventosLocales()
+        .map { ProximosEventos.filtrar(it) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

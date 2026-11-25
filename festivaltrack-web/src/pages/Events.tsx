@@ -9,8 +9,20 @@ interface Evento {
   fechaHora: string;
   ubicacion: string;
   escenario?: string;
+  estado?: string;
   latitud?: number;
   longitud?: number;
+}
+
+/** Un evento se muestra mientras no termine: hasta 4 h después de empezar (igual que en la app móvil). */
+const DURACION_MS = 4 * 60 * 60 * 1000;
+const NO_VISIBLES = new Set(['FINALIZADO', 'CANCELADO', 'BORRADOR']);
+
+function proximos(eventos: Evento[], ahora = Date.now()): Evento[] {
+  return eventos
+    .filter((e) => !NO_VISIBLES.has((e.estado ?? '').toUpperCase()))
+    .filter((e) => new Date(e.fechaHora).getTime() + DURACION_MS > ahora)
+    .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
 }
 
 export default function Events() {
@@ -22,7 +34,7 @@ export default function Events() {
   useEffect(() => {
     api.get('/eventos')
       .then(res => {
-        setEventos(res.data);
+        setEventos(proximos(res.data));
         setLoading(false);
       })
       .catch(err => {
