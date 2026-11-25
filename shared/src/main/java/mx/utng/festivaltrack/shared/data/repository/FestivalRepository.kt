@@ -74,6 +74,26 @@ class FestivalRepository(
      *
      * Llama al endpoint remoto `GET /api/v1/eventos`.
      */
+    companion object {
+        private val UUID_LOCAL = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
+        /**
+         * Qué eventos locales hay que borrar después de sincronizar:
+         * - los que el servidor ya no tiene (eliminados o cancelados en el backend), y
+         * - los borradores locales (UUID) que ya se subieron y llegaron con su id del servidor.
+         * Un borrador local que todavía no se sube se conserva.
+         */
+        fun eventosLocalesAEliminar(locales: List<EventoEntity>, remotos: List<EventoEntity>): List<EventoEntity> {
+            val remoteIds = remotos.map { it.id }.toSet()
+            return locales.filter { local ->
+                if (local.id in remoteIds) return@filter false
+                val esBorradorLocal = UUID_LOCAL.matches(local.id)
+                val yaSubido = remotos.any { it.nombre == local.nombre && it.fechaHora == local.fechaHora }
+                !esBorradorLocal || yaSubido
+            }
+        }
+    }
+
     suspend fun syncEventos() {
         withContext(Dispatchers.IO) {
             try {
@@ -92,12 +112,10 @@ class FestivalRepository(
                 //     cualquier ID local que no esté en remoteIds fue eliminado en servidor).
                 //    Conservamos eventos locales cuyo ID empiece con letras UUID (pendientes
                 //    de sincronizar) para no perder los que aún no se subieron.
+                //    Los eventos del servidor tienen ids "EVT-..." (seed) o cuid (creados desde la API);
+                //    los creados sin conexión tienen un UUID local hasta que se suben.
                 val allLocal = eventoDao.getAllOnce()
-                val toDelete = allLocal.filter { local ->
-                    val isStaleEvt = local.id.startsWith("EVT-") && local.id !in remoteIds
-                    val isDuplicateUuid = !local.id.startsWith("EVT-") && remoteEntities.any { it.nombre == local.nombre && it.fechaHora == local.fechaHora }
-                    isStaleEvt || isDuplicateUuid
-                }
+                val toDelete = eventosLocalesAEliminar(allLocal, remoteEntities)
                 toDelete.forEach { eventoDao.delete(it) }
             } catch (e: Exception) {
                 e.printStackTrace()
