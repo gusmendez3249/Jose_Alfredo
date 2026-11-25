@@ -50,7 +50,7 @@ fun ConcertsScreen(
     onOpenEvent: (String) -> Unit = {},
     viewModel: ConcertsViewModel = viewModel()
 ) {
-    val eventos by eventosViewModel?.eventosLocales?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
+    val eventos by eventosViewModel?.eventosProximos?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
     val summaries by viewModel.summaries.collectAsState()
     val queue by PlaybackManager.queue.collectAsState()
     val queueIndex by PlaybackManager.currentIndex.collectAsState()
