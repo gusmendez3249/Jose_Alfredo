@@ -12,6 +12,22 @@ export interface UsuarioActual {
   rol: string;
 }
 
+/** Cuerpo de `POST /foro`. */
+export interface CrearPublicacionDto {
+  tipo?: string;
+  titulo?: string;
+  contenido?: string;
+  imagenUrl?: string;
+  lugar?: string;
+}
+
+/** Publicación con autor, conteos y (si hay sesión) el "me gusta" del usuario. */
+type PublicacionConRelaciones = Prisma.PublicacionGetPayload<object> & {
+  autor: { id: string; nombre: string };
+  _count: { likes: number; comentarios: number };
+  likes?: { usuarioId: string }[];
+};
+
 const MAX_CONTENIDO = 1000;
 const MAX_TITULO = 80;
 const MAX_LUGAR = 60;
@@ -35,7 +51,7 @@ export class ForoService {
     } satisfies Prisma.PublicacionInclude;
   }
 
-  private mapPublicacion(p: any) {
+  private mapPublicacion(p: PublicacionConRelaciones) {
     return {
       id: p.id,
       tipo: p.tipo,
@@ -67,7 +83,8 @@ export class ForoService {
     }
     if (opts.before) {
       const fecha = new Date(opts.before);
-      if (isNaN(fecha.getTime())) throw new BadRequestException('Cursor inválido');
+      if (isNaN(fecha.getTime()))
+        throw new BadRequestException('Cursor inválido');
       where.createdAt = { lt: fecha };
     }
     const items = await this.prisma.publicacion.findMany({
@@ -79,16 +96,7 @@ export class ForoService {
     return items.map((p) => this.mapPublicacion(p));
   }
 
-  async crear(
-    usuario: UsuarioActual,
-    dto: {
-      tipo?: string;
-      titulo?: string;
-      contenido?: string;
-      imagenUrl?: string;
-      lugar?: string;
-    },
-  ) {
+  async crear(usuario: UsuarioActual, dto: CrearPublicacionDto) {
     const contenido = (dto.contenido ?? '').trim();
     const imagenUrl = dto.imagenUrl?.trim() || null;
     const tipo =
@@ -143,7 +151,9 @@ export class ForoService {
     });
     if (!existe) throw new NotFoundException('Publicación no encontrada');
 
-    const key = { publicacionId_usuarioId: { publicacionId, usuarioId: usuario.id } };
+    const key = {
+      publicacionId_usuarioId: { publicacionId, usuarioId: usuario.id },
+    };
     const previo = await this.prisma.likePublicacion.findUnique({ where: key });
     if (previo) {
       await this.prisma.likePublicacion.deleteMany({
@@ -156,7 +166,9 @@ export class ForoService {
         update: {},
       });
     }
-    const likes = await this.prisma.likePublicacion.count({ where: { publicacionId } });
+    const likes = await this.prisma.likePublicacion.count({
+      where: { publicacionId },
+    });
     return { liked: !previo, likes };
   }
 
@@ -176,7 +188,11 @@ export class ForoService {
     }));
   }
 
-  async comentar(usuario: UsuarioActual, publicacionId: string, texto?: string) {
+  async comentar(
+    usuario: UsuarioActual,
+    publicacionId: string,
+    texto?: string,
+  ) {
     const limpio = (texto ?? '').trim();
     if (!limpio) throw new BadRequestException('El comentario está vacío');
     if (limpio.length > MAX_COMENTARIO) {
@@ -202,7 +218,9 @@ export class ForoService {
   }
 
   async eliminarComentario(usuario: UsuarioActual, id: string) {
-    const c = await this.prisma.comentarioPublicacion.findUnique({ where: { id } });
+    const c = await this.prisma.comentarioPublicacion.findUnique({
+      where: { id },
+    });
     if (!c) throw new NotFoundException('Comentario no encontrado');
     if (c.autorId !== usuario.id && usuario.rol !== 'ADMINISTRADOR') {
       throw new ForbiddenException('No puedes eliminar este comentario');

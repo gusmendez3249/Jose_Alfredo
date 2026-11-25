@@ -1,5 +1,15 @@
 import {
-  Body, Controller, Delete, Get, Param, Post, Put, Request, UploadedFile, UseGuards, UseInterceptors,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Request,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
@@ -10,6 +20,7 @@ import { ArReconocimientoFacade } from './ar-reconocimiento.facade';
 import { ArCatalogoService } from './ar-catalogo.service';
 import { SitioArDto } from './dto/sitio-ar.dto';
 import { UpdateSitioArDto } from './dto/update-sitio-ar.dto';
+import type { RequestConUsuario } from '../common/request-con-usuario';
 
 @Controller('ar')
 export class ArController {
@@ -24,35 +35,53 @@ export class ArController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @Post('reconocer')
-  @UseInterceptors(FileInterceptor('foto', { limits: { fileSize: 5 * 1024 * 1024 } }))
-  reconocer(@UploadedFile() foto: Express.Multer.File, @Request() req: any) {
+  @UseInterceptors(
+    FileInterceptor('foto', { limits: { fileSize: 5 * 1024 * 1024 } }),
+  )
+  reconocer(
+    @UploadedFile() foto: Express.Multer.File,
+    @Request() req: RequestConUsuario,
+  ) {
     return this.facade.reconocer(foto?.buffer, req.user.id);
   }
 
   /** Pantalla 3: historial de sitios visitados por el usuario autenticado. */
   @UseGuards(JwtAuthGuard)
   @Get('historial')
-  historial(@Request() req: any) {
+  historial(@Request() req: RequestConUsuario) {
     return this.facade.historial(req.user.id);
   }
 
   // ─── Catálogo: lectura pública, escritura solo organizadores ───
 
   @Get('sitios')
-  sitios() { return this.catalogo.activos(); }
+  sitios() {
+    return this.catalogo.activos();
+  }
 
   @Get('sitios/:id')
-  sitio(@Param('id') id: string) { return this.catalogo.porId(id); }
+  sitio(@Param('id') id: string) {
+    return this.catalogo.porId(id);
+  }
 
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Post('sitios')
-  crear(@Body() dto: SitioArDto) { return this.catalogo.crear(dto); }
+  crear(@Body() dto: SitioArDto) {
+    return this.catalogo.crear(dto);
+  }
 
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Put('sitios/:id')
-  actualizar(@Param('id') id: string, @Body() dto: UpdateSitioArDto) { return this.catalogo.actualizar(id, dto); }
+  actualizar(@Param('id') id: string, @Body() dto: UpdateSitioArDto) {
+    return this.catalogo.actualizar(id, dto);
+  }
 
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Delete('sitios/:id')
-  eliminar(@Param('id') id: string) { return this.catalogo.eliminar(id); }
+  eliminar(@Param('id') id: string) {
+    return this.catalogo.eliminar(id);
+  }
 }

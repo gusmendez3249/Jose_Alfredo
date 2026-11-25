@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -12,7 +12,11 @@ import { getJwtSecret } from './jwt-secret';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: getJwtSecret(),
-        signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN as any) || '7d' },
+        signOptions: {
+          // Acepta valores como "7d" o "12h" (formato de la librería ms)
+          expiresIn: (process.env.JWT_EXPIRES_IN ||
+            '7d') as JwtSignOptions['expiresIn'],
+        },
       }),
     }),
   ],

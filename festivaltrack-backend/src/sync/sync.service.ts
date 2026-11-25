@@ -12,8 +12,14 @@ export class SyncService {
       this.prisma.evento.findMany({
         where: { estado: { not: 'CANCELADO' }, updatedAt: { gte: fechaDesde } },
         select: {
-          id: true, nombre: true, fechaHora: true, ubicacion: true,
-          escenario: true, bannerUrl: true, estado: true, updatedAt: true,
+          id: true,
+          nombre: true,
+          fechaHora: true,
+          ubicacion: true,
+          escenario: true,
+          bannerUrl: true,
+          estado: true,
+          updatedAt: true,
           artista: { select: { id: true, nombre: true, imagenUrl: true } },
         },
         orderBy: { fechaHora: 'asc' },

@@ -1,5 +1,17 @@
 import { CreateCancionDto } from './dto/create-cancion.dto';
-import { BadRequestException, Controller, Get, Post, Put, Delete, Body, Param, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { CancionesService } from './canciones.service';
@@ -39,7 +51,10 @@ export class CancionesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMINISTRADOR')
   @Put('evento/:eventoId')
-  setRepertorio(@Param('eventoId') eventoId: string, @Body('cancionIds') cancionIds: string[]) {
+  setRepertorio(
+    @Param('eventoId') eventoId: string,
+    @Body('cancionIds') cancionIds: string[],
+  ) {
     return this.cancionesService.setRepertorio(eventoId, cancionIds);
   }
 
@@ -52,7 +67,12 @@ export class CancionesController {
       limits: { fileSize: 30 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (!ARCHIVO_EXT[file.mimetype]) {
-          return cb(new BadRequestException('Formato no permitido (usa MP3, M4A, WAV, OGG, JPG, PNG o WEBP)'), false);
+          return cb(
+            new BadRequestException(
+              'Formato no permitido (usa MP3, M4A, WAV, OGG, JPG, PNG o WEBP)',
+            ),
+            false,
+          );
         }
         cb(null, true);
       },
@@ -70,13 +90,15 @@ export class CancionesController {
     return { url: `/uploads/${file.filename}` };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Post()
   create(@Body() body: CreateCancionDto) {
     return this.cancionesService.create(body);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard) @Roles('ADMINISTRADOR')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMINISTRADOR')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cancionesService.remove(id);
