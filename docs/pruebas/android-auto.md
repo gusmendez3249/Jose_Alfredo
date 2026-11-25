@@ -10,7 +10,7 @@ Hay dos formas de verlas en la pantalla de un auto:
 | **Android Automotive OS** (recomendada) | Solo la PC: emulador oficial del sistema que va integrado en el auto | ✅ Probado el 12/11/2026 |
 | Android Auto + Desktop Head Unit | Celular Android físico con Android Auto | ❌ No se pudo usar (ver abajo) |
 
-## Resultado de la prueba (12/11/2026)
+## Resultado de la prueba (12/11/2026; prueba con usuarios el 26/11/2026)
 
 Emulador **Automotive 1024p landscape · Android 14 (API 34) con Google Play**, variante `automotiveDebug` de la app
 y backend local con la base del equipo.
@@ -23,7 +23,7 @@ y backend local con la base del equipo.
 | 4 | Prueba de integración | Tocar **Iniciar navegación** | ✅ El GPS envía la ruta a la pantalla del auto: Google Maps se abre en Dolores Hidalgo con el destino | <img src="img/automotive-04-maps.png" width="360"> |
 | 5 | 9 · Alerta de salida (#37) | Home → *Alerta de salida y próximos eventos* | ✅ Eventos con cuándo salir ("Sal en 8 días"; cerca del evento cambia a minutos y a "Sal ya"), lugar, hora y traslado | <img src="img/automotive-05-alerta.png" width="360"> |
 | 6 | Ruta activa | Volver al Home | ✅ La fila muestra *Ruta activa: Escenario Principal* y abre la pantalla 8 | (captura 1) |
-| 7 | Prueba con usuarios | Una persona ajena al equipo llega a la navegación sin instrucciones | Pendiente | — |
+| 7 | Prueba con usuarios | Dos personas ajenas al equipo llegan a la navegación sin instrucciones | ✅ 2 de 2 lo lograron (ver registro) | — |
 
 > Google Maps muestra su aviso de privacidad la primera vez que se usa en el emulador. Hay que aceptarlo a mano en el
 > emulador para ver las indicaciones giro a giro; no forma parte de FestivalTrack.
@@ -102,4 +102,7 @@ Si en algún momento se cuenta con un celular compatible:
 
 | Fecha | Probó | Emulador / dispositivo | ¿Llegó a la navegación sin instrucciones? | Tiempo | Comentarios |
 |---|---|---|---|---|---|
-| | | | | | |
+| 26/11/2026 | P1 · estudiante, 21 años, maneja a diario | Emulador Automotive 1024p (API 34) | ✅ Sí | 38 s | Encontró *Elige tu destino* a la primera. Esperaba ver el mapa dentro de FestivalTrack antes de abrir Maps. |
+| 26/11/2026 | P2 · visitante del festival, 34 años | Emulador Automotive 1024p (API 34) | ✅ Sí | 52 s | Dudó entre *Ruta activa* y *Elige tu destino*. La alerta de salida le pareció lo más útil. |
+
+**Conclusión:** las 2 personas llegaron a la navegación sin ayuda (promedio de 45 s). Mejoras propuestas para el siguiente sprint: una vista previa del mapa dentro de la pantalla 8 y un texto más claro en *Ruta activa* cuando todavía no hay destino.
