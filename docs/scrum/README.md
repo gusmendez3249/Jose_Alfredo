@@ -24,6 +24,7 @@ Cada sprint registra **6 Daily Scrum** (tres por semana: lunes, miércoles y vie
 | Sprint 1 | 6 / 6 | ✅ vie 16/10 | ✅ vie 16/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 2 | 6 / 6 | ✅ vie 30/10 | ✅ vie 30/10 | ✅ (entregado en la Release `v4.2-sprint3`) |
 | Sprint 3 | 6 / 6 | ✅ vie 13/11 | ✅ vie 13/11 | ✅ Releases [`v4.2-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.2-sprint3) y [`v4.3-sprint3`](https://github.com/gusmendez3249/Jose_Alfredo/releases/tag/v4.3-sprint3) |
+| Sprint 4 | 4 / 6 | Vie 27/11 | Vie 27/11 | Pendiente: `v4.4-sprint4` |
 
 > 📷 Cada ceremonia incluye la captura de la videollamada (`img/daily-N-reunion.png`, `img/review-reunion.png`, `img/retro-reunion.png`) con la evidencia que se presentó ese día.
 
@@ -88,8 +89,25 @@ ni en el celular del equipo; el detalle está en #84 y en [`docs/pruebas/android
 |---|---|---|
 | #84 | Validar el modo automóvil en Android Automotive OS y prueba con usuarios | Noé |
 | #39, #36 | Pantallas 8 y 10: evidencia en el head unit | Noé |
+| #90 | Release `v4.4-sprint4` con APK móvil y automotive | Noé |
+| #91 | Ordenar las actualizaciones de Dependabot | Noé |
+| #92 | Ícono de FestivalTrack en el teléfono | Noé |
+| #93 | Dividir el bundle del portal web | Noé |
+| #94 | Regla de protección en `develop` y `main` | Gustavo |
 
-Las ceremonias del Sprint 4 se registran en `sprint-4/` conforme se realicen.
+**Scrum Master:** Noé Chavero Martínez.
+
+| Ceremonia | Fecha | Documento |
+|---|---|---|
+| Daily Scrum 1 | Lun 16/11 | [daily-1.md](sprint-4/daily-1.md) |
+| Daily Scrum 2 | Mié 18/11 | [daily-2.md](sprint-4/daily-2.md) |
+| Daily Scrum 3 | Vie 20/11 | [daily-3.md](sprint-4/daily-3.md) |
+| Daily Scrum 4 | Lun 23/11 | [daily-4.md](sprint-4/daily-4.md) |
+| Daily Scrum 5 | Mié 25/11 | Pendiente |
+| Daily Scrum 6 | Jue 26/11 | Pendiente |
+| Sprint Review | Vie 27/11 | Pendiente |
+| Retrospectiva | Vie 27/11 | Pendiente |
+| Incremento | Vie 27/11 | Pendiente: Release `v4.4-sprint4` (#90) |
 
 ## Burndown
 
