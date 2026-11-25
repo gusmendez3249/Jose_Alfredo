@@ -44,4 +44,4 @@
 
 ---
 
-<p align="center"><sub><a href="daily-3.md">← Daily 3</a> · <a href="../README.md#sprint-4--16-al-27-de-noviembre-de-2026">Índice del Sprint 4</a></sub></p>
+<p align="center"><sub><a href="daily-3.md">← Daily 3</a> · <a href="../README.md#sprint-4--16-al-27-de-noviembre-de-2026">Índice del Sprint 4</a> · <a href="daily-5.md">Daily 5 →</a></sub></p>
