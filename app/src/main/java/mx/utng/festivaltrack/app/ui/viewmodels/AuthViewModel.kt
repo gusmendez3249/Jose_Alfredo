@@ -119,9 +119,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 tokenManager.saveUserId(response.usuario.id)
                 tokenManager.saveUserName(response.usuario.nombre)
                 _authState.value = AuthState.Success(response.usuario.rol)
+            } catch (e: retrofit2.HttpException) {
+                // Mismo mensaje si el correo no existe o la contraseña es incorrecta (no revela cuentas)
+                _authState.value = AuthState.Error(
+                    if (e.code() == 401 || e.code() == 400) "Correo o contraseña incorrectos"
+                    else if (e.code() == 429) "Demasiados intentos. Espera un minuto e intenta de nuevo."
+                    else "El servidor no respondió. Intenta de nuevo."
+                )
             } catch (e: Exception) {
-                // Error genérico para no revelar si el correo existe o no (seguridad)
-                _authState.value = AuthState.Error("Credenciales inválidas o error de red")
+                _authState.value = AuthState.Error("Sin conexión con el servidor. Revisa tu internet.")
             }
         }
     }
@@ -131,7 +137,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
      *
      * Validaciones locales:
      * - Ningún campo puede estar vacío.
-     * - La contraseña debe tener al menos 6 caracteres.
+     * - La contraseña: al menos 8 caracteres, una mayúscula y un número (igual que el backend).
      *
      * Flujo asíncrono (en [viewModelScope]):
      * 1. Emite [AuthState.Loading].
@@ -142,7 +148,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
      *
      * @param nombre Nombre completo del nuevo usuario.
      * @param correo Correo electrónico (debe ser único en el sistema).
-     * @param contrasena Contraseña (mínimo 6 caracteres).
+     * @param contrasena Contraseña (8+ caracteres, una mayúscula y un número).
      */
     fun register(nombre: String, correo: String, contrasena: String) {
         if (nombre.isBlank() || correo.isBlank() || contrasena.isBlank()) {
@@ -150,30 +156,35 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         
-        if (contrasena.length < 6) {
-            _authState.value = AuthState.Error("La contraseña debe tener al menos 6 caracteres")
+        if (!contrasenaValida(contrasena)) {
+            _authState.value = AuthState.Error(REGLA_CONTRASENA)
+            return
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(correo.trim()).matches()) {
+            _authState.value = AuthState.Error("Escribe un correo válido")
             return
         }
 
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val response = api.register(RegisterDto(nombre, correo, contrasena))
+                val response = api.register(RegisterDto(nombre.trim(), correo.trim(), contrasena))
                 tokenManager.saveToken(response.accessToken)
                 tokenManager.saveUserRole(response.usuario.rol)
                 tokenManager.saveUserId(response.usuario.id)
                 tokenManager.saveUserName(response.usuario.nombre)
                 _authState.value = AuthState.Success(response.usuario.rol)
+            } catch (e: retrofit2.HttpException) {
+                _authState.value = AuthState.Error(
+                    when (e.code()) {
+                        409 -> "El correo ya está registrado"
+                        400 -> "Revisa los datos: correo válido y contraseña de 8 caracteres con mayúscula y número"
+                        429 -> "Demasiados intentos. Espera un minuto e intenta de nuevo."
+                        else -> "No se pudo crear la cuenta. Intenta de nuevo."
+                    }
+                )
             } catch (e: Exception) {
-                val errorMsg = e.localizedMessage ?: "Error de conexión con el servidor"
-                when {
-                    errorMsg.contains("409") ->
-                        _authState.value = AuthState.Error("El correo ya está registrado")
-                    errorMsg.contains("Failed to connect") || errorMsg.contains("ConnectException") ->
-                        _authState.value = AuthState.Error("No se pudo conectar al servidor en puerto 3001")
-                    else ->
-                        _authState.value = AuthState.Error("Error al registrarse: ${e.message}")
-                }
+                _authState.value = AuthState.Error("Sin conexión con el servidor. Revisa tu internet.")
             }
         }
     }
@@ -199,3 +210,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
+/** Mensaje de la regla de contraseña; el backend aplica la misma. */
+const val REGLA_CONTRASENA = "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número"
+
+/** 8+ caracteres, al menos una mayúscula y un número. */
+fun contrasenaValida(contrasena: String): Boolean =
+    contrasena.length >= 8 && contrasena.any(Char::isUpperCase) && contrasena.any(Char::isDigit)

@@ -27,7 +27,13 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
 import com.pedro.rtspserver.RtspServerCamera1
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.data.TokenManager
+import mx.utng.festivaltrack.app.ui.utils.ProximosEventos
+import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
@@ -96,8 +102,36 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     // Instancia del servidor RTSP de cámara
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
+    var cambiando by remember { mutableStateOf(false) }
     var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
+
+    // Concierto al que pertenece la transmisión: los usuarios la ven en la pantalla de ese concierto.
+    var eventos by remember { mutableStateOf<List<EventoEntity>>(emptyList()) }
+    var eventoElegido by remember { mutableStateOf<EventoEntity?>(null) }
+    var menuEventos by remember { mutableStateOf(false) }
+    val bearer = remember { "Bearer ${TokenManager(context).getToken()}" }
+
+    fun estado(enVivo: Boolean) = StreamStatusDto(
+        streamUrl = if (enVivo) streamUrl else "",
+        isLive = enVivo,
+        eventoId = if (enVivo) eventoElegido?.id else null,
+        eventoNombre = if (enVivo) eventoElegido?.nombre else null
+    )
+
+    LaunchedEffect(Unit) {
+        eventos = runCatching { ProximosEventos.filtrar(api.getEventos().map { it.toEntity() }) }.getOrDefault(emptyList())
+        if (eventoElegido == null) eventoElegido = eventos.firstOrNull()
+    }
+
+    // Mientras transmite, reporta cada 15 s: si la app se cierra, el servidor da la transmisión por terminada.
+    LaunchedEffect(isStreaming, eventoElegido) {
+        while (isStreaming) {
+            runCatching { api.setStreamStatus(bearer, estado(true)) }
+                .onFailure { statusText = "En vivo, pero sin conexión con el servidor" }
+            delay(15_000)
+        }
+    }
 
     // Solicita permisos al cargar la pantalla y obtiene la IP local
     LaunchedEffect(Unit) {
@@ -112,7 +146,15 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     DisposableEffect(Unit) {
         onDispose {
             try {
-                if (isStreaming) rtspServer?.stopStream()
+                if (isStreaming) {
+                    val servidor = rtspServer
+                    // La pantalla ya no existe: detiene y avisa al servidor fuera de su ciclo de vida
+                    // y fuera del hilo principal.
+                    CoroutineScope(Dispatchers.IO).launch {
+                        runCatching { servidor?.stopStream() }
+                        runCatching { api.setStreamStatus(bearer, StreamStatusDto(streamUrl = "", isLive = false)) }
+                    }
+                }
                 rtspServer?.stopPreview()
             } catch (e: Exception) {
                 // Previene cierres inesperados durante la liberación de hardware
@@ -123,7 +165,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Panel Live - Administrador", color = Color.White) },
+                title = { Text("Transmisión en vivo", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Atrás", tint = Color.White)
@@ -183,8 +225,8 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
 
                                     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
                                     override fun surfaceDestroyed(holder: SurfaceHolder) {
-                                        if (isStreaming) rtspServer?.stopStream()
-                                        rtspServer?.stopPreview()
+                                        // El stream lo detiene onDispose en segundo plano; aquí solo la vista previa.
+                                        runCatching { rtspServer?.stopPreview() }
                                     }
                                 })
                             }
@@ -206,47 +248,74 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                     ) {
                         Text(statusText, color = Color.White, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Ingresa esto en la TV:\n$streamUrl", color = PrimaryGold, fontSize = 14.sp)
+                        Text("Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box {
+                            OutlinedButton(
+                                onClick = { if (!isStreaming) menuEventos = true },
+                                enabled = !isStreaming && eventos.isNotEmpty(),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    eventoElegido?.let { "Concierto: ${it.nombre} · ${ProximosEventos.dia(it)} ${ProximosEventos.mesCorto(it)} ${ProximosEventos.hora(it)}" }
+                                        ?: "No hay conciertos próximos",
+                                    color = Color.White, maxLines = 2
+                                )
+                            }
+                            DropdownMenu(expanded = menuEventos, onDismissRequest = { menuEventos = false }) {
+                                eventos.forEach { ev ->
+                                    DropdownMenuItem(
+                                        text = { Text("${ev.nombre} · ${ProximosEventos.dia(ev)} ${ProximosEventos.mesCorto(ev)} ${ProximosEventos.hora(ev)}") },
+                                        onClick = { eventoElegido = ev; menuEventos = false }
+                                    )
+                                }
+                            }
+                        }
                         
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Botón de Inicio / Detención de Transmisión
                         Button(
                             onClick = {
+                                // Preparar los códecs y arrancar el servidor tarda varios segundos: se hace
+                                // fuera del hilo principal para que la pantalla no se congele (ANR).
+                                val servidor = rtspServer
                                 if (!isStreaming) {
-                                    // Prepara códecs de audio y video con resolución compatible 640x480
-                                    val audioPrepared = rtspServer?.prepareAudio() ?: false
-                                    val videoPrepared = try {
-                                        rtspServer?.prepareVideo(640, 480, 30, 1200 * 1024, 0) ?: false
-                                    } catch (e: Exception) {
-                                        rtspServer?.prepareVideo() ?: false
-                                    }
-
-                                    if (audioPrepared && videoPrepared) {
-                                        rtspServer?.startStream()
-                                        isStreaming = true
-                                        statusText = "Transmisión en Vivo ACTIVA"
-                                        // Publicar URL del stream al backend para que la TV se conecte
-                                        coroutineScope.launch {
-                                            try {
-                                                api.setStreamStatus("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", StreamStatusDto(streamUrl = streamUrl, isLive = true))
-                                            } catch (e: Exception) { /* Fallo silencioso */ }
+                                    cambiando = true
+                                    statusText = "Iniciando transmisión…"
+                                    coroutineScope.launch {
+                                        val listo = kotlinx.coroutines.withContext(Dispatchers.Default) {
+                                            runCatching {
+                                                // Códecs de audio y video con resolución compatible 640x480
+                                                val audio = servidor?.prepareAudio() ?: false
+                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, 0) ?: false }
+                                                    .getOrElse { servidor?.prepareVideo() ?: false }
+                                                if (audio && video) servidor?.startStream()
+                                                audio && video
+                                            }.getOrDefault(false)
                                         }
-                                    } else {
-                                        statusText = "Error al inicializar cámara/audio"
+                                        cambiando = false
+                                        if (listo) {
+                                            isStreaming = true
+                                            statusText = "Transmisión en vivo ACTIVA"
+                                            // El reporte periódico (LaunchedEffect de arriba) publica la URL y el concierto.
+                                        } else {
+                                            statusText = "Error al inicializar cámara/audio"
+                                        }
                                     }
                                 } else {
-                                    rtspServer?.stopStream()
+                                    cambiando = true
                                     isStreaming = false
-                                    statusText = "Listo para transmitir"
-                                    // Notificar al backend que el stream terminó
+                                    statusText = "Deteniendo transmisión…"
                                     coroutineScope.launch {
-                                        try {
-                                            api.setStreamStatus("Bearer ${mx.utng.festivaltrack.app.data.TokenManager(context).getToken()}", StreamStatusDto(streamUrl = "", isLive = false))
-                                        } catch (e: Exception) { /* Fallo silencioso */ }
+                                        kotlinx.coroutines.withContext(Dispatchers.Default) { runCatching { servidor?.stopStream() } }
+                                        cambiando = false
+                                        statusText = "Listo para transmitir"
+                                        runCatching { api.setStreamStatus(bearer, estado(false)) }
                                     }
                                 }
                             },
+                            enabled = !cambiando,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isStreaming) Color.Red else PrimaryGold,
                                 contentColor = if (isStreaming) Color.White else Color.Black
@@ -264,7 +333,12 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         } else {
             // Pantalla de advertencia si no se otorgaron permisos de hardware
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Se requieren permisos de cámara y micrófono.", color = Color.White)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Se requieren permisos de cámara y micrófono para transmitir.", color = Color.White)
+                    TextButton(onClick = { permissionsState.launchMultiplePermissionRequest() }) {
+                        Text("Dar permisos", color = PrimaryGold, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }

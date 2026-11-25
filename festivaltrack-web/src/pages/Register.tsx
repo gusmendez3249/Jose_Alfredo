@@ -11,6 +11,10 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)) {
+      setError('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número');
+      return;
+    }
     try {
       const res = await api.post('/auth/register', { nombre, correo, contrasena: password, rol: 'USUARIO' });
       const token = res.data.accessToken ?? res.data.token;
@@ -24,7 +28,14 @@ export default function Register() {
         state: { message: 'Registro completado correctamente. Ya puedes iniciar sesión.' }
       });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al registrarse');
+      const mensaje = err.response?.data?.message;
+      setError(
+        Array.isArray(mensaje)
+          ? mensaje[0]
+          : err.response?.status === 409
+            ? 'El correo ya está registrado'
+            : mensaje || 'Error al registrarse',
+      );
     }
   };
 

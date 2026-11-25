@@ -31,7 +31,7 @@ object DestinosCalculator {
     /** Dos lugares a menos de esta distancia se consideran el mismo destino. */
     private const val MISMO_LUGAR_KM = 0.05
 
-    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
+    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("America/Mexico_City"))
 
     fun construir(
         eventos: List<EventoDto>,

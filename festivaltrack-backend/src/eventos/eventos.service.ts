@@ -110,6 +110,8 @@ export class EventosService {
         capacidad: dto.capacidad,
         bannerUrl: dto.bannerUrl,
         artistaId: dto.artistaId,
+        latitud: dto.latitud,
+        longitud: dto.longitud,
         estado: estadoParsed,
         id: nuevoId,
         administradorId: adminId,

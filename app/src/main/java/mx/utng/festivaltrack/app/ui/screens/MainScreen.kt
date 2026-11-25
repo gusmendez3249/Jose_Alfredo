@@ -49,7 +49,15 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
     object Concerts : BottomNavItem("concerts", Icons.Default.Audiotrack, "Conciertos")
     object Tickets : BottomNavItem("tickets", Icons.Default.ConfirmationNumber, "Comprar")
     object Gallery : BottomNavItem("gallery", Icons.Default.PhotoLibrary, "Galería")
-    object Profile : BottomNavItem("profile", Icons.Default.Person, "Boletos")
+    object Profile : BottomNavItem("profile", Icons.Default.Person, "Perfil")
+}
+
+/**
+ * Pestaña a la que debe abrir [MainScreen] la próxima vez que se muestre
+ * (por ejemplo "Ver mis boletos" después de pagar). Se consume una sola vez.
+ */
+object PestanaPendiente {
+    var ruta: String? = null
 }
 
 @Composable
@@ -73,6 +81,13 @@ fun MainScreen(
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(Unit) {
+        PestanaPendiente.ruta?.let { ruta ->
+            PestanaPendiente.ruta = null
+            if (ruta != BottomNavItem.Home.route) navController.navigate(ruta) { launchSingleTop = true }
+        }
+    }
 
     // Reproductor global (#25): la pantalla "Reproduciendo" y el permiso de notificaciones (Android 13+)
     val playerSheet = rememberPlayerSheetState()
@@ -172,7 +187,7 @@ fun MainScreen(
                     )
                 }
                 composable(BottomNavItem.Biography.route) {
-                    BiographyScreen()
+                    BiographyScreen(onNavigateBack = { navController.popBackStack(BottomNavItem.Home.route, inclusive = false) })
                 }
                 composable(BottomNavItem.Map.route) {
                     MapScreen(
@@ -181,7 +196,15 @@ fun MainScreen(
                     )
                 }
                 composable("destinos") {
-                    ElegirDestinoScreen(onNavigateBack = { navController.popBackStack() })
+                    ElegirDestinoScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onVerRuta = {
+                            // Regresa al mapa de la app (de ahí se abrió esta lista) con el destino elegido.
+                            if (!navController.popBackStack(BottomNavItem.Map.route, inclusive = false)) {
+                                navController.navigate(BottomNavItem.Map.route) { launchSingleTop = true }
+                            }
+                        }
+                    )
                 }
                 composable(BottomNavItem.Concerts.route) {
                     ConcertsScreen(
@@ -213,8 +236,9 @@ fun MainScreen(
                 }
                 composable(BottomNavItem.Profile.route) {
                     mx.utng.festivaltrack.app.ui.screens.ProfileScreen(
-                        onNavigateBack = { navController.navigate(BottomNavItem.Home.route) },
-                        onLogout = onLogout
+                        onNavigateBack = { navController.popBackStack(BottomNavItem.Home.route, inclusive = false) },
+                        onLogout = onLogout,
+                        onComprarBoletos = { navController.navigate(BottomNavItem.Tickets.route) }
                     )
                 }
                 composable("ar") {
@@ -231,7 +255,12 @@ fun MainScreen(
                     val eventoId = backStackEntry.arguments?.getString("eventoId") ?: ""
                     UserLiveStreamScreen(
                         eventoId = eventoId,
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onAbrirOtroConcierto = { otro ->
+                            navController.navigate("live/$otro") {
+                                popUpTo("live/{eventoId}") { inclusive = true }
+                            }
+                        }
                     )
                 }
             }

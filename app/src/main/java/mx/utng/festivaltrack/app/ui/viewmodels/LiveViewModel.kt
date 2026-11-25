@@ -3,14 +3,40 @@ package mx.utng.festivaltrack.app.ui.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.data.TokenManager
 import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 
+/** Qué ve el usuario en la zona del video. */
+sealed class EstadoTransmision {
+    /** Primera consulta al servidor. */
+    object Consultando : EstadoTransmision()
+
+    /** Este concierto no está transmitiendo; se reintenta solo. */
+    data class SinTransmision(val fechaHora: String?, val nombreEvento: String?) : EstadoTransmision()
+
+    /** Se transmite otro concierto en este momento. */
+    data class OtroConcierto(val eventoId: String, val nombre: String) : EstadoTransmision()
+
+    /** En vivo: [urls] en orden de preferencia (IP del celular del admin, luego la del emulador). */
+    data class EnVivo(val urls: List<String>) : EstadoTransmision()
+
+    /** Sin conexión con el servidor. */
+    object SinConexion : EstadoTransmision()
+}
+
+/**
+ * Transmisión en vivo de un concierto: consulta cada pocos segundos el estado que publica el
+ * panel del administrador (`GET /stream/status`) y el chat del concierto.
+ * Cuando el admin inicia, el video aparece solo; cuando detiene, vuelve el aviso.
+ */
 class LiveViewModel(application: Application) : AndroidViewModel(application) {
     private val tokenManager = TokenManager(application)
     private val api = FestivalApiService.create()
@@ -18,84 +44,87 @@ class LiveViewModel(application: Application) : AndroidViewModel(application) {
     private val _messages = MutableStateFlow<List<ChatMessageDto>>(emptyList())
     val messages: StateFlow<List<ChatMessageDto>> = _messages
 
-    private val _streamUrl = MutableStateFlow<String?>(null)
-    val streamUrl: StateFlow<String?> = _streamUrl
+    private val _estado = MutableStateFlow<EstadoTransmision>(EstadoTransmision.Consultando)
+    val estado: StateFlow<EstadoTransmision> = _estado
 
-    private val _userName = MutableStateFlow("Usuario")
+    private val _errorChat = MutableStateFlow<String?>(null)
+    val errorChat: StateFlow<String?> = _errorChat
 
-    private var isPolling = false
+    private var sondeo: Job? = null
+    private var fechaEvento: String? = null
+    private var nombreEvento: String? = null
 
     fun startLiveStream(eventoId: String) {
-        isPolling = true
-        // Fetch stream url
-        viewModelScope.launch {
-            try {
-                // To get the event we fetch all events and find ours, or just use a specific endpoint
-                val eventos = api.getEventos()
-                val evento = eventos.find { it.id == eventoId }
-                val transmision = evento?.transmision
-                if (transmision?.estado == "EN_VIVO") {
-                    _streamUrl.value = transmision.streamUrl
-                }
-            } catch (e: Exception) {
-                // Ignore error, streamUrl remains null
+        if (sondeo?.isActive == true) return
+        sondeo = viewModelScope.launch {
+            runCatching { api.getEventos().find { it.id == eventoId } }.getOrNull()?.let {
+                fechaEvento = it.fechaHora
+                nombreEvento = it.nombre
             }
-        }
-
-        // Poll chat messages
-        viewModelScope.launch {
-            while (isPolling) {
-                try {
-                    val msgs = api.getChatMessages(eventoId)
-                    _messages.value = msgs
-                } catch (e: Exception) {
-                    // Ignore polling errors
-                }
-                delay(3000) // Poll every 3 seconds
+            while (isActive) {
+                actualizarEstado(eventoId)
+                runCatching { api.getChatMessages(eventoId) }.onSuccess { _messages.value = it }
+                delay(SONDEO_MS)
             }
         }
     }
 
+    private suspend fun actualizarEstado(eventoId: String) {
+        val status = runCatching { api.getStreamStatus() }.getOrElse {
+            _estado.value = EstadoTransmision.SinConexion
+            return
+        }
+        val nuevo = estadoPara(status, eventoId, fechaEvento, nombreEvento)
+        // No reinicia el reproductor si sigue la misma transmisión.
+        if (nuevo != _estado.value) _estado.value = nuevo
+    }
+
     fun stopLiveStream() {
-        isPolling = false
+        sondeo?.cancel()
+        sondeo = null
     }
 
     fun sendMessage(eventoId: String, text: String) {
         if (text.isBlank()) return
-        
         val nombre = tokenManager.getUserName() ?: "Usuario"
-        // El chat exige sesión (#50): el backend toma el nombre y el rol del token,
-        // así que sin token no se puede publicar
-        val token = tokenManager.getToken() ?: return
-
+        // El chat exige sesión (#50): el backend toma el nombre y el rol del token.
+        val token = tokenManager.getToken() ?: run {
+            _errorChat.value = "Inicia sesión para escribir en el chat"
+            return
+        }
         viewModelScope.launch {
             try {
-                api.sendChatMessage(
-                    "Bearer $token",
-                    ChatMessageDto(
-                        eventoId = eventoId,
-                        usuarioNombre = nombre,
-                        mensaje = text
-                    )
-                )
-                // Instantly add to local list to feel snappy
-                val current = _messages.value.toMutableList()
-                current.add(
-                    ChatMessageDto(
-                        eventoId = eventoId,
-                        usuarioNombre = nombre,
-                        mensaje = text
-                    )
-                )
-                _messages.value = current
+                api.sendChatMessage("Bearer $token", ChatMessageDto(eventoId = eventoId, usuarioNombre = nombre, mensaje = text))
+                _messages.value = _messages.value + ChatMessageDto(eventoId = eventoId, usuarioNombre = nombre, mensaje = text)
+                _errorChat.value = null
             } catch (e: Exception) {
-                // Handle error
+                _errorChat.value = "No se pudo enviar el mensaje. Intenta de nuevo."
             }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        isPolling = false
+        stopLiveStream()
+    }
+
+    companion object {
+        const val SONDEO_MS = 4000L
+
+        /** Decide qué mostrar para el concierto [eventoId] según el estado publicado por el admin. */
+        fun estadoPara(
+            status: StreamStatusDto,
+            eventoId: String,
+            fechaEvento: String? = null,
+            nombreEvento: String? = null
+        ): EstadoTransmision {
+            val urls = listOf(status.streamUrl, status.emulatorUrl).filter { it.isNotBlank() }.distinct()
+            return when {
+                !status.isLive || urls.isEmpty() -> EstadoTransmision.SinTransmision(fechaEvento, nombreEvento)
+                status.eventoId != null && status.eventoId != eventoId ->
+                    EstadoTransmision.OtroConcierto(status.eventoId!!, status.eventoNombre ?: "otro concierto")
+                else -> EstadoTransmision.EnVivo(urls)
+            }
+        }
     }
 }

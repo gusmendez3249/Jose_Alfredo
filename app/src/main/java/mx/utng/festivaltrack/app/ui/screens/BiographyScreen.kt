@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,19 +40,29 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.R
+import mx.utng.festivaltrack.app.playback.CatalogoAudio
+import mx.utng.festivaltrack.app.playback.PlaybackManager
 import mx.utng.festivaltrack.app.data.factory.BiographyEntryType
 import mx.utng.festivaltrack.app.data.factory.InteractiveBiographyItem
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.ArtistViewModel
 
 @Composable
-fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
+fun BiographyScreen(
+    viewModel: ArtistViewModel = viewModel(),
+    onNavigateBack: (() -> Unit)? = null
+) {
     val scrollState = rememberScrollState()
     val biografia by viewModel.biografia.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    var isAudioPlaying by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val cola by PlaybackManager.queue.collectAsState()
+    val indice by PlaybackManager.currentIndex.collectAsState()
+    val sonando by PlaybackManager.isPlaying.collectAsState()
+    val isAudioPlaying = CatalogoAudio.sonando(CANCION_CITA, cola, indice, sonando)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -170,18 +181,17 @@ fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
                                 .clip(CircleShape)
                                 .background(if (isAudioPlaying) PrimaryGold else Color(0xFF26362A))
                                 .clickable {
-                                    isAudioPlaying = !isAudioPlaying
-                                    Toast.makeText(
-                                        context,
-                                        if (isAudioPlaying) "▶ Reproduciendo cita histórica de voz" else "⏸ Audio pausado",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    scope.launch {
+                                        if (!CatalogoAudio.reproducir(CANCION_CITA)) {
+                                            Toast.makeText(context, "No se pudo cargar la canción. Revisa tu conexión.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 if (isAudioPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = "Reproducir",
+                                contentDescription = if (isAudioPlaying) "Pausar" else "Reproducir",
                                 tint = if (isAudioPlaying) Color.Black else PrimaryGold,
                                 modifier = Modifier.size(26.dp)
                             )
@@ -198,7 +208,7 @@ fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
                                 letterSpacing = 1.sp
                             )
                             Text(
-                                text = if (isAudioPlaying) "Voz original • Audio remasterizado" else "Toca para escuchar",
+                                text = if (isAudioPlaying) "Sonando: «$CANCION_CITA»" else "Toca para escuchar «$CANCION_CITA»",
                                 color = Color.LightGray,
                                 fontSize = 11.sp
                             )
@@ -241,6 +251,19 @@ fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+
+        // Regreso al inicio, igual que en Mapa y Comprar.
+        onNavigateBack?.let { regresar ->
+            IconButton(
+                onClick = regresar,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
+                    .background(Color(0x99000000), CircleShape)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = Color.White)
+            }
+        }
     }
 }
 
@@ -250,7 +273,16 @@ fun BiographyScreen(viewModel: ArtistViewModel = viewModel()) {
 @Composable
 fun DiscographySection() {
     val context = LocalContext.current
-    var playingAlbum by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val cola by PlaybackManager.queue.collectAsState()
+    val indice by PlaybackManager.currentIndex.collectAsState()
+    val sonando by PlaybackManager.isPlaying.collectAsState()
+    // Portada → canción del catálogo con la que empieza (las demás suenan a continuación).
+    fun tocar(cancion: String) = scope.launch {
+        if (!CatalogoAudio.reproducir(cancion)) {
+            Toast.makeText(context, "No se pudo cargar la discografía. Revisa tu conexión.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -274,11 +306,8 @@ fun DiscographySection() {
                 title = "La Enorme Distancia",
                 subtitle = "1950 • 12 Canciones",
                 drawableId = R.drawable.ranchera_guitar,
-                isPlaying = playingAlbum == "La Enorme Distancia",
-                onClick = {
-                    playingAlbum = if (playingAlbum == "La Enorme Distancia") null else "La Enorme Distancia"
-                    Toast.makeText(context, "Reproduciendo muestra: La Enorme Distancia", Toast.LENGTH_SHORT).show()
-                },
+                isPlaying = CatalogoAudio.sonando("Caminos de Guanajuato", cola, indice, sonando),
+                onClick = { tocar("Caminos de Guanajuato") },
                 modifier = Modifier.weight(1f)
             )
 
@@ -286,11 +315,8 @@ fun DiscographySection() {
                 title = "El Camino de la Noche",
                 subtitle = "1954 • 10 Canciones",
                 drawableId = R.drawable.mariachi_gala_stage,
-                isPlaying = playingAlbum == "El Camino de la Noche",
-                onClick = {
-                    playingAlbum = if (playingAlbum == "El Camino de la Noche") null else "El Camino de la Noche"
-                    Toast.makeText(context, "Reproduciendo muestra: El Camino de la Noche", Toast.LENGTH_SHORT).show()
-                },
+                isPlaying = CatalogoAudio.sonando("El Rey", cola, indice, sonando),
+                onClick = { tocar("El Rey") },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -303,11 +329,8 @@ fun DiscographySection() {
                 title = "El Rey (Edición Oro)",
                 subtitle = "1968 • 14 Canciones",
                 drawableId = R.drawable.jose_alfredo_portrait,
-                isPlaying = playingAlbum == "El Rey (Edición Oro)",
-                onClick = {
-                    playingAlbum = if (playingAlbum == "El Rey (Edición Oro)") null else "El Rey (Edición Oro)"
-                    Toast.makeText(context, "Reproduciendo muestra: El Rey", Toast.LENGTH_SHORT).show()
-                },
+                isPlaying = CatalogoAudio.sonando("El Rey", cola, indice, sonando),
+                onClick = { tocar("El Rey") },
                 modifier = Modifier.weight(1f)
             )
 
@@ -315,11 +338,8 @@ fun DiscographySection() {
                 title = "Caminos de Guanajuato",
                 subtitle = "1953 • 12 Canciones",
                 drawableId = R.drawable.hero_dolores_hidalgo,
-                isPlaying = playingAlbum == "Caminos de Guanajuato",
-                onClick = {
-                    playingAlbum = if (playingAlbum == "Caminos de Guanajuato") null else "Caminos de Guanajuato"
-                    Toast.makeText(context, "Reproduciendo muestra: Caminos de Guanajuato", Toast.LENGTH_SHORT).show()
-                },
+                isPlaying = CatalogoAudio.sonando("Caminos de Guanajuato", cola, indice, sonando),
+                onClick = { tocar("Caminos de Guanajuato") },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -418,3 +438,5 @@ fun AnimatedSoundWaves() {
         Box(modifier = Modifier.width(3.dp).height(height3.dp).background(PrimaryGold, RoundedCornerShape(2.dp)))
     }
 }
+/** Canción del catálogo que suena con la cita célebre. */
+private const val CANCION_CITA = "El Rey"

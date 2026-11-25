@@ -58,8 +58,10 @@ fun TicketsScreen(
     val fieldColor = Color(0xFF1E2720)
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("Boletos", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { /* TODO: Go back */ }) {
@@ -89,7 +91,7 @@ fun TicketsScreen(
                         Column {
                             Text("TOTAL A PAGAR", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             Row(verticalAlignment = Alignment.Bottom) {
-                                Text("$${totalPrice}", color = PrimaryGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                                Text(mx.utng.festivaltrack.app.ui.utils.FormatoPago.precio(totalPrice), color = PrimaryGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                                 Text(" MXN", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp, start = 4.dp))
                             }
                         }

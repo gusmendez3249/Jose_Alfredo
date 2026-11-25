@@ -1,5 +1,12 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import android.widget.Toast
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.app.playback.CatalogoAudio
+import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +40,8 @@ fun DashboardScreen(
     onNavigateToEvent: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val audioScope = rememberCoroutineScope()
+    val audioContext = androidx.compose.ui.platform.LocalContext.current
     var selectedEventDetail by remember { mutableStateOf<String?>(null) }
     
     val eventos by eventosViewModel?.eventosProximos?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
@@ -155,11 +164,18 @@ fun DashboardScreen(
                 }
             }
 
-            // Audio Card
+            // Audio Card: reproduce la discografía del catálogo con el reproductor global
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .height(130.dp),
+                    .height(130.dp)
+                    .clickable {
+                        audioScope.launch {
+                            if (!CatalogoAudio.reproducir()) {
+                                Toast.makeText(audioContext, "No se pudo cargar la discografía. Revisa tu conexión.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -185,7 +201,7 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         Text("🎵 Audio", color = PrimaryGold, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("Discografía Completa", color = Color.White.copy(alpha = 0.9f), fontSize = 10.sp)
+                        Text("Toca para escuchar", color = Color.White.copy(alpha = 0.9f), fontSize = 10.sp)
                     }
                 }
             }
@@ -352,26 +368,38 @@ fun DashboardScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Live stream option
-        Button(
-            onClick = {
-                val eId = eventos.firstOrNull()?.id ?: "EVT-001"
-                onNavigateToLive(eId)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFC51111), // Red for live
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .height(52.dp)
-        ) {
-            Text("▶ VER EN VIVO AHORA", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        // Transmisión en vivo: el botón solo aparece cuando el admin está transmitiendo.
+        val enVivo by produceState<StreamStatusDto?>(initialValue = null) {
+            val api = FestivalApiService.create()
+            while (true) {
+                value = runCatching { api.getStreamStatus() }.getOrNull()?.takeIf { it.isLive }
+                delay(10_000)
+            }
+        }
+        enVivo?.let { status ->
+            val eId = status.eventoId ?: eventos.firstOrNull()?.id
+            if (eId != null) {
+                Button(
+                    onClick = { onNavigateToLive(eId) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFC51111),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .heightIn(min = 52.dp)
+                ) {
+                    Text(
+                        "● EN VIVO AHORA" + (status.eventoNombre?.let { ": $it" } ?: ""),
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2
+                    )
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(96.dp)) // espacio para el botón flotante "Explorar AR"
     }
 
     // Interactive Dialog when clicking event

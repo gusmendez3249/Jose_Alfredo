@@ -1,9 +1,7 @@
 package mx.utng.festivaltrack.app.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import android.Manifest
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,21 +53,23 @@ import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.theme.TextSecondary
 import mx.utng.festivaltrack.app.ui.viewmodels.DestinosState
 import mx.utng.festivaltrack.app.ui.viewmodels.DestinosViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.OrigenUbicacion
+import mx.utng.festivaltrack.app.ui.utils.RutaPeatonal
 
 private val VerdeFestival = Color(0xFF243B2E)
 
 /**
  * Pantalla 7 del modo automóvil: el usuario elige a qué escenario o zona del festival llegar.
- * Cada destino muestra distancia y tiempo estimado; "Navegar" guarda la ruta activa para
- * Android Auto y abre la navegación paso a paso.
+ * Cada destino muestra distancia y tiempo a pie; "Ver ruta en el mapa" guarda la ruta activa
+ * (Android Auto la retoma) y abre el mapa de la app con la ruta trazada por calles.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ElegirDestinoScreen(
     onNavigateBack: () -> Unit,
+    onVerRuta: () -> Unit,
     viewModel: DestinosViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val state by viewModel.state.collectAsState()
     val permisos = rememberMultiplePermissionsState(
         listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -84,22 +83,17 @@ fun ElegirDestinoScreen(
         }
     }
 
+    /** Guarda el destino y abre el mapa de la app con la ruta a pie hasta él. */
     fun navegar(destino: Destino) {
         viewModel.elegir(destino)
-        val uri = Uri.parse("google.navigation:q=${destino.latitud},${destino.longitud}&mode=d")
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        val respaldo = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${destino.latitud},${destino.longitud}?q=${destino.latitud},${destino.longitud}(${Uri.encode(destino.nombre)})"))
-        try {
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            runCatching { context.startActivity(respaldo) }
-                .onFailure { Toast.makeText(context, "Ruta guardada para el auto: ${destino.nombre}", Toast.LENGTH_LONG).show() }
-        }
+        onVerRuta()
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("GPS del festival", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -130,20 +124,15 @@ fun ElegirDestinoScreen(
                 is DestinosState.Success -> LazyColumn(
                     Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (s.ubicacionAproximada) {
-                        item {
-                            Text(
-                                "Sin ubicación del teléfono: distancias calculadas desde el Jardín Principal.",
-                                color = TextSecondary, fontSize = 12.sp
-                            )
-                        }
+                    avisoOrigen(s)?.let { aviso ->
+                        item { Text(aviso, color = TextSecondary, fontSize = 12.sp) }
                     }
                     items(s.destinos) { destino -> DestinoCard(destino, onNavegar = { navegar(destino) }) }
                 }
             }
 
             Text(
-                "Al seleccionar, la ruta se envía a la pantalla del auto.",
+                "La ruta se abre en el mapa y también queda lista en la pantalla del auto.",
                 color = TextSecondary, fontSize = 13.sp, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
             )
@@ -168,7 +157,8 @@ private fun DestinoCard(destino: Destino, onNavegar: () -> Unit) {
                 Column(horizontalAlignment = Alignment.End) {
                     val color = if (destacado) PrimaryGold else TextSecondary
                     Text(DestinosCalculator.textoDistancia(destino.distanciaKm), color = color, fontWeight = FontWeight.Bold)
-                    Text("${destino.trasladoMin} min", color = color, fontSize = 13.sp)
+                    val metros = (destino.distanciaKm * 1000).toInt()
+                    Text("${RutaPeatonal.minutosCaminando(metros)} min a pie", color = color, fontSize = 13.sp)
                 }
             }
             Spacer(Modifier.height(14.dp))
@@ -180,7 +170,14 @@ private fun DestinoCard(destino: Destino, onNavegar: () -> Unit) {
                     containerColor = if (destacado) PrimaryGold else Color(0xFF2C2C2C),
                     contentColor = if (destacado) Color.Black else Color.White
                 )
-            ) { Text("Navegar →", fontWeight = FontWeight.Bold) }
+            ) { Text("Ver ruta en el mapa →", fontWeight = FontWeight.Bold) }
         }
     }
+}
+
+/** Explica desde dónde se miden las distancias cuando no es la ubicación real del teléfono. */
+internal fun avisoOrigen(s: DestinosState.Success): String? = when (s.origen) {
+    OrigenUbicacion.GPS -> null
+    OrigenUbicacion.SIN_UBICACION -> "Sin ubicación del teléfono: distancias calculadas desde el Jardín Principal."
+    OrigenUbicacion.LEJOS -> "Estás a ${s.kmAlFestival.toInt()} km del festival: distancias calculadas desde el Jardín Principal de Dolores Hidalgo."
 }
