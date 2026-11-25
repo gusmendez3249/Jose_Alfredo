@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono de FestivalTrack en la pantalla del auto: nota musical dorada sobre fondo oscuro. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#1C1B1F"
+        android:pathData="M24,0A24,24 0,1 1,24 48A24,24 0,1 1,24 0Z" />
+    <path
+        android:fillColor="#E6C27A"
+        android:pathData="M24,10v15.06c-0.88,-0.51 -1.9,-0.81 -3,-0.81c-3.31,0 -6,2.69 -6,6s2.69,6 6,6s6,-2.69 6,-6V16h6v-6H24z" />
+</vector>

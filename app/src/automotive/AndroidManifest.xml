@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Variante para Android Automotive OS: la app corre directo en la pantalla del auto.
+  Se suma al manifiesto principal; las pantallas del auto son las mismas de Android Auto
+  (FestivalCarAppService), mostradas por CarAppActivity de la Car App Library.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.type.automotive" android:required="true" />
+    <!-- Hardware de teléfono que un auto no tiene -->
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" tools:replace="android:required" />
+
+    <application android:icon="@drawable/ic_festival_auto">
+        <!-- En el auto la entrada es CarAppActivity, no la app del teléfono -->
+        <activity android:name=".MainActivity">
+            <intent-filter tools:node="removeAll" />
+        </activity>
+
+        <activity
+            android:name="androidx.car.app.activity.CarAppActivity"
+            android:exported="true"
+            android:icon="@drawable/ic_festival_auto"
+            android:label="FestivalTrack"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="distractionOptimized" android:value="true" />
+        </activity>
+    </application>
+</manifest>

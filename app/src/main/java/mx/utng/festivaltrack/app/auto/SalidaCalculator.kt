@@ -87,12 +87,19 @@ object SalidaCalculator {
     fun textoSalida(minutosParaSalir: Long): String = when {
         minutosParaSalir <= 0 -> "Sal ya"
         minutosParaSalir < 60 -> "Sal en $minutosParaSalir min"
+        // A más de un día de distancia las horas sueltas no ayudan al conductor: se muestran días.
+        minutosParaSalir >= MINUTOS_POR_DIA -> {
+            val dias = minutosParaSalir / MINUTOS_POR_DIA
+            if (dias == 1L) "Sal en 1 día" else "Sal en $dias días"
+        }
         else -> {
             val horas = minutosParaSalir / 60
             val minutos = minutosParaSalir % 60
             if (minutos == 0L) "Sal en $horas h" else "Sal en $horas h $minutos min"
         }
     }
+
+    private const val MINUTOS_POR_DIA = 24 * 60L
 
     /** El backend envía ISO 8601 (`2026-11-20T21:00:00.000Z`); se acepta también con desfase horario. */
     private fun parsearFecha(fecha: String): Instant? =
