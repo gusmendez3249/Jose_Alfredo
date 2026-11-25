@@ -30,6 +30,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.ui.PlayerView
@@ -230,7 +231,12 @@ private fun ReproductorEnVivo(urls: List<String>) {
     LaunchedEffect(Unit) { if (PlaybackManager.isPlaying.value) PlaybackManager.playPause() }
 
     val player = remember(url, intento) {
-        ExoPlayer.Builder(context).build().apply {
+        // En vivo no hace falta acumular video: empieza con 0.3 s en lugar de los 2.5 s por defecto
+        // y mantiene poco búfer para ir casi al tiempo real.
+        val cargaEnVivo = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(500, 2_000, 300, 500)
+            .build()
+        ExoPlayer.Builder(context).setLoadControl(cargaEnVivo).build().apply {
             setMediaSource(
                 RtspMediaSource.Factory().setForceUseRtpTcp(true).setTimeoutMs(8000)
                     .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
@@ -255,6 +261,11 @@ private fun ReproductorEnVivo(urls: List<String>) {
             player.removeListener(listener)
             player.release()
         }
+    }
+    // Si la conexión se queda colgada sin error ni imagen, se reintenta en lugar de esperar para siempre.
+    LaunchedEffect(player) {
+        delay(12_000)
+        if (!reproduciendo) fallo = true
     }
     LaunchedEffect(fallo) {
         if (fallo) {

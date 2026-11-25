@@ -26,6 +26,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
 import com.pedro.rtspserver.RtspServerCamera1
+import com.pedro.rtspserver.server.ClientListener
+import com.pedro.rtspserver.server.ServerClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -36,6 +38,12 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
+
+/**
+ * Segundos entre cuadros clave del video. El reproductor del usuario no muestra imagen hasta
+ * recibir uno, así que un intervalo corto hace que la transmisión aparezca rápido al conectarse.
+ */
+private const val INTERVALO_CUADRO_CLAVE_S = 1
 
 /**
  * Pantalla de Emisión de Transmisión en Vivo para Administradores ([AdminLiveStreamScreen]).
@@ -72,6 +80,7 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
     var cambiando by remember { mutableStateOf(false) }
+    var espectadores by remember { mutableIntStateOf(0) }
     var streamUrl by remember { mutableStateOf("") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
@@ -200,6 +209,22 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                             
                                             // Inicializa el servidor RTSP en el puerto 1935
                                             val server = RtspServerCamera1(this@apply, checker, 1935)
+                                            // Cuando alguien se conecta se pide un cuadro clave: sin él su
+                                            // reproductor no muestra imagen hasta el siguiente (varios segundos).
+                                            val principal = android.os.Handler(android.os.Looper.getMainLooper())
+                                            server.getStreamClient().setClientListener(object : ClientListener {
+                                                override fun onClientConnected(client: ServerClient) {
+                                                    principal.post { espectadores = server.getStreamClient().getNumClients() }
+                                                    // Se repite porque el cliente puede conectarse antes de pedir PLAY.
+                                                    listOf(0L, 800L, 2_000L).forEach { espera ->
+                                                        principal.postDelayed({ runCatching { server.requestKeyFrame() } }, espera)
+                                                    }
+                                                }
+                                                override fun onClientDisconnected(client: ServerClient) {
+                                                    principal.post { espectadores = server.getStreamClient().getNumClients() }
+                                                }
+                                                override fun onClientNewBitrate(bitrate: Long, client: ServerClient) {}
+                                            })
                                             rtspServer = server
                                             server.startPreview()
                                         } catch (e: Exception) {
@@ -231,6 +256,12 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(statusText, color = Color.White, fontWeight = FontWeight.Bold)
+                        if (isStreaming) {
+                            Text(
+                                if (espectadores == 1) "1 persona viendo" else "$espectadores personas viendo",
+                                color = Color.LightGray, fontSize = 13.sp
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(if (streamUrl.isBlank()) "Sin dirección de video" else "Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                         Spacer(modifier = Modifier.height(12.dp))
@@ -272,7 +303,8 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                             runCatching {
                                                 // Códecs de audio y video con resolución compatible 640x480
                                                 val audio = servidor?.prepareAudio() ?: false
-                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, 0) ?: false }
+                                                // Cuadro clave cada 1 s (antes ~5 s): quien se conecta ve imagen casi de inmediato.
+                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, INTERVALO_CUADRO_CLAVE_S, 0) ?: false }
                                                     .getOrElse { servidor?.prepareVideo() ?: false }
                                                 if (audio && video) servidor?.startStream()
                                                 audio && video
