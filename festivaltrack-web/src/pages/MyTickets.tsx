@@ -1,83 +1,151 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { boletosService } from '../services/boletos.service';
-import type { BoletoDto } from '../services/boletos.service';
+import type { BoletoConEvento, EstadoBoleto } from '../services/tipos';
+import { useAuth } from '../auth/useAuth';
+import {
+  ETIQUETA_CATEGORIA,
+  ETIQUETA_ESTADO_BOLETO,
+  folioCorto,
+  formatearFechaEvento,
+  formatearPrecio,
+} from '../lib/formato';
+import { Badge, type TonoBadge } from '../components/ui/Badge';
+import { Button, ButtonLink } from '../components/ui/Button';
+import { IconoAlerta, IconoBoleto, IconoEstrella } from '../components/ui/Icons';
+import { Skeleton } from '../components/ui/Skeleton';
+import { StatusMessage } from '../components/ui/StatusMessage';
+import { useRecurso } from '../hooks/useRecurso';
+import { useTituloPagina } from '../hooks/useTituloPagina';
+
+/** Por qué no se muestra el QR de un boleto que no está ACTIVO. */
+const LEYENDA_SIN_QR: Record<Exclude<EstadoBoleto, 'ACTIVO'>, string> = {
+  USADO: 'Este boleto ya se usó para entrar.',
+  CANCELADO: 'Este boleto fue cancelado y no da acceso.',
+  EXPIRADO: 'Este boleto expiró y ya no da acceso.',
+};
+
+const TONO_ESTADO: Record<EstadoBoleto, TonoBadge> = {
+  ACTIVO: 'exito',
+  USADO: 'neutra',
+  CANCELADO: 'error',
+  EXPIRADO: 'neutra',
+};
+
+function TarjetaBoleto({ boleto }: { boleto: BoletoConEvento }) {
+  const fecha = boleto.evento ? formatearFechaEvento(boleto.evento.fechaHora) : '';
+  const esVip = boleto.categoria === 'VIP';
+  return (
+    <article className="boleto" data-estado={boleto.estado} aria-label={`Boleto ${folioCorto(boleto.id)}`}>
+      <div className="boleto__encabezado">
+        <div className="boleto__badges">
+          <Badge tono="dorada">
+            {esVip && <IconoEstrella tamano={12} />}
+            {ETIQUETA_CATEGORIA[boleto.categoria]}
+          </Badge>
+          <Badge tono={TONO_ESTADO[boleto.estado]}>{ETIQUETA_ESTADO_BOLETO[boleto.estado]}</Badge>
+        </div>
+        <h2 className="boleto__evento">{boleto.evento?.nombre ?? 'Evento no disponible'}</h2>
+        {fecha && boleto.evento && (
+          <p className="meta">
+            <time dateTime={boleto.evento.fechaHora}>{fecha}</time>
+          </p>
+        )}
+        <p className="boleto__precio">{formatearPrecio(boleto.precio)}</p>
+      </div>
+
+      <div className="boleto__corte" aria-hidden="true" />
+
+      <div className="boleto__cuerpo">
+        {/* Solo un boleto ACTIVO enseña su QR; los demás no sirven para entrar. */}
+        {boleto.estado === 'ACTIVO' ? (
+          <div className="boleto__qr">
+            <QRCodeSVG value={boleto.codigoQR} size={160} title={`Código QR del boleto ${folioCorto(boleto.id)}`} />
+          </div>
+        ) : (
+          <p className="boleto__sin-qr">{LEYENDA_SIN_QR[boleto.estado]}</p>
+        )}
+        <p className="boleto__folio">
+          Folio <strong>{folioCorto(boleto.id)}</strong>
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function BoletoSkeleton() {
+  return (
+    <div className="boleto" aria-hidden="true">
+      <div className="boleto__encabezado">
+        <Skeleton alto={22} ancho={120} />
+        <Skeleton alto={20} ancho="70%" />
+        <Skeleton alto={14} ancho="50%" />
+      </div>
+      <div className="boleto__corte" />
+      <div className="boleto__cuerpo">
+        <Skeleton alto={192} ancho={192} />
+      </div>
+    </div>
+  );
+}
+
+const cargarBoletos = (signal: AbortSignal) => boletosService.misBoletos(signal);
 
 export default function MyTickets() {
-  const [boletos, setBoletos] = useState<BoletoDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchBoletos = async () => {
-      const token = localStorage.getItem('token') ?? localStorage.getItem('accessToken');
-      if (!token) {
-        navigate('/login', { replace: true });
-        return;
-      }
-
-      try {
-        const data = await boletosService.getMisBoletos();
-        setBoletos(data);
-      } catch (err: any) {
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('accessToken');
-          navigate('/login', { replace: true });
-        } else {
-          setError('No se pudieron cargar tus boletos.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBoletos();
-  }, [navigate]);
+  useTituloPagina('Mis boletos');
+  const { usuario } = useAuth();
+  const recurso = useRecurso(cargarBoletos, 'mis-boletos');
 
   return (
-    <div className="container" style={{ paddingTop: '100px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ color: 'var(--primary-color)' }}>Mis Boletos</h2>
-        <Link to="/" className="btn-primary" style={{ padding: '8px 16px', fontSize: '14px', textDecoration: 'none' }}>
-          Volver al Inicio
-        </Link>
-      </div>
-      
-      {loading && <p style={{ color: 'var(--text-secondary)' }}>Cargando tus boletos...</p>}
-      
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      
-      {!loading && !error && boletos.length === 0 && (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Aún no tienes boletos</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            Explora los eventos y adquiere tu acceso para disfrutar del festival.
-          </p>
-          <Link to="/events" className="btn-primary" style={{ textDecoration: 'none' }}>Ver Eventos</Link>
+    <div className="pagina">
+      <header className="pagina__cabecera">
+        <h1 className="titulo-pagina">Mis boletos</h1>
+        {usuario && <p className="meta">Hola, {usuario.nombre}</p>}
+      </header>
+
+      {recurso.estado === 'cargando' && (
+        <div role="status" aria-label="Cargando tus boletos" className="rejilla-boletos">
+          <BoletoSkeleton />
+          <BoletoSkeleton />
+          <span className="solo-lectores">Cargando tus boletos…</span>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-        {boletos.map((boleto) => (
-          <div key={boleto.id} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ width: '100%', marginBottom: '16px' }}>
-              <h3 style={{ color: 'white', marginBottom: '4px' }}>{boleto.evento?.nombre || 'Gran Gala Mariachi'}</h3>
-              <p style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold' }}>Categoría: {boleto.categoria}</p>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{new Date(boleto.evento?.fechaHora || Date.now()).toLocaleDateString()}</p>
-            </div>
-            
-            <div style={{ background: 'white', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
-              <QRCodeSVG value={boleto.codigoQR} size={150} />
-            </div>
-            
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID Boleto: {boleto.id}</p>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Estado: <span style={{ color: boleto.estado === 'VENDIDO' ? '#4caf50' : 'var(--primary-color)' }}>{boleto.estado}</span></p>
-          </div>
-        ))}
-      </div>
+      {recurso.estado === 'error' && (
+        <StatusMessage
+          rol="alert"
+          icono={IconoAlerta}
+          titulo="No se pudieron cargar tus boletos"
+          texto={recurso.mensaje}
+          acciones={
+            <Button pildora onClick={recurso.reintentar}>
+              Reintentar
+            </Button>
+          }
+        />
+      )}
+
+      {recurso.estado === 'listo' && recurso.datos.length === 0 && (
+        <StatusMessage
+          icono={IconoBoleto}
+          titulo="Aún no tienes boletos"
+          texto="Explora los eventos y adquiere tu acceso para disfrutar del festival."
+          acciones={
+            <ButtonLink to="/events" pildora>
+              Ver eventos
+            </ButtonLink>
+          }
+        />
+      )}
+
+      {recurso.estado === 'listo' && recurso.datos.length > 0 && (
+        <ul className="rejilla-boletos">
+          {recurso.datos.map((boleto) => (
+            <li key={boleto.id}>
+              <TarjetaBoleto boleto={boleto} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

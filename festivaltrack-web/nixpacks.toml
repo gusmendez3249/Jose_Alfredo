@@ -1,11 +1,13 @@
-﻿[phases.setup]
+[phases.setup]
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = ["npm ci"]
 
 [phases.build]
+# VITE_API_URL debe estar definida como variable del servicio: se incrusta en el bundle y en la CSP.
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx serve -s dist -l $PORT"
+# serve fijado en package.json (sin npx): lee dist/serve.json (rewrites SPA + cabeceras de seguridad).
+cmd = "npm start"
