@@ -39,7 +39,8 @@ import mx.utng.festivaltrack.tv.ui.theme.FestivalTrackTvTheme
 /**
  * Punto de entrada de la app de Android TV.
  *
- * Al abrir se muestra el inicio de sesión (con opción de seguir como invitado). Después, un
+ * Al abrir se muestra el inicio de sesión (con opción de seguir como invitado), salvo que haya
+ * una sesión guardada y vigente: entonces se entra directo con esa cuenta. Después, un
  * menú lateral único y la sección elegida. "Comprar boletos" abre, desde cualquier sección, el
  * QR para pagar en el celular. El botón Atrás del control regresa al Inicio antes de salir.
  */
@@ -65,8 +66,9 @@ class MainActivity : ComponentActivity() {
                     val comunidad by viewModel.comunidad.collectAsState()
                     val boletos by viewModel.boletos.collectAsState()
 
-                    var mostrarLogin by rememberSaveable { mutableStateOf(true) }
-                    var yaEntro by rememberSaveable { mutableStateOf(false) }
+                    // Con una sesión guardada y vigente se entra directo; si no, se pide iniciar sesión.
+                    var mostrarLogin by rememberSaveable { mutableStateOf(viewModel.sesion.value == null) }
+                    var yaEntro by rememberSaveable { mutableStateOf(viewModel.sesion.value != null) }
                     var seccion by rememberSaveable { mutableStateOf(SeccionTv.INICIO) }
                     // Compra con QR: null = cerrada; "" = sin concierto preseleccionado.
                     var comprar by remember { mutableStateOf<String?>(null) }
@@ -86,6 +88,8 @@ class MainActivity : ComponentActivity() {
                         BackHandler(enabled = yaEntro) { mostrarLogin = false }
                         TvLoginScreen(
                             iniciarSesion = viewModel::iniciarSesion,
+                            pedirCodigo = viewModel::pedirCodigoTv,
+                            consultarCodigo = viewModel::consultarVinculoTv,
                             onEntrar = { mostrarLogin = false; yaEntro = true },
                             onContinuarSinCuenta = { mostrarLogin = false; yaEntro = true }
                         )
@@ -139,6 +143,7 @@ class MainActivity : ComponentActivity() {
                                     proximos = proximos,
                                     ahora = ahora,
                                     sesion = sesion,
+                                    enviarMensaje = viewModel::enviarMensajeChat,
                                     onIniciarSesion = { mostrarLogin = true },
                                     onVerProgramacion = { seccion = SeccionTv.PROGRAMACION }
                                 )

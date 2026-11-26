@@ -48,6 +48,31 @@ interface FestivalApiService {
     suspend fun register(@retrofit2.http.Body request: RegisterDto): AuthResponseDto
 
     /**
+     * La TV pide un código para iniciar sesión desde el celular (sin sesión).
+     * @return [CodigoTvDto] con el código para mostrar y el token secreto para preguntar.
+     */
+    @retrofit2.http.POST("auth/tv-sync/codigo")
+    suspend fun pedirCodigoTv(): CodigoTvDto
+
+    /**
+     * La TV pregunta si ya aprobaron su código. Al aprobarse trae el login de esa cuenta.
+     * @param request El `tvToken` que llegó con el código.
+     */
+    @retrofit2.http.POST("auth/tv-sync/estado")
+    suspend fun estadoVinculoTv(@retrofit2.http.Body request: EstadoTvRequest): EstadoVinculoTvDto
+
+    /**
+     * Aprueba desde el celular el código que muestra la TV: la TV entra con esta cuenta.
+     * @param token Token JWT en formato "Bearer <token>".
+     * @throws retrofit2.HttpException 404 si el código no existe o ya venció.
+     */
+    @retrofit2.http.POST("auth/tv-sync")
+    suspend fun vincularTv(
+        @retrofit2.http.Header("Authorization") token: String,
+        @retrofit2.http.Body request: VincularTvRequest
+    ): VincularTvRespuestaDto
+
+    /**
      * Crea un nuevo evento del festival (requiere rol ADMIN).
      * @param token Token JWT del admin en formato "Bearer <token>".
      * @param evento Datos del evento a crear.
@@ -418,6 +443,7 @@ interface FestivalApiService {
  * @property artistaId ID del artista principal (puede ser null).
  * @property artista Datos del artista principal (puede ser null).
  * @property transmision Datos de transmisión en vivo si está activa (puede ser null).
+ * @property bannerUrl Imagen promocional del concierto (puede ser null).
  */
 data class EventoDto(
     val id: String,
@@ -430,7 +456,9 @@ data class EventoDto(
     val longitud: Double?,
     val artistaId: String?,
     val artista: ArtistaDto?,
-    val transmision: TransmisionDto? = null
+    val transmision: TransmisionDto? = null,
+    /** Imagen promocional del concierto (`/uploads/...` o URL https); null si no tiene. */
+    val bannerUrl: String? = null
 ) {
     /**
      * Convierte este DTO a una entidad Room para persistencia local.
@@ -443,7 +471,7 @@ data class EventoDto(
             fechaHora = fechaHora,
             ubicacion = ubicacion,
             escenario = escenario,
-            bannerUrl = null,
+            bannerUrl = bannerUrl?.takeIf { it.isNotBlank() },
             estado = estado,
             artistaId = artistaId,
             artistaNombre = artista?.nombre,
@@ -517,6 +545,39 @@ data class AuthResponseDto(
     val accessToken: String,
     val usuario: UsuarioDto
 )
+
+/**
+ * Código para iniciar sesión en la TV desde el celular (`POST auth/tv-sync/codigo`).
+ * @property codigo Código corto para mostrar, p. ej. "KX7M-3QPA".
+ * @property tvToken Token secreto con el que solo la TV pregunta por el estado.
+ * @property expiraEnSegundos Vigencia del código (5 minutos).
+ */
+data class CodigoTvDto(
+    val codigo: String,
+    val tvToken: String,
+    val expiraEnSegundos: Int
+)
+
+/** Cuerpo de `POST auth/tv-sync/estado`. */
+data class EstadoTvRequest(val tvToken: String)
+
+/**
+ * Respuesta de `POST auth/tv-sync/estado`.
+ * @property estado "PENDIENTE", "APROBADO" o "EXPIRADO".
+ * @property accessToken JWT de la cuenta que aprobó (solo con "APROBADO").
+ * @property usuario Datos de esa cuenta (solo con "APROBADO").
+ */
+data class EstadoVinculoTvDto(
+    val estado: String,
+    val accessToken: String? = null,
+    val usuario: UsuarioDto? = null
+)
+
+/** Cuerpo de `POST auth/tv-sync`: el código que se ve en la TV. */
+data class VincularTvRequest(val codigo: String)
+
+/** Respuesta de `POST auth/tv-sync`. */
+data class VincularTvRespuestaDto(val status: String, val message: String)
 
 /**
  * Información del usuario autenticado.

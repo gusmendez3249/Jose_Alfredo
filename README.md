@@ -77,7 +77,9 @@ npx jest --ci
 #    Levanta la web visible en la red y dile a la app dónde está:
 cd festivaltrack-web && npm run dev -- --host          # http://<IP de tu PC>:5173
 #    En local.properties:  festivaltrack.webUrl=http://<IP de tu PC>:5173
-#    (o -PfestivaltrackWebUrl=https://<web publicada>). Sin configurar usa festivaltrack.deviceHost:5173.
+#    (o -PfestivaltrackWebUrl=https://<web publicada>). Sin configurar usa festivaltrack.deviceHost:5173,
+#    salvo que la API sea la de Render: entonces usa https://festivaltrack-web.onrender.com.
+#    TV contra Render:  ./gradlew :tv:assembleDebug -PfestivaltrackApiUrl=https://festivaltrack-backend.onrender.com/api/v1
 #    El backend debe aceptar ese origen: FRONTEND_URL=http://<IP de tu PC>:5173 en su .env.
 ```
 
@@ -144,10 +146,11 @@ La solución permite conectar a organizadores, visitantes presenciales, espectad
 - Se prueba con el **Desktop Head Unit**; pasos en [app/README.md](./app/README.md#modo-automóvil-android-auto).
 
 ### 2. Aplicación Smart TV (`tv/`)
-- **`TvLiveStreamScreen`**: Pantalla dividida (68% reproductor ExoPlayer RTSP + 32% panel de chat comunitario con refresco automático cada 3 segundos).
-- **`TvChatInputDialog`**: Cuadro de diálogo modal adaptado para D-Pad que permite desplegar el teclado en pantalla sin requerir toque o ratón.
-- **`TvHomeScreen` & `TvHistoricalGalleryScreen`**: Carrusel de imágenes y agenda de actividades para pantallas grandes de alta definición.
-- **`TvSettingsScreen`**: Panel de información técnica del dispositivo y configuración del servidor API.
+- **`TvMainScreen`**: Inicio con el próximo concierto (o la transmisión en curso) y carrusel de conciertos, cada uno con su imagen.
+- **`TvLiveStreamScreen`**: Pantalla dividida (68% reproductor ExoPlayer RTSP + 32% chat del concierto con refresco cada 3 segundos).
+- **`TvScheduleScreen`, `TvBiografiaScreen`, `TvMapaScreen`, `TvGalleryScreen`, `TvComunidadScreen`, `TvBoletosScreen`**: Programación, biografía y música, mapa de sedes con QR de la ruta, galería, comunidad y boletos con QR.
+- **`TvLoginScreen` & `TvSettingsScreen`**: Inicio de sesión **con el celular** (la TV muestra un código y un QR; se confirma en la web `/vincular-tv` o en la app, Perfil → Vincular TV), con correo y contraseña o como invitado; la sesión se guarda cifrada. Ajustes con el servidor, la transmisión y la cuenta.
+- Compra de boletos y registro con **QR** que abre la web en el celular. Detalle de cada pantalla y su código en [tv/README.md](./tv/README.md).
 
 ### 3. Portal Web (`festivaltrack-web/`)
 - **`Home.tsx`**: Portada responsive con Hero animado, tarjetas de eventos en vivo y barra lateral de chat público en tiempo real.

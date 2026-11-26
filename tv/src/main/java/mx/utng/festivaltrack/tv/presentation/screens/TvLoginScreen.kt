@@ -20,25 +20,38 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.shared.data.remote.CodigoTvDto
 import mx.utng.festivaltrack.shared.util.EnlacesWeb
+import mx.utng.festivaltrack.tv.presentation.viewmodel.VinculoTv
 import mx.utng.festivaltrack.tv.ui.theme.*
 import mx.utng.festivaltrack.tv.ui.utils.DynamicQrCode
+
+/** Cada cuánto pregunta la TV si ya aprobaron su código desde el celular. */
+private const val CONSULTA_MS = 3_000L
 
 /**
  * Inicio de sesión en la TV.
  *
- * - Entra de verdad contra el backend (antes cualquier dato dejaba pasar) y muestra los mismos
- *   mensajes que el móvil: "Correo o contraseña incorrectos", "Sin conexión…".
+ * - **Con el celular (recomendado):** la TV pide un código y lo muestra en grande y en un QR.
+ *   El QR abre la web en el celular (si no hay sesión pide entrar o crear cuenta) y ahí se
+ *   confirma; también se puede escribir el código en la app (Perfil → Vincular TV). La TV
+ *   pregunta cada 3 s y entra sola en cuanto lo aprueban. El código dura 5 minutos y se
+ *   renueva solo.
+ * - **Con correo y contraseña** usando el control, con los mismos mensajes que el móvil.
  * - "Continuar sin cuenta": la TV se puede ver completa como invitado; la cuenta solo hace
- *   falta para escribir en el chat.
- * - Crear cuenta: con el control es incómodo, así que un QR real abre el registro en el celular.
+ *   falta para el chat y Mis boletos.
  *
  * @param iniciarSesion Intenta entrar; regresa null si entró o el mensaje de error.
+ * @param pedirCodigo Pide un código para entrar con el celular (null = sin conexión).
+ * @param consultarCodigo Pregunta por el código con su token; con [VinculoTv.Aprobado] ya hay sesión.
  */
 @Composable
 fun TvLoginScreen(
     iniciarSesion: suspend (correo: String, contrasena: String) -> String?,
+    pedirCodigo: suspend () -> CodigoTvDto?,
+    consultarCodigo: suspend (tvToken: String) -> VinculoTv,
     onEntrar: () -> Unit,
     onContinuarSinCuenta: () -> Unit
 ) {
@@ -48,6 +61,30 @@ fun TvLoginScreen(
     var cargando by remember { mutableStateOf(false) }
     var ayudaContrasena by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // Código para entrar con el celular: se pide al abrir, se consulta cada 3 s y se renueva al vencer.
+    var codigoTv by remember { mutableStateOf<CodigoTvDto?>(null) }
+    var sinConexionCodigo by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val codigo = pedirCodigo()
+            codigoTv = codigo
+            sinConexionCodigo = codigo == null
+            if (codigo == null) {
+                delay(5_000)
+                continue
+            }
+            val vence = System.currentTimeMillis() + codigo.expiraEnSegundos * 1_000L
+            while (System.currentTimeMillis() < vence) {
+                delay(CONSULTA_MS)
+                when (consultarCodigo(codigo.tvToken)) {
+                    is VinculoTv.Aprobado -> { onEntrar(); return@LaunchedEffect }
+                    VinculoTv.Expirado -> break
+                    VinculoTv.Pendiente, VinculoTv.SinConexion -> Unit
+                }
+            }
+        }
+    }
 
     val camposColores = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = FestivalGold,
@@ -72,28 +109,47 @@ fun TvLoginScreen(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Bienvenida y QR para crear cuenta
+            // Bienvenida y entrada con el celular (QR + código)
             Column(modifier = Modifier.weight(1f).padding(end = 32.dp), verticalArrangement = Arrangement.Center) {
                 Text("FESTIVAL JOSÉ ALFREDO JIMÉNEZ", color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(8.dp))
-                Text("Bienvenido al\nFestival", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 42.sp)
-                Spacer(Modifier.height(12.dp))
+                Text("Bienvenido al Festival", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
                 Text(
                     "Mira la programación, la galería y las transmisiones en vivo desde Dolores Hidalgo.",
                     color = FestivalTextSecondary, fontSize = 13.sp
                 )
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(20.dp))
                 Card(colors = CardDefaults.cardColors(containerColor = FestivalCardBg), shape = RoundedCornerShape(12.dp)) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        DynamicQrCode(content = EnlacesWeb.registro(), modifier = Modifier.size(120.dp))
+                        val codigo = codigoTv
+                        Box(Modifier.size(150.dp), contentAlignment = Alignment.Center) {
+                            when {
+                                codigo != null -> DynamicQrCode(content = EnlacesWeb.vincularTv(codigo.codigo), modifier = Modifier.fillMaxSize())
+                                sinConexionCodigo -> Text("Sin conexión con el servidor", color = FestivalTextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
+                                else -> CircularProgressIndicator(color = FestivalGold, modifier = Modifier.size(32.dp))
+                            }
+                        }
                         Spacer(Modifier.width(16.dp))
                         Column {
-                            Text("¿No tienes cuenta?", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Escanea con tu celular para crearla", color = FestivalGold, fontSize = 12.sp)
-                            Text(EnlacesWeb.registro(), color = FestivalTextSecondary, fontSize = 10.sp)
+                            Text("Entra con tu celular", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Escanea el código con la cámara y confirma.", color = FestivalTextSecondary, fontSize = 12.sp)
+                            Text("O en la app: Perfil → Vincular TV.", color = FestivalTextSecondary, fontSize = 12.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                codigo?.codigo ?: "····-····",
+                                color = FestivalGold, fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp
+                            )
+                            Text("La TV entra sola al confirmar. El código cambia cada 5 min.", color = FestivalTextSecondary, fontSize = 10.sp)
                         }
                     }
                 }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "¿No tienes cuenta? Al escanear el código también puedes crearla.",
+                    color = FestivalTextSecondary, fontSize = 12.sp
+                )
             }
 
             // Formulario

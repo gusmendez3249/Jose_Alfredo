@@ -30,6 +30,7 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 import mx.utng.festivaltrack.shared.util.HorarioFestival
 import mx.utng.festivaltrack.tv.R
+import mx.utng.festivaltrack.tv.presentation.components.PortadaConcierto
 import mx.utng.festivaltrack.tv.ui.theme.*
 import java.time.Instant
 
@@ -204,7 +205,8 @@ fun TvMainScreen(
 }
 
 /**
- * Tarjeta de concierto del carrusel; se resalta con borde dorado al enfocarla con el control.
+ * Tarjeta de concierto del carrusel con su imagen ([PortadaConcierto]); se resalta con borde
+ * dorado al enfocarla con el control.
  */
 @Composable
 fun TvEventCard(evento: EventoEntity, ahora: Instant, enVivo: Boolean, onClick: () -> Unit) {
@@ -225,12 +227,7 @@ fun TvEventCard(evento: EventoEntity, ahora: Instant, enVivo: Boolean, onClick: 
             )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = R.drawable.mariachi_gala_stage),
-                contentDescription = evento.nombre,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            PortadaConcierto(evento, Modifier.fillMaxSize())
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)))))
             Column(
                 modifier = Modifier.fillMaxSize().padding(12.dp),

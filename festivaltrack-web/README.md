@@ -106,6 +106,7 @@ El diseño replica el de la app móvil (`app/.../ui/theme/Color.kt` y sus pantal
 | `/admin`, `/admin/conciertos`, `/admin/canciones`, `/admin/usuarios` | Panel de administración: resumen, conciertos y repertorio, catálogo de canciones, usuarios y roles | Rol `ADMINISTRADOR` |
 | `/checkout/:eventoId` | Compra de boletos VIP/GENERAL (pago simulado) | Sí |
 | `/mis-boletos` | Boletos con QR (solo los activos muestran QR) | Sí |
+| `/vincular-tv?codigo=…` | Entrar en la Smart TV con esta cuenta: la abre el QR de la TV y se confirma el código | Sí |
 | `/events/map` | Redirige a `/events` (ruta antigua) | — |
 | cualquier otra | Página no encontrada | — |
 

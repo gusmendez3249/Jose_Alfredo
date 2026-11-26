@@ -17,6 +17,10 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
 import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
+import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
+import mx.utng.festivaltrack.shared.data.remote.CodigoTvDto
+import mx.utng.festivaltrack.shared.data.remote.EstadoTvRequest
+import mx.utng.festivaltrack.shared.data.remote.EstadoVinculoTvDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
@@ -25,9 +29,15 @@ import mx.utng.festivaltrack.shared.data.remote.LoginDto
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 import mx.utng.festivaltrack.shared.util.HorarioFestival
+import mx.utng.festivaltrack.tv.data.DatosSesion
+import mx.utng.festivaltrack.tv.data.SesionGuardadaTv
+import retrofit2.HttpException
 import java.time.Instant
 
-/** Cuenta con la que se inició sesión en la TV. Solo vive en memoria: al cerrar la app se pide de nuevo. */
+/**
+ * Cuenta con la que se inició sesión en la TV. Se guarda cifrada ([SesionGuardadaTv]) y se
+ * restaura al abrir la app mientras el token siga vigente.
+ */
 data class SesionTv(val nombre: String, val correo: String, val token: String)
 
 /** Estado de la galería traída del servidor. */
@@ -43,7 +53,10 @@ sealed class EstadoGaleria {
  * - **Cartelera**: eventos de Room sincronizados con el backend cada 5 s; [proximos] aplica las
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
- * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado.
+ * - **Sesión**: login real contra el backend, con correo y contraseña o aprobando desde el
+ *   celular el código que muestra la TV ([pedirCodigoTv] y [consultarVinculoTv]);
+ *   [sesion] es null para ver como invitado. Se guarda
+ *   en la TV y, si el servidor rechaza el token (401) en boletos, comunidad o chat, se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
 class TvViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,7 +86,10 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     private val _galeria = MutableStateFlow<EstadoGaleria>(EstadoGaleria.Cargando)
     val galeria: StateFlow<EstadoGaleria> = _galeria.asStateFlow()
 
-    private val _sesion = MutableStateFlow<SesionTv?>(null)
+    private val sesionGuardada = SesionGuardadaTv(application)
+
+    private val _sesion = MutableStateFlow(sesionGuardada.leer()?.let { SesionTv(it.nombre, it.correo, it.token) })
+    /** Sesión actual; ya viene restaurada al crear el ViewModel si había una guardada y vigente. */
     val sesion: StateFlow<SesionTv?> = _sesion.asStateFlow()
 
     /** Música: demos de 30 s, como en el móvil. */
@@ -130,6 +146,14 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
+        // Sesión restaurada: se confirma con el servidor (si ya no acepta el token, se cierra).
+        _sesion.value?.let { restaurada ->
+            viewModelScope.launch {
+                runCatching { api.getMisBoletos("Bearer ${restaurada.token}") }
+                    .onFailure { if (esTokenRechazado(it)) cerrarSesionSiSigue(restaurada.token) }
+            }
+        }
+
         cargarGaleria()
         cargarBiografiaYMusica()
         cargarComunidad()
@@ -155,8 +179,9 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         return try {
             val respuesta = api.login(LoginDto(correo.trim(), contrasena))
             _sesion.value = SesionTv(respuesta.usuario.nombre, respuesta.usuario.correo, respuesta.accessToken)
+            sesionGuardada.guardar(DatosSesion(respuesta.usuario.nombre, respuesta.usuario.correo, respuesta.accessToken))
             null
-        } catch (e: retrofit2.HttpException) {
+        } catch (e: HttpException) {
             when (e.code()) {
                 400, 401 -> "Correo o contraseña incorrectos"
                 429 -> "Demasiados intentos. Espera un minuto e intenta de nuevo."
@@ -167,9 +192,42 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Pide al servidor un código para entrar con el celular; null si no hay conexión. */
+    suspend fun pedirCodigoTv(): CodigoTvDto? = runCatching { api.pedirCodigoTv() }.getOrNull()
+
+    /**
+     * Pregunta si ya aprobaron el código desde el celular. Si ya lo aprobaron, inicia y guarda la
+     * sesión de esa cuenta, igual que con correo y contraseña.
+     */
+    suspend fun consultarVinculoTv(tvToken: String): VinculoTv {
+        val respuesta = try {
+            api.estadoVinculoTv(EstadoTvRequest(tvToken))
+        } catch (e: HttpException) {
+            // Demasiadas peticiones o servidor caído: se espera y se vuelve a preguntar.
+            return if (e.code() == 429 || e.code() >= 500) VinculoTv.SinConexion else VinculoTv.Expirado
+        } catch (e: Exception) {
+            return VinculoTv.SinConexion
+        }
+        val resultado = interpretarVinculo(respuesta)
+        if (resultado is VinculoTv.Aprobado) {
+            _sesion.value = resultado.sesion
+            sesionGuardada.guardar(DatosSesion(resultado.sesion.nombre, resultado.sesion.correo, resultado.sesion.token))
+        }
+        return resultado
+    }
+
     fun cerrarSesion() {
+        sesionGuardada.borrar()
         _sesion.value = null
         _boletos.value = Cargable.Cargando
+    }
+
+    /** El servidor ya no acepta el token (venció, se cambió la llave o se borró la cuenta). */
+    private fun esTokenRechazado(error: Throwable) = (error as? HttpException)?.code() == 401
+
+    /** Cierra la sesión por un token rechazado, salvo que mientras tanto se haya entrado con otra. */
+    private fun cerrarSesionSiSigue(token: String) {
+        if (_sesion.value?.token == token) cerrarSesion()
     }
 
     /** Biografía del artista y catálogo de canciones. */
@@ -190,9 +248,15 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     fun cargarComunidad() {
         _comunidad.value = Cargable.Cargando
         viewModelScope.launch {
-            val token = _sesion.value?.let { "Bearer ${it.token}" }
-            _comunidad.value = runCatching { api.getForo(token = token, limit = 30) }
-                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+            val actual = _sesion.value?.token
+            val token = actual?.let { "Bearer $it" }
+            var resultado = runCatching { api.getForo(token = token, limit = 30) }
+            // Con un token que el servidor ya no acepta, se cierra la sesión y se lee como invitado.
+            if (actual != null && resultado.exceptionOrNull()?.let(::esTokenRechazado) == true) {
+                cerrarSesionSiSigue(actual)
+                resultado = runCatching { api.getForo(token = null, limit = 30) }
+            }
+            _comunidad.value = resultado.map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
         }
     }
 
@@ -201,8 +265,34 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         val sesion = _sesion.value ?: return
         _boletos.value = Cargable.Cargando
         viewModelScope.launch {
-            _boletos.value = runCatching { api.getMisBoletos("Bearer ${sesion.token}") }
-                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+            val resultado = runCatching { api.getMisBoletos("Bearer ${sesion.token}") }
+            if (resultado.exceptionOrNull()?.let(::esTokenRechazado) == true) {
+                cerrarSesionSiSigue(sesion.token) // la pantalla vuelve a pedir que se inicie sesión
+                return@launch
+            }
+            _boletos.value = resultado.map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+    }
+
+    /**
+     * Envía un mensaje al chat del concierto con la sesión actual. Regresa null si se envió o el
+     * texto del error. Si el servidor ya no acepta el token (401), cierra la sesión como en
+     * boletos y comunidad, y pide volver a entrar.
+     */
+    suspend fun enviarMensajeChat(eventoId: String, texto: String): String? {
+        val sesion = _sesion.value ?: return "Inicia sesión para escribir."
+        return try {
+            api.sendChatMessage("Bearer ${sesion.token}", ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = texto))
+            null
+        } catch (e: HttpException) {
+            if (esTokenRechazado(e)) {
+                cerrarSesionSiSigue(sesion.token)
+                "Tu sesión venció. Inicia sesión de nuevo para escribir."
+            } else {
+                "No se pudo enviar el mensaje. Intenta de nuevo."
+            }
+        } catch (e: Exception) {
+            "No se pudo enviar el mensaje. Revisa la conexión."
         }
     }
 
@@ -214,6 +304,30 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         reproductor.liberar()
         super.onCleared()
     }
+}
+
+/** Cómo va el inicio de sesión de la TV con el celular. */
+sealed class VinculoTv {
+    /** Nadie ha aprobado el código todavía. */
+    object Pendiente : VinculoTv()
+    /** Lo aprobaron: [sesion] es la cuenta con la que entra la TV. */
+    data class Aprobado(val sesion: SesionTv) : VinculoTv()
+    /** El código venció (5 min) o ya se usó: hay que pedir otro. */
+    object Expirado : VinculoTv()
+    /** No respondió el servidor: se vuelve a preguntar. */
+    object SinConexion : VinculoTv()
+}
+
+/** Traduce la respuesta de `auth/tv-sync/estado`. Un "APROBADO" sin token se toma como vencido. */
+fun interpretarVinculo(respuesta: EstadoVinculoTvDto): VinculoTv = when (respuesta.estado) {
+    "PENDIENTE" -> VinculoTv.Pendiente
+    "APROBADO" -> {
+        val token = respuesta.accessToken
+        val usuario = respuesta.usuario
+        if (token.isNullOrBlank() || usuario == null) VinculoTv.Expirado
+        else VinculoTv.Aprobado(SesionTv(usuario.nombre, usuario.correo, token))
+    }
+    else -> VinculoTv.Expirado
 }
 
 /** Datos que se piden al servidor: cargando, listos o sin conexión. */

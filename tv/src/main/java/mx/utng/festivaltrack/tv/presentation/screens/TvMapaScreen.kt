@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,6 +71,10 @@ fun construirSedes(proximos: List<EventoEntity>, sitios: List<SitioArDto>): List
     return sedes
 }
 
+/** La sede con ese nombre; si ya no está en la lista (o no se ha elegido ninguna), la primera. */
+fun elegirSede(sedes: List<SedeTv>, nombre: String?): SedeTv? =
+    sedes.firstOrNull { it.nombre == nombre } ?: sedes.firstOrNull()
+
 /** Ruta a pie en el mapa del celular (Google Maps abre la app de mapas del teléfono). */
 fun urlRuta(sede: SedeTv) = "https://www.google.com/maps/dir/?api=1&destination=${sede.lat},${sede.lon}&travelmode=walking"
 
@@ -80,7 +85,10 @@ fun urlRuta(sede: SedeTv) = "https://www.google.com/maps/dir/?api=1&destination=
 @Composable
 fun TvMapaScreen(proximos: List<EventoEntity>, sitios: List<SitioArDto>, ahora: Instant) {
     val sedes = remember(proximos, sitios) { construirSedes(proximos, sitios) }
-    var elegida by remember(sedes) { mutableStateOf(sedes.firstOrNull()) }
+    // Se recuerda el nombre y no la sede: la cartelera se sincroniza cada 5 s y cada vez llegan
+    // eventos nuevos (con otro updatedAt), lo que antes regresaba la selección a la primera sede.
+    var elegidoNombre by rememberSaveable { mutableStateOf<String?>(null) }
+    val elegida = elegirSede(sedes, elegidoNombre)
 
     if (sedes.isEmpty()) {
         TvAviso(Icons.Default.Place, "Cargando las sedes del festival…", "Si no aparecen, revisa la conexión con el servidor.", cargando = true)
@@ -96,14 +104,14 @@ fun TvMapaScreen(proximos: List<EventoEntity>, sitios: List<SitioArDto>, ahora: 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
                 items(sedes, key = { it.nombre }) { sede ->
                     var enfocada by remember { mutableStateOf(false) }
-                    val esElegida = sede == elegida
+                    val esElegida = sede.nombre == elegida?.nombre
                     Surface(
-                        onClick = { elegida = sede },
+                        onClick = { elegidoNombre = sede.nombre },
                         color = when { esElegida -> Color(0xFF2C2214); enfocada -> Color(0xFF2E3D30); else -> FestivalCardBg },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .onFocusChanged { enfocada = it.isFocused; if (it.isFocused) elegida = sede }
+                            .onFocusChanged { enfocada = it.isFocused; if (it.isFocused) elegidoNombre = sede.nombre }
                             .border(if (enfocada || esElegida) 2.dp else 0.dp, if (enfocada || esElegida) FestivalGold else Color.Transparent, RoundedCornerShape(10.dp))
                     ) {
                         Column(Modifier.padding(12.dp)) {
@@ -144,6 +152,8 @@ fun TvMapaScreen(proximos: List<EventoEntity>, sitios: List<SitioArDto>, ahora: 
 
 @Composable
 private fun MapaSedes(sedes: List<SedeTv>, elegida: SedeTv?) {
+    // Sede a la que ya se movió el mapa: solo se anima cuando se elige otra, no en cada sincronización.
+    val centradaEn = remember { arrayOfNulls<String>(1) }
     AndroidView(
         factory = { ctx ->
             Configuration.getInstance().load(ctx, ctx.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
@@ -163,10 +173,13 @@ private fun MapaSedes(sedes: List<SedeTv>, elegida: SedeTv?) {
                     position = GeoPoint(sede.lat, sede.lon)
                     title = sede.nombre
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    if (sede == elegida) showInfoWindow()
+                    if (sede.nombre == elegida?.nombre) showInfoWindow()
                 })
             }
-            elegida?.let { mapa.controller.animateTo(GeoPoint(it.lat, it.lon)) }
+            if (elegida != null && elegida.nombre != centradaEn[0]) {
+                mapa.controller.animateTo(GeoPoint(elegida.lat, elegida.lon))
+                centradaEn[0] = elegida.nombre
+            }
             mapa.invalidate()
         },
         modifier = Modifier.fillMaxSize()

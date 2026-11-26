@@ -38,8 +38,9 @@ festivaltrack-backend/
 │   ├── prisma/                  # Conexión inyectable de Prisma Client a PostgreSQL.
 │   │
 │   ├── auth/                    # ⭐ Autenticación JWT con Bcrypt.
-│   │   ├── auth.controller.ts   # Endpoints POST /auth/login y POST /auth/register.
-│   │   └── auth.service.ts      # Hash de contraseñas y firma de tokens JWT.
+│   │   ├── auth.controller.ts   # Endpoints POST /auth/login, /auth/register y /auth/tv-sync (TV con el celular).
+│   │   ├── auth.service.ts      # Hash de contraseñas y firma de tokens JWT.
+│   │   └── vinculos-tv.ts       # Códigos de 5 min para iniciar sesión en la TV desde el celular.
 │   │
 │   ├── boletos/                 # ⭐ Compra transaccional y validación QR.
 │   │   ├── boletos.controller.ts # POST /boletos/comprar, GET /boletos/mis-boletos.
@@ -143,6 +144,13 @@ npm run start:dev
   ```json
   { "correo": "admin@festivaltrack.test", "contrasena": "<tu SEED_ADMIN_PASSWORD>" }
   ```
+
+### 1b. Iniciar sesión en la TV con el celular
+1. La TV pide un código (sin sesión): **POST** `http://localhost:3001/api/v1/auth/tv-sync/codigo` → `{ "codigo": "KX7M-3QPA", "tvToken": "<64 hex>", "expiraEnSegundos": 300 }`.
+2. El usuario lo aprueba con su sesión: **POST** `http://localhost:3001/api/v1/auth/tv-sync`, `Authorization: Bearer <TOKEN_JWT>`, body `{ "codigo": "KX7M-3QPA" }` (404 si no existe o venció).
+3. La TV pregunta cada 3 s: **POST** `http://localhost:3001/api/v1/auth/tv-sync/estado`, body `{ "tvToken": "<64 hex>" }` → `PENDIENTE`, `EXPIRADO` o `APROBADO` con `accessToken` y `usuario` (una sola vez).
+
+Los códigos viven en memoria (`src/auth/vinculos-tv.ts`), duran 5 minutos y no requieren tabla.
 
 ### 2. Comprar Boleto
 - **POST** `http://localhost:3001/api/v1/boletos/comprar`

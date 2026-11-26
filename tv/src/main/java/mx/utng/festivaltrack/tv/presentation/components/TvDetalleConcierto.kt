@@ -1,5 +1,6 @@
 package mx.utng.festivaltrack.tv.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,8 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +33,9 @@ import mx.utng.festivaltrack.tv.ui.utils.DynamicQrCode
 import java.time.Instant
 
 /**
- * Detalle de un concierto, como en el móvil: fecha y lugar en hora de México, su repertorio
- * con demos de 30 s para escuchar y el QR para comprar boletos desde el celular.
+ * Detalle de un concierto, como en el móvil: su imagen ([PortadaConcierto]) de fondo en el
+ * encabezado con la fecha y el lugar en hora de México, su repertorio con demos de 30 s para
+ * escuchar y el QR para comprar boletos desde el celular.
  *
  * @param cargarRepertorio Pide al servidor las canciones del concierto (null = sin conexión).
  */
@@ -68,21 +72,33 @@ fun TvDetalleConcierto(
         ) {
             Row(Modifier.padding(24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text(
-                        if (enVivo) "EN VIVO AHORA" else if (HorarioFestival.enCurso(evento, ahora)) "EN CURSO" else "CONCIERTO DEL FESTIVAL",
-                        color = if (enVivo) FestivalBadgeLive else FestivalGold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp
-                    )
-                    Text(evento.nombre, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Event, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(HorarioFestival.cuando(evento, ahora), color = Color.White, fontSize = 14.sp)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(listOfNotNull(evento.escenario, evento.ubicacion).distinct().joinToString(" · "), color = Color.White, fontSize = 14.sp)
+                    // Encabezado sobre la imagen del concierto (la misma de su tarjeta en el Inicio),
+                    // oscurecida a la izquierda para que el texto se lea.
+                    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
+                        PortadaConcierto(evento, Modifier.matchParentSize())
+                        Box(
+                            Modifier.matchParentSize().background(
+                                Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.88f), Color.Black.copy(alpha = 0.55f), Color.Black.copy(alpha = 0.2f)))
+                            )
+                        )
+                        Column(Modifier.padding(14.dp)) {
+                            Text(
+                                if (enVivo) "EN VIVO AHORA" else if (HorarioFestival.enCurso(evento, ahora)) "EN CURSO" else "CONCIERTO DEL FESTIVAL",
+                                color = if (enVivo) FestivalBadgeLive else FestivalGold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp
+                            )
+                            Text(evento.nombre, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Event, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(HorarioFestival.cuando(evento, ahora), color = Color.White, fontSize = 14.sp)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Place, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(listOfNotNull(evento.escenario, evento.ubicacion).distinct().joinToString(" · "), color = Color.White, fontSize = 14.sp)
+                            }
+                        }
                     }
                     Spacer(Modifier.height(14.dp))
 
@@ -103,7 +119,7 @@ fun TvDetalleConcierto(
                         repertorio == null -> CircularProgressIndicator(color = FestivalGold, modifier = Modifier.size(28.dp))
                         sinConexion -> Text("No se pudo cargar el repertorio. Revisa la conexión.", color = FestivalTextSecondary, fontSize = 13.sp)
                         repertorio!!.isEmpty() -> Text("Este concierto todavía no tiene canciones para escuchar.", color = FestivalTextSecondary, fontSize = 13.sp)
-                        else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.heightIn(max = 230.dp)) {
+                        else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.heightIn(max = 200.dp)) {
                             itemsIndexed(repertorio!!, key = { _, c -> c.id }) { i, cancion ->
                                 TvFilaCancion(
                                     numero = i + 1,
