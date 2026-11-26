@@ -61,10 +61,14 @@ fun ConcertsScreen(
     val ids = eventos.map { it.id }
     LaunchedEffect(ids) { viewModel.load(ids) }
 
+    // MainScreen ya deja el espacio de la barra de estado: sin WindowInsets(0) se sumaba otra
+    // vez y quedaba una franja vacía arriba del título.
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         containerColor = AudioBg,
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0),
                 title = { Text("Conciertos", color = PrimaryGold, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     Icon(

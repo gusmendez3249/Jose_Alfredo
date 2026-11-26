@@ -36,7 +36,7 @@ kapt {
 dependencies {
     implementation(project(":shared"))
     testImplementation("junit:junit:4.13.2")
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
 
     // Wear OS Compose
     implementation(platform(libs.compose.bom))
@@ -77,5 +77,5 @@ dependencies {
     
     // Retrofit + Gson para API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 }

@@ -68,7 +68,9 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     // Concierto elegido desde su detalle; la compra se hace para ese evento.
-    var ticketsEventId by remember { mutableStateOf<String?>(null) }
+    // rememberSaveable: al ir a Pago esta pantalla sale de la composición y, con remember,
+    // al regresar se perdía el concierto elegido.
+    var ticketsEventId by rememberSaveable { mutableStateOf<String?>(null) }
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Biography,

@@ -2,7 +2,6 @@ package mx.utng.festivaltrack.app.ui.screens
 
 import android.Manifest
 import android.content.Context
-import android.net.wifi.WifiManager
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import androidx.compose.foundation.background
@@ -26,47 +25,27 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.pedro.common.ConnectChecker
+import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.rtspserver.RtspServerCamera1
+import com.pedro.rtspserver.server.ClientListener
+import com.pedro.rtspserver.server.ServerClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.data.TokenManager
 import mx.utng.festivaltrack.app.ui.utils.ProximosEventos
+import mx.utng.festivaltrack.app.ui.utils.RotacionCamara
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 
 /**
- * Obtiene la dirección IP local del dispositivo dentro de la red Wi-Fi.
- *
- * Esta función consulta el [WifiManager] de Android para calcular la IP en formato `X.X.X.X`.
- * Si el dispositivo se encuentra dentro del emulador Android o la IP es nula, retorna
- * por defecto `"10.0.2.2"` (alias del host en emuladores).
- *
- * @param context Contexto de la aplicación.
- * @return Dirección IP en formato String para la URL del servidor RTSP.
+ * Segundos entre cuadros clave del video. El reproductor del usuario no muestra imagen hasta
+ * recibir uno, así que un intervalo corto hace que la transmisión aparezca rápido al conectarse.
  */
-fun getLocalIpAddress(context: Context): String {
-    return try {
-        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-        val ipAddress = wifiManager?.connectionInfo?.ipAddress ?: 0
-        if (ipAddress != 0) {
-            String.format(
-                "%d.%d.%d.%d",
-                ipAddress and 0xff,
-                ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff,
-                ipAddress shr 24 and 0xff
-            )
-        } else {
-            "10.0.2.2"
-        }
-    } catch (e: Exception) {
-        "10.0.2.2"
-    }
-}
+private const val INTERVALO_CUADRO_CLAVE_S = 1
 
 /**
  * Pantalla de Emisión de Transmisión en Vivo para Administradores ([AdminLiveStreamScreen]).
@@ -103,7 +82,8 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
     var rtspServer by remember { mutableStateOf<RtspServerCamera1?>(null) }
     var isStreaming by remember { mutableStateOf(false) }
     var cambiando by remember { mutableStateOf(false) }
-    var streamUrl by remember { mutableStateOf("rtsp://10.0.2.2:1935") }
+    var espectadores by remember { mutableIntStateOf(0) }
+    var streamUrl by remember { mutableStateOf("") }
     var statusText by remember { mutableStateOf("Listo para transmitir") }
 
     // Concierto al que pertenece la transmisión: los usuarios la ven en la pantalla de ese concierto.
@@ -138,8 +118,23 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
         }
-        val wifiIp = getLocalIpAddress(context)
-        streamUrl = "rtsp://$wifiIp:1935"
+    }
+
+    // IP real del teléfono en la red (Wi-Fi o hotspot). Se revisa cada pocos segundos por si el
+    // admin se conecta a la red con la pantalla abierta.
+    LaunchedEffect(Unit) {
+        while (true) {
+            if (!isStreaming) {
+                val ip = mx.utng.festivaltrack.app.ui.utils.IpLocal.paraTransmitir()
+                streamUrl = ip?.let { "rtsp://$it:1935" } ?: ""
+                if (ip == null) {
+                    statusText = "Sin red Wi-Fi: conecta este teléfono al mismo Wi-Fi que los asistentes o comparte tu hotspot"
+                } else if (statusText.startsWith("Sin red Wi-Fi")) {
+                    statusText = "Listo para transmitir"
+                }
+            }
+            delay(5_000)
+        }
     }
 
     // Efecto de limpieza: se ejecuta cuando la pantalla se destruye o el usuario navega fuera
@@ -216,8 +211,26 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                             
                                             // Inicializa el servidor RTSP en el puerto 1935
                                             val server = RtspServerCamera1(this@apply, checker, 1935)
+                                            // Cuando alguien se conecta se pide un cuadro clave: sin él su
+                                            // reproductor no muestra imagen hasta el siguiente (varios segundos).
+                                            val principal = android.os.Handler(android.os.Looper.getMainLooper())
+                                            server.getStreamClient().setClientListener(object : ClientListener {
+                                                override fun onClientConnected(client: ServerClient) {
+                                                    principal.post { espectadores = server.getStreamClient().getNumClients() }
+                                                    // Se repite porque el cliente puede conectarse antes de pedir PLAY.
+                                                    listOf(0L, 800L, 2_000L).forEach { espera ->
+                                                        principal.postDelayed({ runCatching { server.requestKeyFrame() } }, espera)
+                                                    }
+                                                }
+                                                override fun onClientDisconnected(client: ServerClient) {
+                                                    principal.post { espectadores = server.getStreamClient().getNumClients() }
+                                                }
+                                                override fun onClientNewBitrate(bitrate: Long, client: ServerClient) {}
+                                            })
                                             rtspServer = server
-                                            server.startPreview()
+                                            // Vista previa con la orientación real del sensor (ver RotacionCamara):
+                                            // sin esto, en teléfonos con el sensor a 270° o 0° se veía de lado.
+                                            server.startPreview(CameraHelper.Facing.BACK, RotacionCamara.traseraActual(ctx))
                                         } catch (e: Exception) {
                                             statusText = "Error al iniciar cámara: ${e.localizedMessage}"
                                         }
@@ -247,8 +260,14 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(statusText, color = Color.White, fontWeight = FontWeight.Bold)
+                        if (isStreaming) {
+                            Text(
+                                if (espectadores == 1) "1 persona viendo" else "$espectadores personas viendo",
+                                color = Color.LightGray, fontSize = 13.sp
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        Text(if (streamUrl.isBlank()) "Sin dirección de video" else "Dirección del video (TV y app):\n$streamUrl", color = PrimaryGold, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                         Spacer(modifier = Modifier.height(12.dp))
                         Box {
                             OutlinedButton(
@@ -286,9 +305,13 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     coroutineScope.launch {
                                         val listo = kotlinx.coroutines.withContext(Dispatchers.Default) {
                                             runCatching {
-                                                // Códecs de audio y video con resolución compatible 640x480
+                                                // Códecs de audio y video con resolución compatible 640x480.
+                                                // La rotación sigue la orientación real del sensor y de la pantalla:
+                                                // con 0 fijo (o suponiendo el sensor a 90°) el video llegaba girado.
+                                                val rotacion = RotacionCamara.traseraActual(context)
                                                 val audio = servidor?.prepareAudio() ?: false
-                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, 0) ?: false }
+                                                // Cuadro clave cada 1 s (antes ~5 s): quien se conecta ve imagen casi de inmediato.
+                                                val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, INTERVALO_CUADRO_CLAVE_S, rotacion) ?: false }
                                                     .getOrElse { servidor?.prepareVideo() ?: false }
                                                 if (audio && video) servidor?.startStream()
                                                 audio && video
@@ -315,7 +338,8 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                     }
                                 }
                             },
-                            enabled = !cambiando,
+                            // Sin IP en la red nadie podría ver el video: no se deja iniciar.
+                            enabled = !cambiando && (isStreaming || streamUrl.isNotBlank()),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isStreaming) Color.Red else PrimaryGold,
                                 contentColor = if (isStreaming) Color.White else Color.Black
