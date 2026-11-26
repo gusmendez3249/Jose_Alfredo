@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MapaRuta from '../components/MapaRuta';
+import { geolocalizacionDisponible, mensajeGeolocalizacion, OPCIONES_GPS } from '../components/mapa/geolocalizacion';
 import { Alert } from '../components/ui/Alert';
 import { Button, ButtonLink } from '../components/ui/Button';
 import { IconoAlerta, IconoLugar, IconoRuta } from '../components/ui/Icons';
@@ -25,20 +26,6 @@ type EstadoRuta =
   | { estado: 'lista'; ruta: Ruta }
   | { estado: 'error'; mensaje: string };
 
-const OPCIONES_GPS: PositionOptions = { timeout: 10_000, maximumAge: 60_000, enableHighAccuracy: false };
-const GEOLOCALIZACION_DISPONIBLE = 'geolocation' in navigator;
-
-function mensajeGeolocalizacion(error: GeolocationPositionError): string {
-  switch (error.code) {
-    case error.PERMISSION_DENIED:
-      return 'No se permitió el acceso a tu ubicación. Actívalo en tu navegador para ver la ruta.';
-    case error.TIMEOUT:
-      return 'Se agotó el tiempo para obtener tu ubicación.';
-    default:
-      return 'No se pudo determinar tu ubicación.';
-  }
-}
-
 /** Mapa del evento con la ruta a pie desde la ubicación del usuario (si la comparte). */
 function MapaDelEvento({ evento }: { evento: Evento & { latitud: number; longitud: number } }) {
   const destino = useMemo<Coordenada>(() => [evento.latitud, evento.longitud], [evento.latitud, evento.longitud]);
@@ -51,7 +38,7 @@ function MapaDelEvento({ evento }: { evento: Evento & { latitud: number; longitu
   const [calculo, setCalculo] = useState<{ origen: Coordenada; valor: Extract<EstadoRuta, { estado: 'lista' | 'error' }> } | null>(null);
 
   useEffect(() => {
-    if (!GEOLOCALIZACION_DISPONIBLE) return;
+    if (!geolocalizacionDisponible()) return;
     let vigente = true;
     navigator.geolocation.getCurrentPosition(
       (posicion) => {
@@ -69,7 +56,7 @@ function MapaDelEvento({ evento }: { evento: Evento & { latitud: number; longitu
     };
   }, [intentoGps]);
 
-  const ubicacion: EstadoUbicacion = !GEOLOCALIZACION_DISPONIBLE
+  const ubicacion: EstadoUbicacion = !geolocalizacionDisponible()
     ? { estado: 'error', mensaje: 'Tu navegador no permite obtener la ubicación.' }
     : gps?.intento === intentoGps
       ? gps.valor

@@ -14,7 +14,7 @@ export default function Events() {
     <div className="pagina pagina--lectura">
       <header className="pagina__cabecera">
         <h1 className="titulo-pagina">Próximos eventos</h1>
-        <p className="meta">Consulta la cartelera, compra tu boleto o mira la ruta hacia el escenario.</p>
+        <p className="meta">Consulta la cartelera, escucha un fragmento de las canciones de cada concierto, compra tu boleto o mira la ruta hacia el escenario.</p>
       </header>
 
       {recurso.estado === 'cargando' && (

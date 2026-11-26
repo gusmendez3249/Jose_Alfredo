@@ -8,8 +8,8 @@ import react from '@vitejs/plugin-react';
 const COMODIN_BACKEND = 'https://*.onrender.com';
 
 /**
- * Ajusta la CSP de dist/serve.json al backend real: `connect-src` pasa de permitir
- * cualquier https://*.onrender.com a permitir solo el origen de VITE_API_URL.
+ * Ajusta la CSP de dist/serve.json al backend real: `connect-src`, `img-src` y `media-src` pasan
+ * de permitir cualquier https://*.onrender.com a permitir solo el origen de VITE_API_URL.
  * Sin VITE_API_URL se deja el comodín (y la app mostrará el error de configuración).
  */
 function cspConBackend(apiUrl: string | undefined): Plugin {

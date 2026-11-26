@@ -86,3 +86,23 @@ export async function calcularRutaAPie(origen: Coordenada, destino: Coordenada, 
     signal.removeEventListener('abort', alCancelar);
   }
 }
+
+/** Velocidad de paseo que usa la app móvil: 4.8 km/h = 80 m por minuto (RutaPeatonal.kt). */
+const METROS_POR_MINUTO = 80;
+
+/** Distancia en línea recta (Haversine) entre dos puntos, en metros. */
+export function distanciaEnLinea(a: Coordenada, b: Coordenada): number {
+  const RADIO_TIERRA_M = 6_371_000;
+  const aRad = (grados: number) => (grados * Math.PI) / 180;
+  const dLat = aRad(b[0] - a[0]);
+  const dLon = aRad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(aRad(a[0])) * Math.cos(aRad(b[0])) * Math.sin(dLon / 2) ** 2;
+  return 2 * RADIO_TIERRA_M * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** Respaldo cuando el servicio de rutas falla: trazo recto y minutos como en el móvil (ceil(m / 80), mínimo 1). */
+export function rutaEnLinea(origen: Coordenada, destino: Coordenada): Ruta {
+  const distanciaMetros = distanciaEnLinea(origen, destino);
+  const minutos = Math.max(1, Math.ceil(distanciaMetros / METROS_POR_MINUTO));
+  return { puntos: [origen, destino], distanciaMetros, duracionSegundos: minutos * 60 };
+}
