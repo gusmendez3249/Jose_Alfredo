@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import '../styles/envivo.css';
+import { AvisoEnVivo } from '../components/envivo/AvisoEnVivo';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { A11y, Autoplay, EffectFade, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -6,7 +8,19 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/pagination';
 import { Button, ButtonLink } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { IconoAlerta, IconoBoleto, IconoEventos, IconoFlecha, IconoLugar, IconoReloj, IconoRuta } from '../components/ui/Icons';
+import {
+  IconoAlerta,
+  IconoBoleto,
+  IconoComunidad,
+  IconoEnVivo,
+  IconoEventos,
+  IconoFlecha,
+  IconoLibro,
+  IconoLugar,
+  IconoMapa,
+  IconoReloj,
+  IconoRuta,
+} from '../components/ui/Icons';
 import { Skeleton } from '../components/ui/Skeleton';
 import { estaALaVenta, lugarDe, tieneCoordenadas } from '../services/eventos.service';
 import type { Evento } from '../services/tipos';
@@ -145,29 +159,30 @@ function ProximoEvento() {
   );
 }
 
+const ACCESOS = [
+  { a: '/en-vivo', Icono: IconoEnVivo, titulo: 'En vivo', texto: 'Transmisión y chat' },
+  { a: '/biografia', Icono: IconoLibro, titulo: 'Biografía', texto: 'Conoce al Maestro' },
+  { a: '/comunidad', Icono: IconoComunidad, titulo: 'Comunidad', texto: 'Comparte tu experiencia' },
+  { a: '/mapa', Icono: IconoMapa, titulo: 'Mapa del festival', texto: 'Llega a tu destino' },
+  { a: '/events', Icono: IconoEventos, titulo: 'Eventos', texto: 'Cartelera completa' },
+  { a: '/mis-boletos', Icono: IconoBoleto, titulo: 'Mis boletos', texto: 'Tus accesos con QR' },
+] as const;
+
 function Accesos() {
   return (
-    <nav className="accesos" aria-label="Accesos rápidos">
-      <Link to="/events" className="tarjeta tarjeta--enlace acceso">
-        <span className="acceso__icono">
-          <IconoEventos tamano={24} />
-        </span>
-        <span className="acceso__texto">
-          <strong>Eventos</strong>
-          <span className="meta">Cartelera completa</span>
-        </span>
-        <IconoFlecha tamano={20} />
-      </Link>
-      <Link to="/mis-boletos" className="tarjeta tarjeta--enlace acceso">
-        <span className="acceso__icono">
-          <IconoBoleto tamano={24} />
-        </span>
-        <span className="acceso__texto">
-          <strong>Mis boletos</strong>
-          <span className="meta">Tus accesos con QR</span>
-        </span>
-        <IconoFlecha tamano={20} />
-      </Link>
+    <nav className="inicio-accesos" aria-label="Accesos rápidos">
+      {ACCESOS.map(({ a, Icono, titulo, texto }) => (
+        <Link key={a} to={a} className="tarjeta tarjeta--enlace inicio-acceso">
+          <span className="inicio-acceso__icono">
+            <Icono tamano={24} />
+          </span>
+          <span className="inicio-acceso__texto">
+            <strong>{titulo}</strong>
+            <span className="meta">{texto}</span>
+          </span>
+          <IconoFlecha tamano={18} className="inicio-acceso__flecha" />
+        </Link>
+      ))}
     </nav>
   );
 }
@@ -189,9 +204,10 @@ export default function Home() {
         </ButtonLink>
       </header>
 
+      <AvisoEnVivo />
+      <Accesos />
       <Carrusel />
       <ProximoEvento />
-      <Accesos />
     </div>
   );
 }

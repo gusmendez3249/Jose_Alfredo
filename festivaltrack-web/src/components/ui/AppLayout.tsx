@@ -3,21 +3,43 @@ import { Link, NavLink, useLocation, useMatch, useNavigate } from 'react-router-
 import { useAuth } from '../../auth/useAuth';
 import { ButtonLink, Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
-import { IconoBoleto, IconoEventos, IconoInicio, IconoMarca, IconoSalir } from './Icons';
+import { ReproductorGlobal } from '../audio/ReproductorGlobal';
+import {
+  IconoBoleto,
+  IconoComunidad,
+  IconoEnVivo,
+  IconoEventos,
+  IconoInicio,
+  IconoLibro,
+  IconoMapa,
+  IconoMarca,
+  IconoSalir,
+} from './Icons';
 import { clases } from './clases';
 
+/** Navegación de la cabecera (escritorio). */
 const ENLACES = [
   { a: '/', etiqueta: 'Inicio', Icono: IconoInicio, exacto: true },
   { a: '/events', etiqueta: 'Eventos', Icono: IconoEventos, exacto: false },
+  { a: '/biografia', etiqueta: 'Biografía', Icono: IconoLibro, exacto: false },
+  { a: '/comunidad', etiqueta: 'Comunidad', Icono: IconoComunidad, exacto: false },
+  { a: '/mapa', etiqueta: 'Mapa', Icono: IconoMapa, exacto: false },
+  { a: '/en-vivo', etiqueta: 'En vivo', Icono: IconoEnVivo, exacto: false },
   { a: '/mis-boletos', etiqueta: 'Mis boletos', Icono: IconoBoleto, exacto: false },
 ] as const;
+
+/** La barra inferior del móvil solo tiene sitio para cinco; el resto se abre desde Inicio. */
+const RUTAS_BARRA_INFERIOR: readonly string[] = ['/', '/events', '/mapa', '/comunidad', '/mis-boletos'];
+const ENLACES_INFERIORES = ENLACES.filter(({ a }) => RUTAS_BARRA_INFERIOR.includes(a));
 
 /** Estructura común: cabecera fija, navegación (inferior en móvil), contenido y pie. */
 export function AppLayout({ children }: { children: ReactNode }) {
   const { autenticado, usuario, cerrarSesion } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const esMapa = useMatch('/events/:id/map') !== null;
+  const mapaDeEvento = useMatch('/events/:id/map') !== null;
+  // Las páginas de mapa ocupan toda la pantalla: sin pie y sin márgenes del contenido.
+  const esMapa = mapaDeEvento || pathname === '/mapa';
   const principal = useRef<HTMLElement>(null);
   const primeraCarga = useRef(true);
   const [confirmando, setConfirmando] = useState(false);
@@ -78,6 +100,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {etiqueta}
               </NavLink>
             ))}
+            {usuario?.rol === 'ADMINISTRADOR' && (
+              <NavLink to="/admin" className="nav-principal__enlace">
+                Admin
+              </NavLink>
+            )}
           </nav>
 
           <div className="cuenta">
@@ -113,8 +140,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </footer>
       )}
 
+      <ReproductorGlobal />
+
       <nav className="nav-inferior" aria-label="Navegación inferior">
-        {ENLACES.map(({ a, etiqueta, Icono, exacto }) => (
+        {ENLACES_INFERIORES.map(({ a, etiqueta, Icono, exacto }) => (
           <NavLink key={a} to={a} end={exacto} className="nav-inferior__enlace">
             <Icono tamano={24} />
             <span>{etiqueta}</span>

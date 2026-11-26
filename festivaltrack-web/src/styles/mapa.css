@@ -1,0 +1,385 @@
+/* Mapa del festival (/mapa). Prefijo mapa-fest / mapa-pin / mapa-yo para no chocar con el mapa de evento. */
+.mapa-fest {
+  --mapa-escenario: var(--color-primario);
+  --mapa-concierto: var(--color-error);
+  --mapa-historico: var(--color-exito);
+  --mapa-yo: #4c8dff;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+/* Móvil: mapa arriba y panel debajo (no se superponen, así el destino elegido no queda tapado). */
+.mapa-fest__area {
+  position: relative;
+  order: 1;
+  flex: 1 1 0;
+  min-height: 200px;
+}
+
+.mapa-fest__panel {
+  order: 2;
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  max-height: 52%;
+  padding: var(--espacio-3) var(--margen-pagina);
+  overflow-y: auto;
+  border-top: 1px solid var(--color-borde-dorado);
+  background: var(--color-destacado);
+}
+
+@media (min-width: 900px) {
+  .mapa-fest {
+    flex-direction: row;
+  }
+
+  .mapa-fest__area {
+    order: 2;
+    min-height: 0;
+  }
+
+  .mapa-fest__panel {
+    order: 1;
+    flex: 0 0 400px;
+    max-height: none;
+    gap: var(--espacio-4);
+    padding: var(--espacio-4) var(--espacio-4) var(--espacio-5);
+    border-top: 0;
+    border-right: 1px solid var(--color-borde);
+    background: var(--color-superficie);
+  }
+}
+
+.mapa-fest__mapa {
+  position: absolute;
+  inset: 0;
+  background: var(--color-fondo);
+}
+
+/* Teselas en modo oscuro, como en el mapa de evento. */
+.mapa-fest__mapa .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+
+/* ---------- Cabecera ---------- */
+.mapa-fest__titulo {
+  font-size: var(--texto-pagina);
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.mapa-fest__cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mapa-fest__avisos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+}
+
+.mapa-fest__aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-1) var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+}
+
+.mapa-fest__cargando {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+/* ---------- Ficha del destino ---------- */
+.mapa-fest__ficha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding: var(--espacio-4);
+  border: 1px solid var(--color-borde-dorado);
+  border-radius: var(--radio-l);
+  background: var(--color-tarjeta);
+}
+
+.mapa-fest__categoria {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--color-primario);
+  font-size: var(--texto-eyebrow);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mapa-fest__nombre {
+  font-size: var(--texto-seccion);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mapa-fest__linea {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  overflow-wrap: anywhere;
+}
+
+.mapa-fest__foto {
+  width: 100%;
+  max-height: 160px;
+  border-radius: var(--radio-m);
+  object-fit: cover;
+}
+
+.mapa-fest__descripcion {
+  font-size: var(--texto-cuerpo);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mapa-fest__enlaces,
+.mapa-fest__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.mapa-fest__ruta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  margin-top: var(--espacio-2);
+}
+
+.mapa-fest__estado {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--color-primario);
+}
+
+.mapa-fest__resumen {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: var(--texto-cuerpo-grande);
+}
+
+.mapa-fest__resumen .icono,
+.mapa-fest__resumen strong {
+  color: var(--color-primario);
+}
+
+.mapa-fest__privacidad {
+  font-size: 0.75rem;
+}
+
+/* ---------- Selector ---------- */
+.mapa-fest__alternar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  min-height: var(--objetivo-tactil);
+  border: 1px solid var(--color-borde-dorado);
+  border-radius: var(--radio-pildora);
+  background: transparent;
+  color: var(--color-primario);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mapa-fest__destinos--cerrada {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .mapa-fest__alternar {
+    display: none;
+  }
+
+  /* En escritorio la lista siempre está a la vista. */
+  .mapa-fest__destinos--cerrada {
+    display: block;
+  }
+}
+
+.mapa-fest__selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.mapa-fest__buscar {
+  width: 100%;
+  min-height: var(--objetivo-tactil);
+  padding: 0 var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font: inherit;
+}
+
+.mapa-fest__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.mapa-fest__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--objetivo-tactil);
+  padding: 0 var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pildora);
+  background: transparent;
+  color: var(--color-texto);
+  font: inherit;
+  font-size: var(--texto-meta);
+  cursor: pointer;
+  transition: background var(--transicion), border-color var(--transicion);
+}
+
+.mapa-fest__chip--activo {
+  border-color: var(--color-primario);
+  background: var(--color-dorado-tenue);
+  color: var(--color-primario);
+}
+
+.mapa-fest__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mapa-fest__destino {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  width: 100%;
+  min-height: var(--objetivo-tactil);
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-tarjeta);
+  color: var(--color-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transicion);
+}
+
+.mapa-fest__destino:hover {
+  border-color: var(--color-borde-dorado-fuerte);
+}
+
+.mapa-fest__destino--elegido {
+  border-color: var(--color-primario);
+  background: var(--color-dorado-tenue);
+}
+
+.mapa-fest__destino-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mapa-fest__destino-nombre {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mapa-fest__destino-direccion,
+.mapa-fest__destino-aviso {
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+  overflow-wrap: anywhere;
+}
+
+.mapa-fest__destino-aviso {
+  font-style: italic;
+}
+
+/* ---------- Pines (cada categoría con su silueta y glifo; el color es un refuerzo) ---------- */
+.mapa-pin {
+  background: transparent;
+  border: 0;
+}
+
+.mapa-pin__svg {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.mapa-pin .mapa-pin__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mapa-pin__forma {
+  stroke: var(--color-fondo);
+  stroke-width: 1.5;
+}
+
+.mapa-pin__glifo {
+  fill: var(--color-sobre-primario);
+}
+
+.mapa-pin__svg--escenario .mapa-pin__forma {
+  fill: var(--mapa-escenario);
+}
+
+.mapa-pin__svg--concierto .mapa-pin__forma {
+  fill: var(--mapa-concierto);
+}
+
+.mapa-pin__svg--historico .mapa-pin__forma {
+  fill: var(--mapa-historico);
+}
+
+.mapa-pin__svg--sel .mapa-pin__forma {
+  stroke: var(--color-texto);
+  stroke-width: 3;
+}
+
+.mapa-pin:focus-visible {
+  outline: var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- Ubicación del usuario ---------- */
+.mapa-yo {
+  background: transparent;
+  border: 0;
+}
+
+.mapa-yo__punto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--color-texto);
+  border-radius: var(--radio-pildora);
+  background: var(--mapa-yo);
+}

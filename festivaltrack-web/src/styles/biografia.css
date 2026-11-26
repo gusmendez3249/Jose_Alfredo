@@ -1,0 +1,333 @@
+/* Biografía: clases con prefijo bio- */
+.bio-pagina {
+  gap: var(--espacio-6);
+}
+
+.bio-hero {
+  display: grid;
+  gap: var(--espacio-5);
+  align-items: center;
+}
+
+.bio-hero__retrato,
+.bio-hero > .bio-marcador {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--radio-l);
+  border: 1px solid var(--color-borde-dorado);
+  background: var(--color-tarjeta);
+}
+
+.bio-marcador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primario);
+  background: var(--color-tarjeta);
+}
+
+.bio-hero__texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  min-width: 0;
+}
+
+.bio-insignia {
+  align-self: flex-start;
+  padding: var(--espacio-1) var(--espacio-3);
+  border: 1px solid var(--color-borde-dorado-fuerte);
+  border-radius: var(--radio-pildora);
+  background: var(--color-dorado-tenue);
+  color: var(--color-primario);
+  font-size: var(--texto-eyebrow);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.bio-hero__titulo {
+  font-size: var(--texto-hero);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.bio-hero__dorado {
+  color: var(--color-primario);
+}
+
+.bio-hero__nombre {
+  font-size: var(--texto-seccion);
+  color: var(--color-texto-secundario);
+}
+
+.bio-cita {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: var(--espacio-2) 0 0;
+  padding: var(--espacio-4);
+  border: 1px solid var(--color-borde-dorado);
+  border-radius: var(--radio-m);
+  background: var(--color-destacado);
+}
+
+.bio-cita__texto {
+  margin: 0;
+  font-size: var(--texto-seccion);
+  font-style: italic;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.bio-cuerpo {
+  display: grid;
+  gap: var(--espacio-6);
+}
+
+.bio-cuerpo__principal,
+.bio-cuerpo__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-6);
+  min-width: 0;
+}
+
+.bio-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+}
+
+.bio-texto {
+  max-width: var(--ancho-lectura);
+  font-size: var(--texto-cuerpo-grande);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.bio-subtitulo {
+  font-size: var(--texto-cuerpo-grande);
+  font-weight: 700;
+  color: var(--color-primario);
+}
+
+/* Hitos: línea de tiempo vertical */
+.bio-hitos {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+  margin: 0;
+  padding: 0 0 0 var(--espacio-5);
+  list-style: none;
+  border-left: 2px solid var(--color-borde-dorado);
+}
+
+.bio-hito {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  overflow-wrap: anywhere;
+}
+
+.bio-hito::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: calc(-1 * var(--espacio-5) - 6px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primario);
+}
+
+.bio-hito__ano {
+  font-size: var(--texto-eyebrow);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-primario);
+}
+
+.bio-hito__titulo {
+  font-weight: 700;
+}
+
+.bio-hito__descripcion {
+  color: var(--color-texto-secundario);
+  line-height: 1.6;
+}
+
+/* Discografía */
+.bio-albumes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bio-album {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: 0;
+}
+
+.bio-album__portada {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+}
+
+.bio-album__titulo {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.bio-grabaciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.bio-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bio-lista li {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--color-texto-secundario);
+  overflow-wrap: anywhere;
+}
+
+.bio-lista svg {
+  flex: none;
+  color: var(--color-primario);
+}
+
+/* Archivo histórico */
+.bio-archivo__lista {
+  display: grid;
+  gap: var(--espacio-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bio-entrada {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-l);
+  background: var(--color-tarjeta);
+}
+
+.bio-entrada__imagen {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.bio-entrada__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding: var(--espacio-4);
+}
+
+.bio-entrada__epoca {
+  font-size: var(--texto-eyebrow);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-primario);
+}
+
+.bio-entrada__titulo {
+  font-size: var(--texto-seccion);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bio-entrada__lugar {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  font-size: var(--texto-meta);
+  color: var(--color-texto-secundario);
+}
+
+.bio-entrada__lugar svg {
+  flex: none;
+}
+
+.bio-entrada .bio-texto {
+  font-size: var(--texto-cuerpo);
+  line-height: 1.6;
+}
+
+.bio-entrada__cita {
+  margin: var(--espacio-2) 0 0;
+  padding-left: var(--espacio-3);
+  border-left: 2px solid var(--color-primario);
+  font-style: italic;
+  color: var(--color-texto-secundario);
+  overflow-wrap: anywhere;
+}
+
+.bio-cargando {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+}
+
+@media (min-width: 768px) {
+  .bio-archivo__lista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .bio-hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--espacio-6);
+  }
+
+  .bio-hero__retrato,
+  .bio-hero > .bio-marcador {
+    max-height: 480px;
+  }
+
+  .bio-cuerpo {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+    gap: var(--espacio-7);
+  }
+
+  .bio-cuerpo__lateral {
+    position: sticky;
+    top: calc(var(--alto-cabecera) + var(--espacio-4));
+  }
+
+  .bio-archivo__lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
