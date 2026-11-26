@@ -1,0 +1,334 @@
+/* Administración de conciertos y repertorio. Clases con prefijo admin-conciertos-. */
+
+.admin-conciertos-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espacio-4);
+}
+
+.admin-conciertos-cabecera > .pagina__cabecera {
+  flex: 1 1 280px;
+}
+
+.admin-conciertos-filtros {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--espacio-3);
+}
+
+@media (min-width: 640px) {
+  .admin-conciertos-filtros {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+
+.admin-conciertos-seleccion {
+  appearance: none;
+  padding-right: 40px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-primario) 50%),
+    linear-gradient(135deg, var(--color-primario) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.admin-conciertos-seleccion option {
+  background: var(--color-tarjeta);
+  color: var(--color-texto);
+}
+
+.admin-conciertos-area {
+  min-height: 112px;
+  padding: var(--espacio-3) var(--espacio-4);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ---------- Tabla (escritorio) que pasa a tarjetas (móvil) ---------- */
+.admin-conciertos-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-l);
+  overflow: hidden;
+}
+
+.admin-conciertos-tabla th,
+.admin-conciertos-tabla td {
+  padding: var(--espacio-3) var(--espacio-4);
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.admin-conciertos-tabla thead th {
+  font-size: var(--texto-eyebrow);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-texto-secundario);
+}
+
+.admin-conciertos-tabla tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.admin-conciertos-nombre {
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.admin-conciertos-botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.admin-conciertos-cancelar {
+  color: var(--color-error-texto);
+}
+
+.admin-conciertos-cancelar:hover {
+  color: var(--color-error-texto);
+}
+
+@media (max-width: 859.98px) {
+  .admin-conciertos-tabla,
+  .admin-conciertos-tabla tbody,
+  .admin-conciertos-tabla tr,
+  .admin-conciertos-tabla th,
+  .admin-conciertos-tabla td {
+    display: block;
+  }
+
+  .admin-conciertos-tabla {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  /* La cabecera se oculta a la vista pero sigue disponible para lectores de pantalla. */
+  .admin-conciertos-tabla thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .admin-conciertos-tabla tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-3);
+  }
+
+  .admin-conciertos-tabla tr {
+    background: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio-l);
+    padding: var(--espacio-2) 0;
+  }
+
+  .admin-conciertos-tabla th,
+  .admin-conciertos-tabla td {
+    border-bottom: 0;
+    padding: var(--espacio-2) var(--espacio-4);
+  }
+
+  .admin-conciertos-tabla .admin-conciertos-nombre {
+    font-size: var(--texto-cuerpo-grande);
+    color: var(--color-primario);
+  }
+
+  .admin-conciertos-tabla td[data-etiqueta]::before {
+    content: attr(data-etiqueta);
+    display: block;
+    margin-bottom: 2px;
+    font-size: var(--texto-eyebrow);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-texto-secundario);
+  }
+
+  .admin-conciertos-tabla td[data-etiqueta='Acciones']::before {
+    display: none;
+  }
+}
+
+/* ---------- Formulario ---------- */
+.admin-conciertos-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+}
+
+.admin-conciertos-fila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--espacio-4);
+}
+
+@media (min-width: 480px) {
+  .admin-conciertos-fila {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.admin-conciertos-precios {
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde-dorado);
+  border-radius: var(--radio-m);
+  background: var(--color-dorado-tenue);
+  font-size: var(--texto-meta);
+  color: var(--color-texto);
+}
+
+.admin-conciertos-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.admin-conciertos-nota {
+  text-align: right;
+}
+
+.admin-conciertos-estado-linea {
+  display: flex;
+}
+
+/* ---------- Repertorio ---------- */
+.admin-conciertos-repertorio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+}
+
+.admin-conciertos-listas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--espacio-5);
+}
+
+@media (min-width: 860px) {
+  .admin-conciertos-listas {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.admin-conciertos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  min-width: 0;
+}
+
+.admin-conciertos-canciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-conciertos-cancion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-2) var(--espacio-3);
+  min-height: 60px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-tarjeta);
+}
+
+.admin-conciertos-cancion__numero {
+  flex: none;
+  width: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-primario);
+}
+
+.admin-conciertos-cancion__texto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.admin-conciertos-cancion__titulo {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.admin-conciertos-cancion__meta,
+.admin-conciertos-cancion__aviso {
+  font-size: var(--texto-meta);
+  color: var(--color-texto-secundario);
+  overflow-wrap: anywhere;
+}
+
+.admin-conciertos-cancion__acciones {
+  display: flex;
+  flex: none;
+}
+
+.admin-conciertos-icono {
+  min-width: var(--objetivo-tactil);
+  padding: 0;
+}
+
+.admin-conciertos-vacio {
+  padding: var(--espacio-4);
+  border: 1px dashed var(--color-borde);
+  border-radius: var(--radio-m);
+  font-size: var(--texto-cuerpo);
+  color: var(--color-texto-secundario);
+}
+
+/* Se queda a la vista sin tapar la barra de navegación inferior del móvil. */
+.admin-conciertos-pie {
+  position: sticky;
+  bottom: var(--alto-barra-inferior);
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-superficie);
+}
+
+@media (max-width: 639.98px) {
+  .admin-conciertos-pie {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--espacio-2);
+    padding: var(--espacio-2) var(--espacio-3);
+  }
+
+  .admin-conciertos-pie .admin-conciertos-botones {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+}

@@ -1,7 +1,12 @@
+import { Link } from 'react-router-dom';
+import '../styles/audio.css';
 import type { Evento } from '../services/tipos';
 import { estaALaVenta, lugarDe, tieneCoordenadas } from '../services/eventos.service';
 import { formatearFechaEvento } from '../lib/formato';
 import { diaYMes, horaDeEvento } from '../lib/fechaEvento';
+import { useCantidadDemos } from './audio/demosEvento';
+import { useReproductor } from './audio/reproductor';
+import { Badge } from './ui/Badge';
 import { ButtonLink } from './ui/Button';
 import { IconoLugar, IconoReloj, IconoRuta } from './ui/Icons';
 import { Skeleton } from './ui/Skeleton';
@@ -18,6 +23,17 @@ function BloqueFecha({ iso }: { iso: string }) {
   );
 }
 
+/** Insignia de demos (como `RepertoireBadge` del móvil); nada mientras carga, si no hay o si falla. */
+function InsigniaDemos({ eventoId }: { eventoId: string }) {
+  const cantidad = useCantidadDemos(eventoId);
+  const { contexto, reproduciendo } = useReproductor();
+  if (contexto?.eventoId === eventoId) {
+    return <Badge tono="dorada">{reproduciendo ? 'Sonando ahora' : 'En pausa'}</Badge>;
+  }
+  if (!cantidad) return null;
+  return <Badge tono="dorada">{cantidad === 1 ? '1 demo para escuchar' : `${cantidad} demos para escuchar`}</Badge>;
+}
+
 export function EventoCard({ evento }: { evento: Evento }) {
   const lugar = lugarDe(evento);
   const hora = horaDeEvento(evento.fechaHora);
@@ -26,12 +42,15 @@ export function EventoCard({ evento }: { evento: Evento }) {
   const tituloId = `evento-${evento.id}`;
 
   return (
-    <article className="tarjeta evento-card" aria-labelledby={tituloId}>
+    <article className="tarjeta evento-card concierto-tarjeta" aria-labelledby={tituloId}>
       <div className="evento-card__principal">
         <BloqueFecha iso={evento.fechaHora} />
         <div className="evento-card__cuerpo">
           <h2 id={tituloId} className="evento-card__nombre">
-            {evento.nombre}
+            {/* Su ::after cubre la tarjeta entera; los botones de abajo quedan por encima. */}
+            <Link to={`/events/${id}`} className="concierto-tarjeta__enlace">
+              {evento.nombre}
+            </Link>
           </h2>
           {evento.artista?.nombre && <p className="evento-card__artista">{evento.artista.nombre}</p>}
           <ul className="evento-card__meta meta">
@@ -48,6 +67,9 @@ export function EventoCard({ evento }: { evento: Evento }) {
               </li>
             )}
           </ul>
+          <div className="concierto-tarjeta__insignia">
+            <InsigniaDemos eventoId={evento.id} />
+          </div>
         </div>
       </div>
 

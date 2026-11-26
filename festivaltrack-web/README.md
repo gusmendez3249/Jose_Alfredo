@@ -50,7 +50,7 @@ src/
   components/              EventoCard, MapaRuta, ErrorBoundary, NotFound, ErrorDeConfiguracion
   config/env.ts            VITE_API_URL validada
   config/precios.ts        Categorías a la venta (VIP, GENERAL) y precios (deben coincidir con el backend)
-  lib/http.ts              Cliente axios: baseURL, timeout 20 s, token y manejo de 401
+  lib/http.ts              Cliente axios: baseURL, timeout 60 s, token y manejo de 401
   lib/errores.ts           mensajeDeError(): convierte errores de red/HTTP en mensajes en español
   lib/formato.ts           Fechas (es-MX, hora del centro de México), precios "$4,500 MXN", folios
   lib/fechaEvento.ts       Día/mes y hora para las tarjetas de evento
@@ -97,7 +97,13 @@ El diseño replica el de la app móvil (`app/.../ui/theme/Color.kt` y sus pantal
 | `/` | Inicio | — |
 | `/login`, `/register` | Acceso y registro (el registro entra directamente con la sesión iniciada) | — |
 | `/events` | Cartelera de próximos eventos | — |
+| `/events/:id` | Detalle del concierto con sus demos (se escuchan en el reproductor global) | — |
 | `/events/:id/map` | Mapa y ruta a pie hasta el evento | — |
+| `/biografia` | Biografía, discografía y archivo histórico | — |
+| `/comunidad` | Foro: publicaciones con foto, me gusta y comentarios | Solo para publicar, comentar o borrar |
+| `/mapa` | Mapa del festival con destinos (`?destino=<id>` preselecciona uno) y ruta a pie | — |
+| `/en-vivo` | Estado de la transmisión y chat en vivo (sin video) | Solo para escribir en el chat |
+| `/admin`, `/admin/conciertos`, `/admin/canciones`, `/admin/usuarios` | Panel de administración: resumen, conciertos y repertorio, catálogo de canciones, usuarios y roles | Rol `ADMINISTRADOR` |
 | `/checkout/:eventoId` | Compra de boletos VIP/GENERAL (pago simulado) | Sí |
 | `/mis-boletos` | Boletos con QR (solo los activos muestran QR) | Sí |
 | `/events/map` | Redirige a `/events` (ruta antigua) | — |
@@ -108,6 +114,10 @@ El diseño replica el de la app móvil (`app/.../ui/theme/Color.kt` y sus pantal
 - **Compras:** con `cantidad > 1` el backend crea un único boleto (un QR) por precio × cantidad, así que la web hace una compra de 1 boleto por cada uno, en serie. Si una falla, se informa cuántos se compraron y se puede reintentar solo lo que faltó.
 - **Pago simulado:** los datos de tarjeta solo se validan en el navegador; nunca se envían al backend ni se guardan.
 - **Mapa:** teselas de `tile.openstreetmap.org` y ruta a pie con el OSRM de FOSSGIS (`routing.openstreetmap.de`, perfil *foot*). La ubicación del usuario solo se envía a ese servicio. Si se niega la ubicación, el mapa se muestra igual centrado en el evento.
+- **Medios:** toda URL de imagen o audio que viene de la API pasa por `urlMedia()` (`src/lib/media.ts`), que solo acepta archivos subidos al backend (`/uploads/...`) y los hosts externos permitidos. Lo demás se sustituye por un marcador. Los archivos subidos pueden desaparecer del servidor (disco efímero), así que cada imagen y audio degrada con `onError`.
+- **Demos:** como en la app móvil, cada demo se corta a los 30 s. El reproductor es único para toda la web y sigue sonando al cambiar de página.
+- **En vivo:** el video se emite por RTSP desde un teléfono en la red local y un navegador no puede reproducirlo; la web muestra el estado y el chat, y remite a la app y a la TV para el video. El chat y el estado se consultan por sondeo, que se pausa con la pestaña oculta.
+- **Panel de administración:** `RequireAdmin` solo oculta la interfaz; quien autoriza cada operación es el backend. "Cancelar concierto" no borra el registro: lo deja en estado cancelado, y la API deja de listarlo. Fecha y hora se introducen en hora del centro de México y se envían en UTC.
 - **Sesión:** si el backend responde 401 a una petición con token, la sesión se cierra y se pide iniciar sesión de nuevo.
 
 ## Despliegue y cabeceras
@@ -120,11 +130,11 @@ El diseño replica el de la app móvil (`app/.../ui/theme/Color.kt` y sus pantal
 
 ### CSP y el origen del backend
 
-`connect-src` necesita el origen del backend, que es configurable. `public/serve.json` trae el comodín `https://*.onrender.com`; durante `npm run build` el plugin `festivaltrack:csp-backend` de `vite.config.ts` lo reemplaza en `dist/serve.json` por el origen exacto de `VITE_API_URL` (p. ej. `https://festivaltrack-backend.onrender.com`). Si se compila sin `VITE_API_URL`, se queda el comodín y Vite avisa.
+`connect-src` (API), `img-src` (fotos y portadas de `/uploads`) y `media-src` (audio de `/uploads`) necesitan el origen del backend, que es configurable. `public/serve.json` trae el comodín `https://*.onrender.com`; durante `npm run build` el plugin `festivaltrack:csp-backend` de `vite.config.ts` lo reemplaza en `dist/serve.json` por el origen exacto de `VITE_API_URL` (p. ej. `https://festivaltrack-backend.onrender.com`). Si se compila sin `VITE_API_URL`, se queda el comodín y Vite avisa.
 
-Si se cambia de servicio de rutas o de teselas, hay que actualizar `connect-src` / `img-src` en `public/serve.json`.
+Si se cambia de servicio de rutas o de teselas, hay que actualizar `connect-src` / `img-src` en `public/serve.json`. Los hosts externos de imágenes y audio (`images.unsplash.com`, `www.soundhelix.com`) están en `img-src` / `media-src` y en la lista de `src/lib/media.ts`: deben coincidir. `blob:` se permite en ambas para las vistas previas locales al subir una foto o una canción.
 
-> Si el frontend se publica como *Static Site* de Render (sin `serve`), `serve.json` no se aplica: las mismas cabeceras y la regla de rewrite hay que configurarlas en el panel de Render.
+> En Render el frontend se publica como *Static Site* (sin `serve`), así que `serve.json` no se aplica: las mismas cabeceras y la regla de rewrite están declaradas en `render.yaml`, en la raíz del repositorio. Un cambio en una política hay que hacerlo en los dos archivos.
 
 ### Nixpacks (Railway u otros)
 
