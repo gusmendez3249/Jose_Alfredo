@@ -2,6 +2,8 @@ package mx.utng.festivaltrack.tv.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,167 +13,147 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
-import mx.utng.festivaltrack.tv.ui.theme.FestivalCardBg
-import mx.utng.festivaltrack.tv.ui.theme.FestivalDarkBg
-import mx.utng.festivaltrack.tv.ui.theme.FestivalGold
+import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
+import mx.utng.festivaltrack.shared.util.EnlacesWeb
+import mx.utng.festivaltrack.tv.presentation.viewmodel.SesionTv
+import mx.utng.festivaltrack.tv.ui.theme.*
 
 /**
- * Pantalla de configuración para la app en Android TV.
- * Muestra información del servidor, estado de transmisión, y permite cerrar sesión.
- * Incluye un menú lateral de navegación controlado por D-Pad.
- *
- * @param currentNavIndex Índice activo actualmente en el menú de navegación lateral.
- * @param onNavSelect Callback disparado al elegir una opción en el menú lateral.
- * @param onLogout Callback disparado al hacer clic en el botón de cerrar sesión.
+ * Ajustes de la TV con datos reales: a qué servidor se conecta y si responde, el estado de la
+ * transmisión, la página donde se compran boletos y la cuenta (iniciar o cerrar sesión).
  */
 @Composable
 fun TvSettingsScreen(
-    currentNavIndex: Int,
-    onNavSelect: (Int) -> Unit,
-    onLogout: () -> Unit = {}
+    servidorConectado: Boolean?,
+    stream: StreamStatusDto?,
+    sesion: SesionTv?,
+    onIniciarSesion: () -> Unit,
+    onCerrarSesion: () -> Unit
 ) {
-    Row(
+    val context = LocalContext.current
+    val version = remember {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "—"
+    }
+    var confirmarSalida by remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FestivalDarkBg)
+            .padding(32.dp)
     ) {
-        // SIDEBAR
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Settings, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(32.dp))
+            Spacer(Modifier.width(12.dp))
+            Text("Ajustes", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("Versión $version", color = FestivalTextSecondary, fontSize = 12.sp)
+        }
+        Spacer(Modifier.height(20.dp))
+
         Column(
-            modifier = Modifier
-                .width(260.dp)
-                .fillMaxHeight()
-                .background(Color(0xFF141A17))
-                .padding(24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
         ) {
-            Column {
-                Text(
-                    text = "FESTIVAL",
-                    color = FestivalGold,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "José Alfredo Jiménez",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                val navItems = listOf(
-                    "Inicio" to Icons.Default.Home,
-                    "Galería Histórica" to Icons.Default.Collections,
-                    "Transmisión En Vivo" to Icons.Default.LiveTv,
-                    "Programación" to Icons.Default.Event,
-                    "Ajustes" to Icons.Default.Settings
-                )
-
-                navItems.forEachIndexed { index, (label, icon) ->
-                    val isSelected = currentNavIndex == index
-                    SidebarMenuItem(
-                        label = label,
-                        icon = icon,
-                        isSelected = isSelected,
-                        onClick = { onNavSelect(index) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+            AjusteCard(
+                icon = Icons.Default.Person,
+                title = "Cuenta",
+                subtitle = sesion?.let { "${it.nombre} · ${it.correo}" } ?: "Invitado: puedes ver todo; para escribir en el chat inicia sesión"
+            ) {
+                if (sesion != null) {
+                    Button(
+                        onClick = { confirmarSalida = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC51111), contentColor = Color.White),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Cerrar sesión", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Button(
+                        onClick = onIniciarSesion,
+                        colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Login, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Iniciar sesión", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
+            AjusteCard(
+                icon = Icons.Default.Dns,
+                title = "Servidor del festival",
+                subtitle = EnlacesWeb.servidor,
+                estado = when (servidorConectado) {
+                    true -> "Conectado" to Color(0xFF66BB6A)
+                    false -> "Sin conexión" to FestivalBadgeLive
+                    null -> "Comprobando…" to FestivalTextSecondary
+                }
+            )
+            AjusteCard(
+                icon = Icons.Default.LiveTv,
+                title = "Transmisión en vivo",
+                subtitle = when {
+                    stream == null -> "No se sabe: el servidor no responde"
+                    stream.isLive -> "En vivo: ${stream.eventoNombre ?: "concierto del festival"}"
+                    else -> "Sin transmisión en este momento"
+                }
+            )
+            AjusteCard(
+                icon = Icons.Default.QrCode,
+                title = "Compra de boletos con el celular",
+                subtitle = "Los códigos QR abren ${EnlacesWeb.base}"
+            )
         }
+    }
 
-        // MAIN CONTENT AREA
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(32.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Settings, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(32.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Ajustes del Dispositivo Smart TV", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                SettingsCard(
-                    icon = Icons.Default.Dns,
-                    title = "Servidor Backend & API",
-                    subtitle = "http://10.0.2.2:3001/api/v1 (Conectado / Saludable)"
-                )
-                SettingsCard(
-                    icon = Icons.Default.HighQuality,
-                    title = "Calidad de Transmisión RTSP",
-                    subtitle = "Automática (1080p 60fps / H.264 ExoPlayer)"
-                )
-                SettingsCard(
-                    icon = Icons.Default.Tv,
-                    title = "Dispositivo Smart TV",
-                    subtitle = "Android TV Leanback OS (Conexión Emulador 10.0.2.2:1935)"
-                )
-                SettingsCard(
-                    icon = Icons.Default.VolumeUp,
-                    title = "Modo de Audio",
-                    subtitle = "Estéreo En Vivo / Dolby Digital Surround"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+    if (confirmarSalida) {
+        AlertDialog(
+            onDismissRequest = { confirmarSalida = false },
+            containerColor = FestivalCardBg,
+            title = { Text("¿Cerrar sesión?", color = FestivalGold, fontWeight = FontWeight.Bold) },
+            text = { Text("La TV seguirá funcionando como invitado.", color = Color.White) },
+            confirmButton = {
                 Button(
-                    onClick = onLogout,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFC51111),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth(0.4f)
-                ) {
-                    Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Cerrar Sesión en Smart TV", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
+                    onClick = { confirmarSalida = false; onCerrarSesion() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC51111), contentColor = Color.White)
+                ) { Text("Cerrar sesión", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { confirmarSalida = false }) { Text("Cancelar", color = Color.Gray) } }
+        )
     }
 }
 
-/**
- * Tarjeta para mostrar una opción o información de configuración.
- *
- * @param icon Ícono [ImageVector] que representa la opción.
- * @param title Título principal de la configuración.
- * @param subtitle Texto secundario o descripción del estado actual.
- */
 @Composable
-private fun SettingsCard(icon: ImageVector, title: String, subtitle: String) {
+private fun AjusteCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    estado: Pair<String, Color>? = null,
+    accion: (@Composable () -> Unit)? = null
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = FestivalCardBg),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(28.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
                 Text(title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(subtitle, color = Color.Gray, fontSize = 13.sp)
             }
+            estado?.let { (texto, color) ->
+                Text(texto, color = color, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
+            accion?.invoke()
         }
     }
 }
