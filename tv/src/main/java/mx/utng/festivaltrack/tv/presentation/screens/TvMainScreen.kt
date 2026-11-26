@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -49,16 +51,20 @@ fun TvMainScreen(
     usuario: String?,
     onVerEnVivo: () -> Unit,
     onVerProgramacion: () -> Unit,
-    onComprar: (String?) -> Unit
+    onComprar: (String?) -> Unit,
+    onAbrirConcierto: (String) -> Unit,
+    onEscucharMusica: () -> Unit
 ) {
     val enVivo = stream?.isLive == true
     val siguiente = proximos.firstOrNull()
 
+    // Se desplaza (con el foco del control) cuando la barra de música le quita espacio.
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FestivalDarkBg)
-            .padding(32.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 32.dp, vertical = 24.dp)
     ) {
         // Barra superior: saludo y hora real
         Row(
@@ -158,6 +164,12 @@ fun TvMainScreen(
                             Spacer(Modifier.width(6.dp))
                             Text("Ver programación", color = Color.White)
                         }
+                        // Como la tarjeta "Audio" del inicio del móvil: suena el catálogo del artista.
+                        OutlinedButton(onClick = onEscucharMusica, shape = RoundedCornerShape(8.dp)) {
+                            Icon(Icons.Default.MusicNote, contentDescription = null, tint = Color.White)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Escuchar música", color = Color.White)
+                        }
                     }
                 }
             }
@@ -177,15 +189,15 @@ fun TvMainScreen(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                 items(proximos, key = { it.id }) { evento ->
                     TvEventCard(evento = evento, ahora = ahora, enVivo = enVivo && stream?.eventoId == evento.id, onClick = {
-                        if (enVivo && stream?.eventoId == evento.id) onVerEnVivo() else onComprar(evento.id)
+                        if (enVivo && stream?.eventoId == evento.id) onVerEnVivo() else onAbrirConcierto(evento.id)
                     })
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Elige un concierto y pulsa OK para comprar sus boletos desde tu celular",
+            "Elige un concierto y pulsa OK para escuchar su repertorio y comprar boletos",
             color = FestivalTextSecondary, fontSize = 11.sp, modifier = Modifier.align(Alignment.End)
         )
     }

@@ -12,7 +12,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import mx.utng.festivaltrack.tv.presentation.components.SeccionTv
+import mx.utng.festivaltrack.tv.presentation.components.TvBarraMusica
+import mx.utng.festivaltrack.tv.presentation.components.TvDetalleConcierto
+import mx.utng.festivaltrack.tv.presentation.screens.ORIGEN_DISCOGRAFIA
+import mx.utng.festivaltrack.tv.presentation.screens.TvBiografiaScreen
+import mx.utng.festivaltrack.tv.presentation.screens.TvBoletosScreen
+import mx.utng.festivaltrack.tv.presentation.screens.TvComunidadScreen
+import mx.utng.festivaltrack.tv.presentation.screens.TvMapaScreen
+import mx.utng.festivaltrack.tv.presentation.viewmodel.Cargable
 import mx.utng.festivaltrack.tv.presentation.components.TvComprarBoletosDialog
 import mx.utng.festivaltrack.tv.presentation.components.TvSidebar
 import mx.utng.festivaltrack.tv.presentation.screens.TvGalleryScreen
@@ -47,12 +58,28 @@ class MainActivity : ComponentActivity() {
                     val sesion by viewModel.sesion.collectAsState()
                     val galeria by viewModel.galeria.collectAsState()
                     val servidorConectado by viewModel.servidorConectado.collectAsState()
+                    val musica by viewModel.musica.collectAsState()
+                    val biografia by viewModel.biografia.collectAsState()
+                    val canciones by viewModel.canciones.collectAsState()
+                    val sitios by viewModel.sitios.collectAsState()
+                    val comunidad by viewModel.comunidad.collectAsState()
+                    val boletos by viewModel.boletos.collectAsState()
 
                     var mostrarLogin by rememberSaveable { mutableStateOf(true) }
                     var yaEntro by rememberSaveable { mutableStateOf(false) }
                     var seccion by rememberSaveable { mutableStateOf(SeccionTv.INICIO) }
                     // Compra con QR: null = cerrada; "" = sin concierto preseleccionado.
                     var comprar by remember { mutableStateOf<String?>(null) }
+                    // Detalle de concierto abierto (id) o null.
+                    var detalle by remember { mutableStateOf<String?>(null) }
+
+                    // En la transmisión se pausa la música para que se escuche el concierto (como en el móvil).
+                    LaunchedEffect(seccion) { if (seccion == SeccionTv.EN_VIVO) viewModel.reproductor.pausar() }
+
+                    val reproducirCatalogo: (Int) -> Unit = { i ->
+                        (canciones as? Cargable.Listo)?.datos?.takeIf { it.isNotEmpty() }
+                            ?.let { viewModel.reproductor.reproducir(it, i, ORIGEN_DISCOGRAFIA) }
+                    }
 
                     if (mostrarLogin) {
                         // Si se abrió desde dentro (chat o Ajustes), Atrás regresa a donde estaba.
@@ -75,7 +102,8 @@ class MainActivity : ComponentActivity() {
                             usuario = sesion?.nombre,
                             onComprarBoletos = { comprar = "" }
                         )
-                        Box(Modifier.weight(1f)) {
+                        Column(Modifier.weight(1f)) {
+                          Box(Modifier.weight(1f)) {
                             when (seccion) {
                                 SeccionTv.INICIO -> TvMainScreen(
                                     proximos = proximos,
@@ -84,7 +112,26 @@ class MainActivity : ComponentActivity() {
                                     usuario = sesion?.nombre,
                                     onVerEnVivo = { seccion = SeccionTv.EN_VIVO },
                                     onVerProgramacion = { seccion = SeccionTv.PROGRAMACION },
-                                    onComprar = { comprar = it ?: "" }
+                                    onComprar = { comprar = it ?: "" },
+                                    onAbrirConcierto = { detalle = it },
+                                    onEscucharMusica = { reproducirCatalogo(0) }
+                                )
+                                SeccionTv.BIOGRAFIA -> TvBiografiaScreen(
+                                    biografia = biografia,
+                                    canciones = canciones,
+                                    musica = musica,
+                                    onReproducir = { lista, i -> viewModel.reproductor.reproducir(lista, i, ORIGEN_DISCOGRAFIA) },
+                                    onReintentar = viewModel::cargarBiografiaYMusica
+                                )
+                                SeccionTv.MAPA -> TvMapaScreen(proximos = proximos, sitios = sitios, ahora = ahora)
+                                SeccionTv.COMUNIDAD -> TvComunidadScreen(comunidad = comunidad, onRecargar = viewModel::cargarComunidad)
+                                SeccionTv.BOLETOS -> TvBoletosScreen(
+                                    sesion = sesion,
+                                    boletos = boletos,
+                                    ahora = ahora,
+                                    onCargar = viewModel::cargarBoletos,
+                                    onIniciarSesion = { mostrarLogin = true },
+                                    onComprar = { comprar = "" }
                                 )
                                 SeccionTv.GALERIA -> TvGalleryScreen(estado = galeria, onReintentar = viewModel::cargarGaleria)
                                 SeccionTv.EN_VIVO -> TvLiveStreamScreen(
@@ -99,7 +146,7 @@ class MainActivity : ComponentActivity() {
                                     proximos = proximos,
                                     stream = stream,
                                     ahora = ahora,
-                                    onComprar = { comprar = it },
+                                    onAbrir = { detalle = it },
                                     onVerEnVivo = { seccion = SeccionTv.EN_VIVO }
                                 )
                                 SeccionTv.AJUSTES -> TvSettingsScreen(
@@ -110,7 +157,35 @@ class MainActivity : ComponentActivity() {
                                     onCerrarSesion = viewModel::cerrarSesion
                                 )
                             }
+                          }
+                          // Barra del reproductor: visible en cualquier sección mientras hay música.
+                          if (musica.actual != null && seccion != SeccionTv.EN_VIVO) {
+                              Box(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 12.dp)) {
+                                  TvBarraMusica(
+                                      estado = musica,
+                                      onAnterior = viewModel.reproductor::anterior,
+                                      onAlternar = viewModel.reproductor::alternar,
+                                      onSiguiente = { viewModel.reproductor.siguiente() },
+                                      onCerrar = viewModel.reproductor::detener
+                                  )
+                              }
+                          }
                         }
+                    }
+
+                    detalle?.let { id ->
+                        val evento = proximos.firstOrNull { it.id == id }
+                        if (evento == null) detalle = null
+                        else TvDetalleConcierto(
+                            evento = evento,
+                            ahora = ahora,
+                            enVivo = stream?.isLive == true && stream?.eventoId == evento.id,
+                            musica = musica,
+                            cargarRepertorio = viewModel::repertorio,
+                            onReproducir = { lista, i -> viewModel.reproductor.reproducir(lista, i, evento.nombre) },
+                            onVerEnVivo = { detalle = null; seccion = SeccionTv.EN_VIVO },
+                            onCerrar = { detalle = null }
+                        )
                     }
 
                     comprar?.let { preseleccionado ->

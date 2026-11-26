@@ -14,7 +14,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
+import mx.utng.festivaltrack.shared.data.remote.BoletoDto
+import mx.utng.festivaltrack.shared.data.remote.CancionDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
+import mx.utng.festivaltrack.shared.data.remote.SitioArDto
 import mx.utng.festivaltrack.shared.data.remote.GaleriaDto
 import mx.utng.festivaltrack.shared.data.remote.LoginDto
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
@@ -71,6 +76,27 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     private val _sesion = MutableStateFlow<SesionTv?>(null)
     val sesion: StateFlow<SesionTv?> = _sesion.asStateFlow()
 
+    /** Música: demos de 30 s, como en el móvil. */
+    val reproductor = ReproductorTv(application, viewModelScope)
+    val musica: StateFlow<EstadoMusica> = reproductor.estado
+
+    private val _biografia = MutableStateFlow<Cargable<BiografiaDto?>>(Cargable.Cargando)
+    val biografia: StateFlow<Cargable<BiografiaDto?>> = _biografia.asStateFlow()
+
+    private val _canciones = MutableStateFlow<Cargable<List<CancionDto>>>(Cargable.Cargando)
+    /** Catálogo de canciones del artista (`GET /canciones`). */
+    val canciones: StateFlow<Cargable<List<CancionDto>>> = _canciones.asStateFlow()
+
+    private val _sitios = MutableStateFlow<List<SitioArDto>>(emptyList())
+    val sitios: StateFlow<List<SitioArDto>> = _sitios.asStateFlow()
+
+    private val _comunidad = MutableStateFlow<Cargable<List<PublicacionDto>>>(Cargable.Cargando)
+    val comunidad: StateFlow<Cargable<List<PublicacionDto>>> = _comunidad.asStateFlow()
+
+    private val _boletos = MutableStateFlow<Cargable<List<BoletoDto>>>(Cargable.Cargando)
+    /** Boletos de la cuenta con la que se inició sesión. */
+    val boletos: StateFlow<Cargable<List<BoletoDto>>> = _boletos.asStateFlow()
+
     init {
         val database = FestivalDatabase.getInstance(application)
         repository = FestivalRepository(database.eventoDao())
@@ -105,6 +131,9 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         cargarGaleria()
+        cargarBiografiaYMusica()
+        cargarComunidad()
+        viewModelScope.launch { runCatching { api.getSitiosAr() }.onSuccess { _sitios.value = it } }
     }
 
     /** Vuelve a pedir las galerías al servidor. */
@@ -140,5 +169,56 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
 
     fun cerrarSesion() {
         _sesion.value = null
+        _boletos.value = Cargable.Cargando
     }
+
+    /** Biografía del artista y catálogo de canciones. */
+    fun cargarBiografiaYMusica() {
+        _biografia.value = Cargable.Cargando
+        _canciones.value = Cargable.Cargando
+        viewModelScope.launch {
+            _biografia.value = runCatching { api.getBiografias().firstOrNull() }
+                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+        viewModelScope.launch {
+            _canciones.value = runCatching { api.getCanciones() }
+                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+    }
+
+    /** Publicaciones de la comunidad (las mismas que se ven en la app del celular). */
+    fun cargarComunidad() {
+        _comunidad.value = Cargable.Cargando
+        viewModelScope.launch {
+            val token = _sesion.value?.let { "Bearer ${it.token}" }
+            _comunidad.value = runCatching { api.getForo(token = token, limit = 30) }
+                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+    }
+
+    /** Boletos de la sesión actual; sin sesión se queda en [Cargable.Cargando] (la pantalla pide entrar). */
+    fun cargarBoletos() {
+        val sesion = _sesion.value ?: return
+        _boletos.value = Cargable.Cargando
+        viewModelScope.launch {
+            _boletos.value = runCatching { api.getMisBoletos("Bearer ${sesion.token}") }
+                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+    }
+
+    /** Repertorio de un concierto para escuchar sus demos. */
+    suspend fun repertorio(eventoId: String): List<CancionDto>? =
+        runCatching { api.getCancionesEvento(eventoId) }.getOrNull()
+
+    override fun onCleared() {
+        reproductor.liberar()
+        super.onCleared()
+    }
+}
+
+/** Datos que se piden al servidor: cargando, listos o sin conexión. */
+sealed class Cargable<out T> {
+    object Cargando : Cargable<Nothing>()
+    data class Listo<T>(val datos: T) : Cargable<T>()
+    object SinConexion : Cargable<Nothing>()
 }

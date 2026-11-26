@@ -35,7 +35,7 @@ fun TvScheduleScreen(
     proximos: List<EventoEntity>,
     stream: StreamStatusDto?,
     ahora: Instant,
-    onComprar: (String) -> Unit,
+    onAbrir: (String) -> Unit,
     onVerEnVivo: () -> Unit
 ) {
     val porDia = remember(proximos, ahora) { proximos.groupBy { HorarioFestival.dia(it, ahora) } }
@@ -94,7 +94,7 @@ fun TvScheduleScreen(
                         evento = evento,
                         enCurso = HorarioFestival.enCurso(evento, ahora),
                         enVivo = transmitiendo,
-                        onClick = { if (transmitiendo) onVerEnVivo() else onComprar(evento.id) }
+                        onClick = { if (transmitiendo) onVerEnVivo() else onAbrir(evento.id) }
                     )
                 }
             }
@@ -168,7 +168,7 @@ fun ScheduleCard(evento: EventoEntity, enCurso: Boolean, enVivo: Boolean, onClic
                     contentDescription = null, tint = FestivalGold, modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(6.dp))
-                Text(if (enVivo) "Ver en vivo" else "Comprar", color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (enVivo) "Ver en vivo" else "Ver detalle", color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
