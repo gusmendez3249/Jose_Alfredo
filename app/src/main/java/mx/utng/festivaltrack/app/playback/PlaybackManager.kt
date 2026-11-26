@@ -3,6 +3,7 @@ package mx.utng.festivaltrack.app.playback
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -164,6 +165,12 @@ object PlaybackManager {
         }
     }
 
+    /**
+     * Se conecta al servicio sin cambiar nada, para reflejar lo que ya suena aunque lo haya
+     * puesto otra pantalla, el reproductor del auto o los controles del volante.
+     */
+    fun conectar() = withController { sync(it) }
+
     // ─── Controles ───────────────────────────────────────────────────────────
 
     /** Reemplaza la cola por las canciones de un concierto y empieza a sonar desde [startIndex]. */
@@ -270,8 +277,10 @@ object PlaybackManager {
 
     /** Publica el estado real del reproductor. */
     private fun sync(player: Player) {
+        if (player.mediaItemCount == 0) return
+        adoptarCola(player)
         val queue = _queue.value
-        if (player.mediaItemCount == 0 || queue.isEmpty()) return
+        if (queue.isEmpty()) return
         val index = player.currentMediaItemIndex.coerceIn(0, queue.lastIndex)
         if (index != _currentIndex.value) {
             _currentIndex.value = index
@@ -281,6 +290,19 @@ object PlaybackManager {
         _isPlaying.value = player.isPlaying
         _isBuffering.value = player.playbackState == Player.STATE_BUFFERING && player.playWhenReady
         syncPosition(player)
+    }
+
+    /**
+     * Si la cola del reproductor no es la que conoce la app (la eligieron desde el reproductor
+     * del auto), se toma la del reproductor para que todas las pantallas muestren lo mismo.
+     */
+    private fun adoptarCola(player: Player) {
+        val ids = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
+        if (ids == _queue.value.map { it.id }) return
+        val pistas = (0 until player.mediaItemCount).map { pistaDe(player.getMediaItemAt(it)) }
+        originalQueue = pistas
+        _queue.value = pistas
+        _currentIndex.value = -1 // se publica enseguida con el índice real
     }
 
     private fun syncPosition(player: Player) {
@@ -318,10 +340,13 @@ object PlaybackManager {
         _progress.value = 0f
     }
 
-    private fun toMediaItem(track: QueueTrack): MediaItem =
+    /** Canción como la entiende el reproductor; los datos del concierto viajan en los extras. */
+    fun toMediaItem(track: QueueTrack): MediaItem =
         MediaItem.Builder()
             .setMediaId(track.id)
             .setUri(track.audioUrl)
+            // La URL viaja también aquí: es lo que recibe el servicio cuando la canción llega de otro proceso.
+            .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(Uri.parse(track.audioUrl)).build())
             .setClippingConfiguration(
                 MediaItem.ClippingConfiguration.Builder().setEndPositionMs(DEMO_MS).build()
             )
@@ -332,9 +357,42 @@ object PlaybackManager {
                     .setSubtitle(track.artist)
                     .setAlbumTitle(track.eventoNombre)
                     .setArtworkUri(track.coverUrl?.let(Uri::parse))
+                    .setIsBrowsable(false)
+                    .setIsPlayable(true)
+                    .setExtras(Bundle().apply {
+                        putString(EXTRA_EVENTO_ID, track.eventoId)
+                        putString(EXTRA_ESCENARIO, track.escenario)
+                        putString(EXTRA_FECHA, track.fechaHora)
+                        putInt(EXTRA_DURACION, track.durationSec)
+                        putString(EXTRA_PORTADA, track.coverUrl)
+                    })
                     .build()
             )
             .build()
+
+    /** Reconstruye la canción a partir de lo que guarda el reproductor (inverso de [toMediaItem]). */
+    fun pistaDe(item: MediaItem): QueueTrack {
+        val meta = item.mediaMetadata
+        val extras = meta.extras
+        return QueueTrack(
+            id = item.mediaId,
+            title = meta.title?.toString() ?: "Canción",
+            artist = meta.artist?.toString() ?: "",
+            coverUrl = extras?.getString(EXTRA_PORTADA) ?: meta.artworkUri?.toString(),
+            audioUrl = item.localConfiguration?.uri?.toString() ?: item.requestMetadata.mediaUri?.toString() ?: "",
+            durationSec = extras?.getInt(EXTRA_DURACION) ?: 0,
+            eventoId = extras?.getString(EXTRA_EVENTO_ID) ?: "",
+            eventoNombre = meta.albumTitle?.toString() ?: "Concierto del festival",
+            escenario = extras?.getString(EXTRA_ESCENARIO),
+            fechaHora = extras?.getString(EXTRA_FECHA)
+        )
+    }
+
+    private const val EXTRA_EVENTO_ID = "festivaltrack.eventoId"
+    private const val EXTRA_ESCENARIO = "festivaltrack.escenario"
+    private const val EXTRA_FECHA = "festivaltrack.fechaHora"
+    private const val EXTRA_DURACION = "festivaltrack.duracion"
+    private const val EXTRA_PORTADA = "festivaltrack.portada"
 
     /** Ejecuta [action] cuando el controlador está conectado al servicio (lo conecta si hace falta). */
     private fun withController(action: (MediaController) -> Unit) {

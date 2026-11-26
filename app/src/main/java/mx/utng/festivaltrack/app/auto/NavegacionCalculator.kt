@@ -22,6 +22,12 @@ data class ResumenNavegacion(
 )
 
 /**
+ * Concierto al que lleva la ruta activa, con la hora a la que conviene salir.
+ * @property textoSalida "Sal ya", "Sal en 25 min" o "Sal mañana a las 21:16".
+ */
+data class ConciertoRuta(val nombre: String, val inicio: Instant, val textoSalida: String)
+
+/**
  * Calcula lo que muestra la pantalla de navegación antes de abrir Google Maps o Waze:
  * distancia, tiempo y hora de llegada hacia la [RutaActiva] elegida en el teléfono.
  */
@@ -44,6 +50,19 @@ object NavegacionCalculator {
             llegada = ahora.plus(Duration.ofMinutes(minutos.toLong())),
             uriNavegacion = uriNavegacion(ruta.latitud, ruta.longitud)
         )
+    }
+
+    /**
+     * Concierto de la ruta con su hora de salida (inicio − traslado − margen), o null si la ruta
+     * no se eligió por un concierto o este ya empezó.
+     */
+    fun concierto(ruta: RutaActiva, resumen: ResumenNavegacion, ahora: Instant = Instant.now()): ConciertoRuta? {
+        val nombre = ruta.eventoNombre ?: return null
+        val inicio = ruta.eventoFechaHora?.let(SalidaCalculator::parsearFecha) ?: return null
+        if (inicio.isBefore(ahora)) return null
+        val horaSalida = inicio.minus(Duration.ofMinutes(resumen.trasladoMin + SalidaCalculator.MARGEN_MIN))
+        val minutos = Duration.between(ahora, horaSalida).toMinutes()
+        return ConciertoRuta(nombre, inicio, SalidaCalculator.textoSalida(minutos, horaSalida, ahora))
     }
 
     /** URI que entiende `CarContext.ACTION_NAVIGATE`: `geo:21.1566,-100.9341`. */

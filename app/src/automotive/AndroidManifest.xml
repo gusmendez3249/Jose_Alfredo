@@ -14,7 +14,15 @@
     <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" tools:replace="android:required" />
 
-    <application>
+    <!-- En el auto la app se llama FestivalTrack (en el teléfono, "FestivalTrack Phone") -->
+    <application
+        android:label="FestivalTrack"
+        tools:replace="android:label">
+        <!-- Declara la app para Android Automotive OS (pantallas de plantilla y música) -->
+        <meta-data
+            android:name="com.android.automotive"
+            android:resource="@xml/automotive_app_desc" />
+
         <!-- En el auto la entrada es CarAppActivity, no la app del teléfono -->
         <activity android:name=".MainActivity">
             <intent-filter tools:node="removeAll" />

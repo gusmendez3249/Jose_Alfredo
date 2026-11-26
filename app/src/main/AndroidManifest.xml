@@ -40,13 +40,16 @@
             </intent-filter>
         </activity>
 
-        <!-- Reproductor de demos del concierto: sigue sonando en segundo plano (#31) -->
+        <!-- Reproductor de demos del concierto: sigue sonando en segundo plano (#31).
+             También publica la música para el reproductor del auto y los controles del volante. -->
         <service
             android:name=".playback.PlaybackService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
 
@@ -63,6 +66,10 @@
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
+        <!-- Colores dorados de FestivalTrack en la pantalla del auto -->
+        <meta-data
+            android:name="androidx.car.app.theme"
+            android:resource="@style/TemaAuto" />
         <meta-data
             android:name="androidx.car.app.minCarApiLevel"
             android:value="1" />

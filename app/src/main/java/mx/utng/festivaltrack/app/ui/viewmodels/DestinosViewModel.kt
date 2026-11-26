@@ -23,7 +23,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import mx.utng.festivaltrack.app.auto.Destino
 import mx.utng.festivaltrack.app.auto.DestinosCalculator
-import mx.utng.festivaltrack.app.auto.RutaActiva
 import mx.utng.festivaltrack.app.auto.RutaActivaStore
 import mx.utng.festivaltrack.app.auto.SalidaCalculator
 import mx.utng.festivaltrack.app.ui.utils.Ruta
@@ -183,7 +182,7 @@ class DestinosViewModel(application: Application) : AndroidViewModel(application
 
     /** Guarda el destino como ruta activa (el mapa lo muestra y Android Auto lo retoma). */
     fun elegir(destino: Destino) {
-        rutaStore.guardar(RutaActiva(destino.nombre, destino.latitud, destino.longitud))
+        rutaStore.guardar(destino.comoRuta())
     }
 
     /**

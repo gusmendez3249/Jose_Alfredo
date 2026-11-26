@@ -1,6 +1,7 @@
 package mx.utng.festivaltrack.app.auto
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Duration
@@ -52,5 +53,24 @@ class NavegacionCalculatorTest {
         val voz = NavegacionCalculator.textoVoz(resumen)
         assertTrue(voz.startsWith("Iniciando navegación a Mausoleo."))
         assertTrue(voz.contains("${resumen.trasladoMin} minutos"))
+    }
+
+    @Test
+    fun `la ruta elegida por un concierto dice cuando empieza y a que hora salir`() {
+        // ahora = 12:00 en Dolores Hidalgo; la serenata empieza a las 21:30
+        val ruta = mausoleo.copy(eventoNombre = "Serenata en el Mausoleo", eventoFechaHora = "2026-11-21T03:30:00.000Z")
+        val resumen = NavegacionCalculator.resumen(ruta, 21.1530, -100.9340, ahora)
+        val concierto = NavegacionCalculator.concierto(ruta, resumen, ahora)!!
+        assertEquals("Serenata en el Mausoleo", concierto.nombre)
+        val salida = Instant.parse("2026-11-21T03:30:00Z").minus(Duration.ofMinutes(resumen.trasladoMin + 10L))
+        assertEquals("Sal hoy a las ${TextosAuto.hora(salida)}", concierto.textoSalida)
+    }
+
+    @Test
+    fun `sin concierto o con el concierto ya empezado no hay hora de salida`() {
+        val resumen = NavegacionCalculator.resumen(mausoleo, 21.1530, -100.9340, ahora)
+        assertNull(NavegacionCalculator.concierto(mausoleo, resumen, ahora))
+        val pasado = mausoleo.copy(eventoNombre = "Gala", eventoFechaHora = "2026-11-20T17:00:00Z")
+        assertNull(NavegacionCalculator.concierto(pasado, resumen, ahora))
     }
 }
