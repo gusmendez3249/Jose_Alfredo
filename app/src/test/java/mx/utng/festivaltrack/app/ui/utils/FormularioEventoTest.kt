@@ -46,7 +46,7 @@ class FormularioEventoTest {
     @Test
     fun `reconoce el lugar por nombre o por coordenadas`() {
         assertEquals("Casa Museo", FormularioEvento.lugarPara("casa museo", null, null)?.escenario)
-        assertEquals("Mausoleo de José Alfredo Jiménez", FormularioEvento.lugarPara("Principal", 21.1571, -100.9406)?.escenario)
+        assertEquals("Mausoleo de José Alfredo Jiménez", FormularioEvento.lugarPara("Principal", 21.156687, -100.948773)?.escenario)
         assertNull(FormularioEvento.lugarPara("Otro", 20.0, -100.0))
     }
 }

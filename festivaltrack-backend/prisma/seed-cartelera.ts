@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { UBICACIONES } from './ubicaciones';
 
 /**
  * Cartelera de demostración a partir de hoy.
@@ -25,8 +26,7 @@ const PLANTILLAS = [
     ubicacion: 'Jardín Principal, Dolores Hidalgo',
     escenario: 'Plaza Principal',
     capacidad: 800,
-    latitud: 21.1563,
-    longitud: -100.9338,
+    ...UBICACIONES.jardinPrincipal,
     descripcion:
       'Tríos y bohemios interpretan los clásicos de José Alfredo bajo los faroles del Jardín Principal.',
   },
@@ -38,8 +38,7 @@ const PLANTILLAS = [
     ubicacion: 'Panteón Municipal, Dolores Hidalgo',
     escenario: 'Mausoleo de José Alfredo Jiménez',
     capacidad: 400,
-    latitud: 21.1571,
-    longitud: -100.9406,
+    ...UBICACIONES.mausoleo,
     descripcion:
       'Serenata de mariachi frente al mausoleo en forma de sombrero charro.',
   },
@@ -51,8 +50,7 @@ const PLANTILLAS = [
     ubicacion: 'Calle Guanajuato 13, Centro, Dolores Hidalgo',
     escenario: 'Casa Museo',
     capacidad: 150,
-    latitud: 21.1574,
-    longitud: -100.933,
+    ...UBICACIONES.casaMuseo,
     descripcion:
       'Visita guiada por la casa natal del compositor, con objetos personales y manuscritos.',
   },
@@ -64,8 +62,7 @@ const PLANTILLAS = [
     ubicacion: 'Jardín Principal, Dolores Hidalgo',
     escenario: 'Escenario Principal',
     capacidad: 2500,
-    latitud: 21.1566,
-    longitud: -100.9341,
+    ...UBICACIONES.escenarioPrincipal,
     descripcion:
       'Los mejores mariachis del estado en el escenario principal del festival.',
   },
@@ -77,8 +74,7 @@ const PLANTILLAS = [
     ubicacion: 'Jardín Principal, Dolores Hidalgo',
     escenario: 'Escenario Principal',
     capacidad: 3000,
-    latitud: 21.1566,
-    longitud: -100.9341,
+    ...UBICACIONES.escenarioPrincipal,
     descripcion: 'Concierto de cierre en homenaje a José Alfredo Jiménez.',
   },
 ];

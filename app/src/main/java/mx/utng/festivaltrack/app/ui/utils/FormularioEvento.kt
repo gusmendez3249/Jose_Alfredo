@@ -14,12 +14,12 @@ object FormularioEvento {
 
     val ZONA: ZoneId = ZoneId.of("America/Mexico_City")
 
-    /** Mismos lugares que usa la cartelera (`seed-cartelera.ts`). */
+    /** Mismos lugares y coordenadas que el backend (`prisma/ubicaciones.ts`, tomadas de OpenStreetMap). */
     val LUGARES = listOf(
-        LugarFestival("Escenario Principal", "Jardín Principal, Dolores Hidalgo", 21.1566, -100.9341),
-        LugarFestival("Plaza Principal", "Jardín Principal, Dolores Hidalgo", 21.1563, -100.9338),
-        LugarFestival("Mausoleo de José Alfredo Jiménez", "Panteón Municipal, Dolores Hidalgo", 21.1571, -100.9406),
-        LugarFestival("Casa Museo", "Calle Guanajuato 13, Centro, Dolores Hidalgo", 21.1574, -100.933)
+        LugarFestival("Escenario Principal", "Jardín Principal, frente a la Parroquia, Dolores Hidalgo", 21.1583, -100.9341),
+        LugarFestival("Plaza Principal", "Jardín Principal, Dolores Hidalgo", 21.157511, -100.934529),
+        LugarFestival("Mausoleo de José Alfredo Jiménez", "Panteón Municipal, Dolores Hidalgo", 21.156687, -100.948773),
+        LugarFestival("Casa Museo", "Calle Guanajuato 13, Centro, Dolores Hidalgo", 21.157341, -100.93277)
     )
 
     /** Fecha y hora de Ciudad de México → instante ISO en UTC para el servidor. */
