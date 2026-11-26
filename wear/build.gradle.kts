@@ -36,7 +36,7 @@ kapt {
 dependencies {
     implementation(project(":shared"))
     testImplementation("junit:junit:4.13.2")
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
 
     // Wear OS Compose
     implementation(platform(libs.compose.bom))
