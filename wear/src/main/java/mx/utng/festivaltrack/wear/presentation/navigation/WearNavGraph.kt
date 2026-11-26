@@ -1,100 +1,60 @@
 package mx.utng.festivaltrack.wear.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import mx.utng.festivaltrack.wear.presentation.screens.*
+import mx.utng.festivaltrack.wear.presentation.screens.AgendaScreen
+import mx.utng.festivaltrack.wear.presentation.screens.ConciertoScreen
+import mx.utng.festivaltrack.wear.presentation.screens.MapaRutaScreen
 
 /**
- * Rutas de navegación selladas para Wear OS.
- * @property route El identificador de la ruta en la navegación.
+ * Rutas del reloj. El flujo es corto a propósito: Agenda → Concierto → Mapa
+ * (dos toques para llegar a la ruta). Atrás se hace deslizando hacia la derecha.
  */
 sealed class WearScreen(val route: String) {
-    /** Pantalla inicial tipo Splash. */
-    object Splash       : WearScreen("splash")
-    /** Pantalla que simula una carátula o menú principal. */
-    object WatchFace    : WearScreen("watch_face")
-    /** Pantalla de listado de próximos eventos. */
-    object Proximos     : WearScreen("proximos")
-    /** Pantalla de listado completo de eventos. */
-    object ProgramaCompleto : WearScreen("programa_completo")
-    /**
-     * Pantalla de alerta de un evento próximo.
-     * @property eventoId ID del evento.
-     */
-    object Alerta       : WearScreen("alerta/{eventoId}") {
-        fun createRoute(eventoId: String) = "alerta/$eventoId"
+    /** Agenda del festival agrupada por día (pantalla de inicio). */
+    object Agenda : WearScreen("agenda")
+
+    /** Detalle de un concierto: cuándo, dónde y a qué distancia estás. */
+    object Concierto : WearScreen("concierto/{eventoId}") {
+        fun createRoute(eventoId: String) = "concierto/$eventoId"
     }
-    /**
-     * Pantalla de opciones de navegación a un escenario.
-     * @property eventoId ID del evento.
-     */
-    object NavEscenario : WearScreen("nav_escenario/{eventoId}") {
-        fun createRoute(eventoId: String) = "nav_escenario/$eventoId"
-    }
-    /**
-     * Pantalla del mapa interactivo para acceder al evento.
-     * @property eventoId ID del evento.
-     */
-    object MapaAcceso   : WearScreen("mapa_acceso/{eventoId}") {
-        fun createRoute(eventoId: String) = "mapa_acceso/$eventoId"
+
+    /** Mapa con la ruta a pie hasta el concierto. */
+    object Mapa : WearScreen("mapa/{eventoId}") {
+        fun createRoute(eventoId: String) = "mapa/$eventoId"
     }
 }
 
 /**
- * Gráfico de navegación principal para la aplicación en Wear OS.
- * Utiliza [SwipeDismissableNavHost] que es el estándar en relojes para deslizar hacia atrás.
+ * Navegación del reloj con [SwipeDismissableNavHost] (deslizar para regresar, estándar de Wear OS).
+ *
+ * @param conciertoInicial Concierto a abrir al iniciar (al tocar el aviso de 15 minutos).
  */
 @Composable
-fun WearNavGraph() {
+fun WearNavGraph(conciertoInicial: String? = null) {
     val navController = rememberSwipeDismissableNavController()
 
-    SwipeDismissableNavHost(
-        navController = navController,
-        startDestination = WearScreen.Splash.route
-    ) {
-        composable(WearScreen.Splash.route) {
-            SplashScreen(onSplashFinished = {
-                navController.navigate(WearScreen.WatchFace.route) {
-                    popUpTo(WearScreen.Splash.route) { inclusive = true }
-                }
-            })
+    LaunchedEffect(conciertoInicial) {
+        conciertoInicial?.let { navController.navigate(WearScreen.Concierto.createRoute(it)) }
+    }
+
+    SwipeDismissableNavHost(navController = navController, startDestination = WearScreen.Agenda.route) {
+        composable(WearScreen.Agenda.route) {
+            AgendaScreen(onConcierto = { id -> navController.navigate(WearScreen.Concierto.createRoute(id)) })
         }
-        composable(WearScreen.WatchFace.route) {
-            WatchFaceScreen(onTap = { navController.navigate(WearScreen.Proximos.route) })
-        }
-        composable(WearScreen.Proximos.route) {
-            ProximosScreen(
-                onEventoClick = { id -> navController.navigate(WearScreen.Alerta.createRoute(id)) },
-                onProgramaCompletoClick = { navController.navigate(WearScreen.ProgramaCompleto.route) }
-            )
-        }
-        composable(WearScreen.ProgramaCompleto.route) {
-            ProgramaCompletoScreen(
-                onEventoClick = { id -> navController.navigate(WearScreen.Alerta.createRoute(id)) }
-            )
-        }
-        composable(WearScreen.Alerta.route) { backStack ->
+        composable(WearScreen.Concierto.route) { backStack ->
             val eventoId = backStack.arguments?.getString("eventoId") ?: return@composable
-            AlertaScreen(
+            ConciertoScreen(
                 eventoId = eventoId,
-                onVerMapa = { navController.navigate(WearScreen.NavEscenario.createRoute(eventoId)) }
+                onComoLlegar = { navController.navigate(WearScreen.Mapa.createRoute(eventoId)) }
             )
         }
-        composable(WearScreen.NavEscenario.route) { backStack ->
+        composable(WearScreen.Mapa.route) { backStack ->
             val eventoId = backStack.arguments?.getString("eventoId") ?: return@composable
-            NavEscenarioScreen(
-                eventoId = eventoId,
-                onLlegarAhora = { navController.navigate(WearScreen.MapaAcceso.createRoute(eventoId)) }
-            )
-        }
-        composable(WearScreen.MapaAcceso.route) { backStack ->
-            val eventoId = backStack.arguments?.getString("eventoId") ?: return@composable
-            MapaAccesoScreen(
-                eventoId = eventoId,
-                onBack = { navController.popBackStack(WearScreen.WatchFace.route, false) }
-            )
+            MapaRutaScreen(eventoId = eventoId, onBack = { navController.popBackStack() })
         }
     }
 }
