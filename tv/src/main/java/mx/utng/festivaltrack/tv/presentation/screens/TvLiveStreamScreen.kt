@@ -102,8 +102,13 @@ fun TvLiveStreamScreen(
                 }
 
                 if (enVivo) {
+                    // Fondo oscuro para que el nombre se lea aunque el video sea claro.
                     Row(
-                        modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(16.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(color = FestivalBadgeLive, shape = RoundedCornerShape(4.dp)) {
