@@ -1,4 +1,4 @@
-# Blueprint de Render para el backend de FestivalTrack (NestJS + Prisma).
+# Blueprint de Render de FestivalTrack: backend (NestJS + Prisma) y portal web (sitio estático de Vite).
 # Render → New → Blueprint → elegir este repositorio. Las variables con "sync: false"
 # se piden en el panel al crear el servicio (valores de tu .env; nunca se suben a git).
 services:
@@ -32,5 +32,55 @@ services:
         sync: false
       - key: ANTHROPIC_WORKSPACE_ID
         sync: false
+      # Origen exacto del portal web (CORS). Si Render le asigna otra URL al sitio, cámbiala aquí.
       - key: FRONTEND_URL
-        sync: false
+        value: https://festivaltrack-web.onrender.com
+
+  # Portal web: sitio estático. Aquí no corre `serve`, así que las cabeceras de seguridad y el
+  # fallback de SPA de festivaltrack-web/public/serve.json se declaran en este archivo.
+  - type: web
+    name: festivaltrack-web
+    runtime: static
+    rootDir: festivaltrack-web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Vite la incrusta al compilar: si cambia la URL del backend hay que volver a desplegar.
+      - key: VITE_API_URL
+        value: https://festivaltrack-backend.onrender.com/api/v1
+    headers:
+      # Misma política que serve.json; connect-src debe incluir el origen del backend.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://tile.openstreetmap.org; font-src 'self'; connect-src 'self' https://festivaltrack-backend.onrender.com https://routing.openstreetmap.de; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(self), camera=(), microphone=(), payment=(), usb=()
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+    routes:
+      # Las rutas de React Router (/events, /mis-boletos…) no existen como archivos.
+      - type: rewrite
+        source: /*
+        destination: /index.html
