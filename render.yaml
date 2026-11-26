@@ -1,0 +1,36 @@
+# Blueprint de Render para el backend de FestivalTrack (NestJS + Prisma).
+# Render → New → Blueprint → elegir este repositorio. Las variables con "sync: false"
+# se piden en el panel al crear el servicio (valores de tu .env; nunca se suben a git).
+services:
+  - type: web
+    name: festivaltrack-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: festivaltrack-backend
+    # --include=dev: con NODE_ENV=production npm omitiría @nestjs/cli y prisma, que se usan al compilar.
+    # migrate deploy aplica solo migraciones pendientes (nunca migrate dev contra Neon).
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build && npx prisma migrate deploy
+    startCommand: npm run start:prod
+    healthCheckPath: /api/v1/eventos
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        sync: false
+      - key: ANTHROPIC_WORKSPACE_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

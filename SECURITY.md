@@ -68,7 +68,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 | Backend | 31 alertas (2 críticas: `handlebars`, `proxy-addr`; 8 altas, entre ellas `multer`, `body-parser`, `@nestjs/platform-express`) | `npm audit fix` sin cambios mayores; build y 51 pruebas en verde | **0** |
 | Portal web | 8 altas (`axios`, `vite`, `react-router`, `postcss`…) | `npm audit fix`; compila sin errores | **0** |
 
-**Alertas aceptadas (justificación):** el backend conserva 29 alertas bajas, moderadas y una alta (`brace-expansion`), todas **solo en herramientas de desarrollo** (`jest`, `ts-jest`, `@nestjs/cli`, `typescript-eslint`). Solo se usan para compilar y probar: el servidor en producción arranca con `node dist/main` y nunca carga esas herramientas ni les pasa datos de usuarios. Corregirlas exige subir versiones mayores (`jest` 30→29, `@nestjs/cli` 11→12), y eso se hará en un PR aparte con pruebas.
+**Alertas aceptadas (justificación):** el backend conserva 29 alertas bajas, moderadas y una alta (`brace-expansion`), todas **solo en herramientas de desarrollo** (`jest`, `ts-jest`, `@nestjs/cli`, `typescript-eslint`). Solo se usan para compilar y probar: el servidor en producción arranca con `node dist/src/main` y nunca carga esas herramientas ni les pasa datos de usuarios. Corregirlas exige subir versiones mayores (`jest` 30→29, `@nestjs/cli` 11→12), y eso se hará en un PR aparte con pruebas.
 
 **Automatización:**
 - `backend.yml` y `web.yml` corren `npm audit --omit=dev --audit-level=high`: el PR falla si una dependencia de producción tiene una vulnerabilidad alta o crítica.
