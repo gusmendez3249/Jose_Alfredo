@@ -2,8 +2,11 @@ import axios, { AxiosHeaders } from 'axios';
 import { API_URL } from '../config/env';
 import { limpiarSesion, obtenerToken } from '../auth/session';
 
-/** Render (plan gratuito) tarda en despertar; más de 20 s se trata como "servidor despertando". */
-const TIEMPO_LIMITE_MS = 20_000;
+/**
+ * El backend en Render (plan gratuito) se duerme y su primer arranque midió ~27 s: con 20 s la
+ * primera visita fallaba siempre. 60 s cubre el arranque en frío; pasado eso se avisa y se reintenta.
+ */
+const TIEMPO_LIMITE_MS = 60_000;
 
 export const http = axios.create({
   baseURL: API_URL,

@@ -50,7 +50,7 @@ src/
   components/              EventoCard, MapaRuta, ErrorBoundary, NotFound, ErrorDeConfiguracion
   config/env.ts            VITE_API_URL validada
   config/precios.ts        Categorías a la venta (VIP, GENERAL) y precios (deben coincidir con el backend)
-  lib/http.ts              Cliente axios: baseURL, timeout 20 s, token y manejo de 401
+  lib/http.ts              Cliente axios: baseURL, timeout 60 s, token y manejo de 401
   lib/errores.ts           mensajeDeError(): convierte errores de red/HTTP en mensajes en español
   lib/formato.ts           Fechas (es-MX, hora del centro de México), precios "$4,500 MXN", folios
   lib/fechaEvento.ts       Día/mes y hora para las tarjetas de evento
