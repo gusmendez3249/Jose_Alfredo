@@ -124,7 +124,7 @@ El diseño replica el de la app móvil (`app/.../ui/theme/Color.kt` y sus pantal
 
 Si se cambia de servicio de rutas o de teselas, hay que actualizar `connect-src` / `img-src` en `public/serve.json`.
 
-> Si el frontend se publica como *Static Site* de Render (sin `serve`), `serve.json` no se aplica: las mismas cabeceras y la regla de rewrite hay que configurarlas en el panel de Render.
+> En Render el frontend se publica como *Static Site* (sin `serve`), así que `serve.json` no se aplica: las mismas cabeceras y la regla de rewrite están declaradas en `render.yaml`, en la raíz del repositorio. Un cambio en una política hay que hacerlo en los dos archivos.
 
 ### Nixpacks (Railway u otros)
 
