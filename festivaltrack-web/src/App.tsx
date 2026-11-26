@@ -21,6 +21,7 @@ const EventDetail = lazy(() => import('./pages/EventDetail'));
 const Community = lazy(() => import('./pages/Community'));
 const Live = lazy(() => import('./pages/Live'));
 const FestivalMap = lazy(() => import('./pages/FestivalMap'));
+const VincularTv = lazy(() => import('./pages/VincularTv'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
 const AdminEventForm = lazy(() => import('./pages/admin/AdminEventForm'));
@@ -85,6 +86,15 @@ function Rutas() {
             element={
               <RequireAuth>
                 <Checkout />
+              </RequireAuth>
+            }
+          />
+          {/* La TV muestra un QR que abre esta ruta con ?codigo=...; sin sesión, el login regresa aquí. */}
+          <Route
+            path="/vincular-tv"
+            element={
+              <RequireAuth>
+                <VincularTv />
               </RequireAuth>
             }
           />

@@ -27,6 +27,15 @@ object EnlacesWeb {
     fun registro(): String = "$base/register"
 
     /**
+     * Página donde el celular aprueba el inicio de sesión de la TV. Si no hay sesión, la web
+     * pide entrar (o crear cuenta) y regresa aquí con el código ya escrito.
+     */
+    fun vincularTv(codigo: String): String = vincularTvDesde(base, codigo)
+
+    internal fun vincularTvDesde(base: String, codigo: String): String =
+        "$base/vincular-tv?codigo=${java.net.URLEncoder.encode(codigo, "UTF-8")}"
+
+    /**
      * Regla para la base, en este orden:
      * 1. La URL configurada.
      * 2. Si la API está en Render (`<nombre>-backend.onrender.com`), el sitio estático que

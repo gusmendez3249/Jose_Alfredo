@@ -9,6 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +27,97 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.app.ui.viewmodels.ProfileState
 import mx.utng.festivaltrack.app.ui.viewmodels.ProfileViewModel
+import mx.utng.festivaltrack.app.ui.viewmodels.VincularTvState
+import mx.utng.festivaltrack.app.ui.viewmodels.limpiarCodigoTv
+
+/**
+ * Diálogo para entrar en la TV del festival con esta cuenta: se escribe el código que muestra la
+ * TV (también se puede escanear su QR con la cámara, que abre la web). La TV entra sola en unos
+ * segundos.
+ */
+@Composable
+private fun VincularTvDialog(estado: VincularTvState, onVincular: (String) -> Unit, onCerrar: () -> Unit) {
+    // TextFieldValue para dejar el cursor al final: al agregar el guion, con un String el cursor
+    // se quedaba atrás y lo que se escribía después quedaba en desorden ("H89J6EBQ" → "H89J-EBQ6").
+    var campo by remember { mutableStateOf(TextFieldValue("")) }
+    val codigo = campo.text
+    val enviando = estado is VincularTvState.Enviando
+    AlertDialog(
+        onDismissRequest = { if (!enviando) onCerrar() },
+        containerColor = Color(0xFF1E1E1E),
+        icon = { Icon(Icons.Default.Tv, contentDescription = null, tint = PrimaryGold) },
+        title = { Text("Vincular una TV", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                if (estado is VincularTvState.Listo) {
+                    Text(
+                        "¡Listo! La TV entrará con tu cuenta en unos segundos.",
+                        color = Color.White, fontSize = 15.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        "Escribe el código que aparece en la pantalla de inicio de sesión de la TV, junto al QR.",
+                        color = Color.Gray, fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = campo,
+                        onValueChange = {
+                            val limpio = limpiarCodigoTv(it.text)
+                            campo = TextFieldValue(limpio, TextRange(limpio.length))
+                        },
+                        label = { Text("Código de la TV") },
+                        placeholder = { Text("ABCD-1234") },
+                        singleLine = true,
+                        enabled = !enviando,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                        isError = estado is VincularTvState.Error,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryGold,
+                            focusedLabelColor = PrimaryGold,
+                            cursorColor = PrimaryGold,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (estado is VincularTvState.Error) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(estado.mensaje, color = Color(0xFFFF8A80), fontSize = 13.sp)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        "Hazlo solo con una TV que tengas enfrente: entrará con tu cuenta.",
+                        color = Color.Gray, fontSize = 12.sp
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (estado is VincularTvState.Listo) {
+                Button(
+                    onClick = onCerrar,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black)
+                ) { Text("Cerrar", fontWeight = FontWeight.Bold) }
+            } else {
+                Button(
+                    onClick = { onVincular(codigo) },
+                    enabled = !enviando && codigo.length == 9,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGold, contentColor = Color.Black)
+                ) {
+                    if (enviando) CircularProgressIndicator(color = Color.Black, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                    else Text("Vincular", fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            if (estado !is VincularTvState.Listo) {
+                TextButton(onClick = onCerrar, enabled = !enviando) { Text("Cancelar", color = Color.Gray) }
+            }
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +131,15 @@ fun ProfileScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val nombre = remember { mx.utng.festivaltrack.app.data.TokenManager(context).getUserName() }
     var confirmarSalida by remember { mutableStateOf(false) }
+    var verVincularTv by remember { mutableStateOf(false) }
+
+    if (verVincularTv) {
+        VincularTvDialog(
+            estado = viewModel.vincularTv.collectAsState().value,
+            onVincular = viewModel::vincularTv,
+            onCerrar = { verVincularTv = false; viewModel.reiniciarVincularTv() }
+        )
+    }
 
     if (confirmarSalida) {
         AlertDialog(
@@ -87,8 +193,19 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(8.dp))
             nombre?.let {
                 Text("Hola, $it", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
+            // Entrar en la TV del festival con esta cuenta, sin escribir la contraseña con el control.
+            OutlinedButton(
+                onClick = { verVincularTv = true },
+                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryGold),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Tv, contentDescription = null, tint = PrimaryGold)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Vincular una TV", color = PrimaryGold, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
 
             when (profileState) {
                 is ProfileState.Loading -> {

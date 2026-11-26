@@ -1,9 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
+import { VinculosTv } from './vinculos-tv';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -113,22 +116,59 @@ export class AuthService {
     };
   }
 
+  /** Vinculaciones pendientes de Smart TV (ver {@link VinculosTv}). */
+  private readonly vinculosTv = new VinculosTv();
+
   /**
-   * Vincula una Smart TV a la sesión de un usuario (funcionalidad experimental).
-   *
-   * En una implementación completa, esto guardaría la relación en una tabla
-   * de sesiones TV o establecería un canal WebSocket bidireccional.
-   * Actualmente simula la vinculación y retorna éxito.
-   *
-   * @param body Objeto con tvToken (ID único de la TV) y userId (ID del usuario).
-   * @returns Objeto con status, mensaje de confirmación y el tvToken.
+   * La TV pide un código para iniciar sesión desde el celular.
+   * @returns `codigo` para mostrar (y poner en el QR) y `tvToken` secreto para preguntar.
+   * @throws ServiceUnavailableException si hay demasiadas vinculaciones pendientes (HTTP 503).
    */
-  tvSync(body: { tvToken: string; userId: string }) {
-    // TODO: Implementar persistencia real de sesiones TV o WebSockets
+  crearCodigoTv() {
+    const vinculo = this.vinculosTv.crear();
+    if (!vinculo) {
+      throw new ServiceUnavailableException(
+        'Hay demasiadas TV esperando. Intenta de nuevo en un minuto.',
+      );
+    }
+    return vinculo;
+  }
+
+  /**
+   * El usuario con sesión aprueba el código que ve en la TV: la TV entrará con su cuenta.
+   * @throws NotFoundException si el código no existe o ya venció (HTTP 404).
+   */
+  tvSync(body: { codigo: string; userId: string }) {
+    if (!this.vinculosTv.aprobar(body.codigo, body.userId)) {
+      throw new NotFoundException(
+        'El código no existe o ya venció. Revisa el que muestra la TV.',
+      );
+    }
     return {
       status: 'SUCCESS',
-      message: 'Smart TV vinculada correctamente',
-      tvToken: body.tvToken,
+      message: 'Listo: la TV entrará con tu cuenta en unos segundos.',
+    };
+  }
+
+  /**
+   * La TV pregunta si ya aprobaron su código. Al estar aprobado recibe, una sola vez, la misma
+   * respuesta que un login (accessToken y usuario) de la cuenta que lo aprobó.
+   */
+  async estadoTv(tvToken: string) {
+    const resultado = this.vinculosTv.consultar(tvToken);
+    if (resultado.estado !== 'APROBADO') return resultado;
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { id: resultado.usuarioId },
+    });
+    if (!usuario) return { estado: 'EXPIRADO' as const };
+    return {
+      estado: 'APROBADO' as const,
+      ...this.firmarToken(
+        usuario.id,
+        usuario.nombre,
+        usuario.correo,
+        usuario.rol,
+      ),
     };
   }
   /**

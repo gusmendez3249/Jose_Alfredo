@@ -2,7 +2,11 @@
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 /**
@@ -199,6 +203,66 @@ describe('AuthService - Pruebas Unitarias', () => {
       await expect(
         service.updateRole('user-123', 'ROL_INVALIDO'),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  // ─── Grupo 4: Inicio de sesión en la TV con el celular ────────────────────
+
+  describe('TV con el celular (tv-sync)', () => {
+    it('la TV recibe el login de la cuenta que aprobó su código', async () => {
+      const { codigo, tvToken } = service.crearCodigoTv();
+      await expect(service.estadoTv(tvToken)).resolves.toEqual({
+        estado: 'PENDIENTE',
+      });
+
+      expect(service.tvSync({ codigo, userId: 'user-123' }).status).toBe(
+        'SUCCESS',
+      );
+      prismaMock.usuario.findUnique.mockResolvedValue({
+        id: 'user-123',
+        nombre: 'Omar',
+        correo: 'omar@test.com',
+        rol: 'USUARIO',
+      });
+
+      const respuesta = await service.estadoTv(tvToken);
+      expect(respuesta).toEqual({
+        estado: 'APROBADO',
+        accessToken: 'mock.jwt.token',
+        token: 'mock.jwt.token',
+        usuario: {
+          id: 'user-123',
+          nombre: 'Omar',
+          correo: 'omar@test.com',
+          rol: 'USUARIO',
+        },
+      });
+      expect(jwtMock.sign).toHaveBeenCalledWith({
+        sub: 'user-123',
+        correo: 'omar@test.com',
+        rol: 'USUARIO',
+      });
+      // Se entrega una sola vez.
+      await expect(service.estadoTv(tvToken)).resolves.toEqual({
+        estado: 'EXPIRADO',
+      });
+    });
+
+    it('un código que no existe responde 404', () => {
+      service.crearCodigoTv();
+      expect(() =>
+        service.tvSync({ codigo: 'ZZZZ-ZZZZ', userId: 'user-123' }),
+      ).toThrow(NotFoundException);
+    });
+
+    it('si la cuenta se borró antes de que la TV preguntara, no entra', async () => {
+      const { codigo, tvToken } = service.crearCodigoTv();
+      service.tvSync({ codigo, userId: 'borrado' });
+      prismaMock.usuario.findUnique.mockResolvedValue(null);
+      await expect(service.estadoTv(tvToken)).resolves.toEqual({
+        estado: 'EXPIRADO',
+      });
+      expect(jwtMock.sign).not.toHaveBeenCalled();
     });
   });
 });

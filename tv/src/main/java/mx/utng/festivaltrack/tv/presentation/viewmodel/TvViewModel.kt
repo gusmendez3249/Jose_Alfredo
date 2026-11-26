@@ -18,6 +18,9 @@ import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
 import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
 import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
+import mx.utng.festivaltrack.shared.data.remote.CodigoTvDto
+import mx.utng.festivaltrack.shared.data.remote.EstadoTvRequest
+import mx.utng.festivaltrack.shared.data.remote.EstadoVinculoTvDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
@@ -50,7 +53,9 @@ sealed class EstadoGaleria {
  * - **Cartelera**: eventos de Room sincronizados con el backend cada 5 s; [proximos] aplica las
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
- * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado. Se guarda
+ * - **Sesión**: login real contra el backend, con correo y contraseña o aprobando desde el
+ *   celular el código que muestra la TV ([pedirCodigoTv] y [consultarVinculoTv]);
+ *   [sesion] es null para ver como invitado. Se guarda
  *   en la TV y, si el servidor rechaza el token (401) en boletos, comunidad o chat, se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
@@ -187,6 +192,30 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Pide al servidor un código para entrar con el celular; null si no hay conexión. */
+    suspend fun pedirCodigoTv(): CodigoTvDto? = runCatching { api.pedirCodigoTv() }.getOrNull()
+
+    /**
+     * Pregunta si ya aprobaron el código desde el celular. Si ya lo aprobaron, inicia y guarda la
+     * sesión de esa cuenta, igual que con correo y contraseña.
+     */
+    suspend fun consultarVinculoTv(tvToken: String): VinculoTv {
+        val respuesta = try {
+            api.estadoVinculoTv(EstadoTvRequest(tvToken))
+        } catch (e: HttpException) {
+            // Demasiadas peticiones o servidor caído: se espera y se vuelve a preguntar.
+            return if (e.code() == 429 || e.code() >= 500) VinculoTv.SinConexion else VinculoTv.Expirado
+        } catch (e: Exception) {
+            return VinculoTv.SinConexion
+        }
+        val resultado = interpretarVinculo(respuesta)
+        if (resultado is VinculoTv.Aprobado) {
+            _sesion.value = resultado.sesion
+            sesionGuardada.guardar(DatosSesion(resultado.sesion.nombre, resultado.sesion.correo, resultado.sesion.token))
+        }
+        return resultado
+    }
+
     fun cerrarSesion() {
         sesionGuardada.borrar()
         _sesion.value = null
@@ -275,6 +304,30 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         reproductor.liberar()
         super.onCleared()
     }
+}
+
+/** Cómo va el inicio de sesión de la TV con el celular. */
+sealed class VinculoTv {
+    /** Nadie ha aprobado el código todavía. */
+    object Pendiente : VinculoTv()
+    /** Lo aprobaron: [sesion] es la cuenta con la que entra la TV. */
+    data class Aprobado(val sesion: SesionTv) : VinculoTv()
+    /** El código venció (5 min) o ya se usó: hay que pedir otro. */
+    object Expirado : VinculoTv()
+    /** No respondió el servidor: se vuelve a preguntar. */
+    object SinConexion : VinculoTv()
+}
+
+/** Traduce la respuesta de `auth/tv-sync/estado`. Un "APROBADO" sin token se toma como vencido. */
+fun interpretarVinculo(respuesta: EstadoVinculoTvDto): VinculoTv = when (respuesta.estado) {
+    "PENDIENTE" -> VinculoTv.Pendiente
+    "APROBADO" -> {
+        val token = respuesta.accessToken
+        val usuario = respuesta.usuario
+        if (token.isNullOrBlank() || usuario == null) VinculoTv.Expirado
+        else VinculoTv.Aprobado(SesionTv(usuario.nombre, usuario.correo, token))
+    }
+    else -> VinculoTv.Expirado
 }
 
 /** Datos que se piden al servidor: cargando, listos o sin conexión. */

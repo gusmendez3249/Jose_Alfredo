@@ -49,6 +49,14 @@ class EnlacesWebTest {
     }
 
     @Test
+    fun `el enlace para vincular la TV lleva el codigo`() {
+        assertEquals(
+            "https://festivaltrack-web.onrender.com/vincular-tv?codigo=KX7M-3QPA",
+            EnlacesWeb.vincularTvDesde("https://festivaltrack-web.onrender.com", "KX7M-3QPA")
+        )
+    }
+
+    @Test
     fun `otro servicio de Render que no es el backend no se adivina`() {
         assertEquals(
             "http://192.168.1.20:5173",

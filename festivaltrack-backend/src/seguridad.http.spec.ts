@@ -64,7 +64,15 @@ describe('Seguridad de la API (HTTP)', () => {
       ),
     },
   };
-  const authService = { tvSync: jest.fn((b) => ({ status: 'SUCCESS', ...b })) };
+  const authService = {
+    tvSync: jest.fn((b) => ({ status: 'SUCCESS', ...b })),
+    crearCodigoTv: jest.fn(() => ({
+      codigo: 'KX7M-3QPA',
+      tvToken: 'a'.repeat(64),
+      expiraEnSegundos: 300,
+    })),
+    estadoTv: jest.fn(() => Promise.resolve({ estado: 'PENDIENTE' })),
+  };
   const biografiasService = {
     findAll: jest.fn(() => []),
     findOne: jest.fn(),
@@ -155,18 +163,44 @@ describe('Seguridad de la API (HTTP)', () => {
     it('vincular una TV exige sesión y usa el usuario del token, no el del cuerpo', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/tv-sync')
-        .send({ tvToken: 'tv-123' })
+        .send({ codigo: 'KX7M-3QPA' })
         .expect(401);
 
       await request(app.getHttpServer())
         .post('/api/v1/auth/tv-sync')
         .set('Authorization', token('u-normal'))
-        .send({ tvToken: 'tv-123', userId: 'u-admin' })
+        .send({ codigo: 'KX7M-3QPA', userId: 'u-admin' })
         .expect(201);
       expect(authService.tvSync).toHaveBeenCalledWith({
-        tvToken: 'tv-123',
+        codigo: 'KX7M-3QPA',
         userId: 'u-normal',
       });
+    });
+
+    it('la TV pide su código sin sesión y pregunta solo con un token bien formado', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/tv-sync/codigo')
+        .expect(201);
+      expect(authService.crearCodigoTv).toHaveBeenCalled();
+
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/tv-sync/estado')
+        .send({ tvToken: 'no-es-un-token' })
+        .expect(400);
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/tv-sync/estado')
+        .send({ tvToken: 'a'.repeat(64) })
+        .expect(200);
+      expect(authService.estadoTv).toHaveBeenCalledWith('a'.repeat(64));
+    });
+
+    it('responde 400 a un código de TV con caracteres raros', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/tv-sync')
+        .set('Authorization', token('u-normal'))
+        .send({ codigo: "KX7M'; DROP" })
+        .expect(400);
+      expect(authService.tvSync).not.toHaveBeenCalled();
     });
   });
 

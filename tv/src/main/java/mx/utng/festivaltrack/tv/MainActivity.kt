@@ -88,6 +88,8 @@ class MainActivity : ComponentActivity() {
                         BackHandler(enabled = yaEntro) { mostrarLogin = false }
                         TvLoginScreen(
                             iniciarSesion = viewModel::iniciarSesion,
+                            pedirCodigo = viewModel::pedirCodigoTv,
+                            consultarCodigo = viewModel::consultarVinculoTv,
                             onEntrar = { mostrarLogin = false; yaEntro = true },
                             onContinuarSinCuenta = { mostrarLogin = false; yaEntro = true }
                         )
