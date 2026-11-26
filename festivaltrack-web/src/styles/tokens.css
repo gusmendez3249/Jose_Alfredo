@@ -1,0 +1,91 @@
+/*
+ * Tokens de diseño. Los valores salen del tema de la app móvil (ui/theme/Color.kt y las pantallas).
+ * Todo color, radio, espacio o tamaño de letra de la web debe salir de aquí.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Superficies */
+  --color-fondo: #121212;
+  --color-superficie: #1e1e1e;
+  --color-tarjeta: #1e2720;
+  --color-destacado: #162219;
+  --color-borde: #2a3a2e;
+  --color-skeleton-a: #26352b;
+  --color-skeleton-b: #3a4c40;
+  /* Fondo del QR: debe ser blanco para que los lectores lo lean. */
+  --color-qr: #ffffff;
+
+  /* Marca */
+  --color-primario: #e6c27a;
+  --color-primario-oscuro: #c4a059;
+  --color-sobre-primario: #000000;
+  --color-borde-dorado: rgba(230, 194, 122, 0.35);
+  --color-borde-dorado-fuerte: rgba(230, 194, 122, 0.6);
+  --color-dorado-tenue: rgba(230, 194, 122, 0.1);
+
+  /* Texto */
+  --color-texto: #ffffff;
+  --color-texto-secundario: #aaaaaa;
+
+  /* Estados */
+  --color-error: #cf6679;
+  --color-error-texto: #ff8a80;
+  --color-peligro: #c51111;
+  --color-exito: #4caf50;
+
+  /* Tipografía */
+  --fuente: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --texto-eyebrow: 0.75rem;
+  --texto-meta: 0.8125rem;
+  --texto-cuerpo: 0.9375rem;
+  --texto-cuerpo-grande: 1rem;
+  --texto-seccion: 1.125rem;
+  --texto-pagina: 1.375rem;
+  --texto-precio: clamp(1.5rem, 1.2rem + 1.2vw, 1.75rem);
+  --texto-hero: clamp(2rem, 1.2rem + 3.6vw, 2.8125rem);
+
+  /* Radios */
+  --radio-s: 8px;
+  --radio-m: 12px;
+  --radio-l: 16px;
+  --radio-xl: 18px;
+  --radio-pildora: 999px;
+
+  /* Espacios */
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 12px;
+  --espacio-4: 16px;
+  --espacio-5: 24px;
+  --espacio-6: 32px;
+  --espacio-7: 48px;
+
+  /* Layout */
+  --ancho-contenido: 1120px;
+  --ancho-lectura: 720px;
+  --alto-cabecera: 60px;
+  --alto-barra-inferior: 0px;
+  --margen-pagina: 16px;
+  --objetivo-tactil: 44px;
+
+  /* Movimiento */
+  --transicion: 160ms ease;
+  --duracion-skeleton: 1100ms;
+
+  /* Foco */
+  --foco: 2px solid var(--color-primario);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --margen-pagina: 24px;
+    --alto-cabecera: 64px;
+  }
+}
+
+@media (max-width: 639.98px) {
+  :root {
+    --alto-barra-inferior: 64px;
+  }
+}

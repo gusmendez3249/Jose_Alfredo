@@ -13,6 +13,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.tv.ui.theme.FestivalGold
@@ -31,7 +32,8 @@ fun SidebarMenuItem(
     label: String,
     icon: ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    alto: Dp = 44.dp
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -42,7 +44,7 @@ fun SidebarMenuItem(
         contentColor = if (isSelected) Color.Black else Color.White,
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(alto)
             .onFocusChanged { isFocused = it.isFocused }
             .focusable()
     ) {

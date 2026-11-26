@@ -1,121 +1,226 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import L from 'leaflet';
-import 'leaflet-routing-machine';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import MapaRuta from '../components/MapaRuta';
+import { geolocalizacionDisponible, mensajeGeolocalizacion, OPCIONES_GPS } from '../components/mapa/geolocalizacion';
+import { Alert } from '../components/ui/Alert';
+import { Button, ButtonLink } from '../components/ui/Button';
+import { IconoAlerta, IconoLugar, IconoRuta } from '../components/ui/Icons';
+import { Skeleton } from '../components/ui/Skeleton';
+import { Spinner } from '../components/ui/Spinner';
+import { StatusMessage } from '../components/ui/StatusMessage';
+import { eventosService, lugarDe, tieneCoordenadas } from '../services/eventos.service';
+import { calcularRutaAPie, RutaNoDisponibleError, type Coordenada, type Ruta } from '../services/rutas.service';
+import type { Evento } from '../services/tipos';
+import { formatearDistancia, formatearDuracion } from '../lib/formato';
+import { useRecurso } from '../hooks/useRecurso';
+import { useTituloPagina } from '../hooks/useTituloPagina';
 
-// Fix for default Leaflet markers in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+type EstadoUbicacion =
+  | { estado: 'obteniendo' }
+  | { estado: 'lista'; coords: Coordenada }
+  | { estado: 'error'; mensaje: string };
 
-function Routing({ userLoc, eventLoc }: { userLoc: [number, number]; eventLoc: [number, number] }) {
-  const map = useMap();
+type EstadoRuta =
+  | { estado: 'inactiva' }
+  | { estado: 'calculando' }
+  | { estado: 'lista'; ruta: Ruta }
+  | { estado: 'error'; mensaje: string };
+
+/** Mapa del evento con la ruta a pie desde la ubicación del usuario (si la comparte). */
+function MapaDelEvento({ evento }: { evento: Evento & { latitud: number; longitud: number } }) {
+  const destino = useMemo<Coordenada>(() => [evento.latitud, evento.longitud], [evento.latitud, evento.longitud]);
+  const lugar = lugarDe(evento);
+
+  // Los resultados guardan a qué intento / origen corresponden: si no coinciden con el
+  // actual, el estado es "obteniendo" / "calculando" (se deriva en el render, sin setState síncrono).
+  const [intentoGps, setIntentoGps] = useState(0);
+  const [gps, setGps] = useState<{ intento: number; valor: Exclude<EstadoUbicacion, { estado: 'obteniendo' }> } | null>(null);
+  const [calculo, setCalculo] = useState<{ origen: Coordenada; valor: Extract<EstadoRuta, { estado: 'lista' | 'error' }> } | null>(null);
+
   useEffect(() => {
-    if (!map) return;
-    const routingControl = L.Routing.control({
-      waypoints: [
-        L.latLng(userLoc[0], userLoc[1]),
-        L.latLng(eventLoc[0], eventLoc[1])
-      ],
-      routeWhileDragging: false,
-      addWaypoints: false,
-      show: false,
-      // @ts-ignore
-      createMarker: () => null // Let the routing machine just draw the line, we could add custom markers if needed
-    }).addTo(map);
-
+    if (!geolocalizacionDisponible()) return;
+    let vigente = true;
+    navigator.geolocation.getCurrentPosition(
+      (posicion) => {
+        if (vigente) {
+          setGps({ intento: intentoGps, valor: { estado: 'lista', coords: [posicion.coords.latitude, posicion.coords.longitude] } });
+        }
+      },
+      (error) => {
+        if (vigente) setGps({ intento: intentoGps, valor: { estado: 'error', mensaje: mensajeGeolocalizacion(error) } });
+      },
+      OPCIONES_GPS,
+    );
     return () => {
-      try {
-        map.removeControl(routingControl);
-      } catch (e) {
-        console.error(e);
-      }
+      vigente = false;
     };
-  }, [map, userLoc, eventLoc]);
-  return null;
+  }, [intentoGps]);
+
+  const ubicacion: EstadoUbicacion = !geolocalizacionDisponible()
+    ? { estado: 'error', mensaje: 'Tu navegador no permite obtener la ubicación.' }
+    : gps?.intento === intentoGps
+      ? gps.valor
+      : { estado: 'obteniendo' };
+  const origen = ubicacion.estado === 'lista' ? ubicacion.coords : null;
+
+  useEffect(() => {
+    if (!origen) return;
+    const control = new AbortController();
+    calcularRutaAPie(origen, destino, control.signal)
+      .then((r) => setCalculo({ origen, valor: { estado: 'lista', ruta: r } }))
+      .catch((error: unknown) => {
+        if (control.signal.aborted) return;
+        setCalculo({
+          origen,
+          valor: {
+            estado: 'error',
+            mensaje: error instanceof RutaNoDisponibleError ? error.message : 'No se pudo calcular la ruta a pie.',
+          },
+        });
+      });
+    return () => control.abort();
+  }, [origen, destino]);
+
+  const ruta: EstadoRuta = !origen
+    ? { estado: 'inactiva' }
+    : calculo?.origen === origen
+      ? calculo.valor
+      : { estado: 'calculando' };
+
+  const reintentarUbicacion = useCallback(() => setIntentoGps((n) => n + 1), []);
+
+  return (
+    <div className="pagina-mapa">
+      <div className="mapa-barra">
+        <ButtonLink to="/events" variante="fantasma" tamano="chico">
+          Volver a eventos
+        </ButtonLink>
+        <div className="mapa-barra__titulo">
+          <h1 className="mapa-barra__nombre">Ruta hacia: {evento.nombre}</h1>
+          {lugar && (
+            <p className="meta mapa-barra__lugar">
+              <IconoLugar tamano={14} /> {lugar}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mapa-area">
+        <MapaRuta
+          destino={destino}
+          etiquetaDestino={evento.nombre}
+          origen={origen}
+          ruta={ruta.estado === 'lista' ? ruta.ruta.puntos : null}
+        />
+
+        <section className="mapa-panel" aria-label="Ruta a pie">
+          <div aria-live="polite" className="pila pila--chica">
+            {ubicacion.estado === 'obteniendo' && (
+              <p role="status" className="mapa-panel__estado">
+                <Spinner /> Obteniendo tu ubicación…
+              </p>
+            )}
+            {ubicacion.estado === 'error' && (
+              <Alert tono="error">{ubicacion.mensaje} El mapa muestra la ubicación del evento.</Alert>
+            )}
+            {ruta.estado === 'calculando' && (
+              <p role="status" className="mapa-panel__estado">
+                <Spinner /> Calculando la ruta a pie…
+              </p>
+            )}
+            {ruta.estado === 'lista' && (
+              <p className="mapa-panel__resumen">
+                <IconoRuta tamano={20} />
+                <span>
+                  A pie: <strong>{formatearDistancia(ruta.ruta.distanciaMetros)}</strong> · unos{' '}
+                  <strong>{formatearDuracion(ruta.ruta.duracionSegundos)}</strong>
+                </span>
+              </p>
+            )}
+            {ruta.estado === 'error' && (
+              <Alert tono="error">{ruta.mensaje} El mapa sigue mostrando tu ubicación y la del evento.</Alert>
+            )}
+          </div>
+
+          {ubicacion.estado === 'error' && (
+            <Button variante="secundario" tamano="chico" onClick={reintentarUbicacion}>
+              Reintentar ubicación
+            </Button>
+          )}
+
+          <p className="meta mapa-panel__privacidad">
+            Tu ubicación solo se envía al servicio externo de rutas de OpenStreetMap para calcular el trayecto.
+          </p>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 export default function MapRoute() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const evento = location.state?.evento;
-  
-  const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
-  const [error, setError] = useState<string>('');
+  const { id = '' } = useParams();
+  const recurso = useRecurso((signal) => eventosService.porId(id, signal), id, {
+    404: 'Este evento no existe o ya no está disponible.',
+  });
+  useTituloPagina(recurso.estado === 'listo' ? `Ruta a ${recurso.datos.nombre}` : 'Ruta al evento');
 
-  useEffect(() => {
-    if (!evento || !evento.latitud || !evento.longitud) {
-      setError('Este evento no tiene coordenadas registradas.');
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      setError('Tu navegador no soporta geolocalización.');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLoc([position.coords.latitude, position.coords.longitude]);
-      },
-      (err) => {
-        setError('No se pudo obtener tu ubicación. Por favor permite el acceso al GPS.');
-        console.error(err);
-      }
-    );
-  }, [evento]);
-
-  if (!evento) {
+  if (recurso.estado === 'cargando') {
     return (
-      <div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}>
-        <h2>Evento no encontrado</h2>
-        <button className="btn-primary" onClick={() => navigate('/events')} style={{ marginTop: '24px' }}>Volver</button>
+      <div className="pagina pagina--lectura">
+        <div role="status" className="pila" aria-label="Cargando evento">
+          <Skeleton alto={28} ancho="60%" />
+          <Skeleton alto={16} ancho="40%" />
+          <Skeleton alto={240} />
+          <span className="solo-lectores">Cargando evento…</span>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
-      <header style={{ padding: '24px', backgroundColor: 'var(--bg-color)', zIndex: 1000, boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
-        <h2 style={{ color: 'var(--primary-color)', fontSize: '1.5rem', marginBottom: '8px' }}>Ruta hacia: {evento.artistaNombre || evento.nombre}</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>{(evento.escenario || evento.ubicacion).toUpperCase()}</p>
-        <button className="btn-primary" onClick={() => navigate(-1)} style={{ marginTop: '16px', padding: '8px 24px' }}>Volver</button>
-      </header>
-      
-      <div style={{ flex: 1, position: 'relative' }}>
-        {error && (
-          <div style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#ef4444', color: 'white', padding: '12px 24px', borderRadius: '8px', zIndex: 1001 }}>
-            {error}
-          </div>
-        )}
-
-        {!error && !userLoc && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001, backgroundColor: 'var(--surface-color)', padding: '24px', borderRadius: '16px' }}>
-            Obteniendo tu ubicación...
-          </div>
-        )}
-
-        {userLoc && evento.latitud && evento.longitud && (
-          <MapContainer 
-            center={userLoc} 
-            zoom={13} 
-            style={{ height: '100%', width: '100%' }}
-            zoomControl={false}
-          >
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Routing userLoc={userLoc} eventLoc={[evento.latitud, evento.longitud]} />
-          </MapContainer>
-        )}
+  if (recurso.estado === 'error') {
+    return (
+      <div className="pagina pagina--lectura">
+        <StatusMessage
+          rol="alert"
+          nivelTitulo={1}
+          icono={IconoAlerta}
+          titulo="No se pudo mostrar el mapa"
+          texto={recurso.mensaje}
+          acciones={
+            <>
+              {recurso.status !== 404 && (
+                <Button pildora onClick={recurso.reintentar}>
+                  Reintentar
+                </Button>
+              )}
+              <ButtonLink to="/events" variante="secundario" pildora>
+                Volver a eventos
+              </ButtonLink>
+            </>
+          }
+        />
       </div>
-    </div>
-  );
+    );
+  }
+
+  const evento = recurso.datos;
+  if (!tieneCoordenadas(evento)) {
+    return (
+      <div className="pagina pagina--lectura">
+        <StatusMessage
+          nivelTitulo={1}
+          icono={IconoLugar}
+          titulo={evento.nombre}
+          texto="Este evento no tiene coordenadas registradas."
+          acciones={
+            <ButtonLink to="/events" pildora>
+              Volver a eventos
+            </ButtonLink>
+          }
+        />
+      </div>
+    );
+  }
+
+  return <MapaDelEvento evento={evento} />;
 }

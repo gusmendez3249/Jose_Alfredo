@@ -1,0 +1,645 @@
+/* Reproductor global de demos (reproductor-*) y detalle de concierto (concierto-*). */
+
+/* ---------- Mini reproductor ---------- */
+/*
+ * Va en el flujo del documento (último hijo de .app antes de la barra inferior) y se pega abajo con
+ * sticky: ocupa su propio alto, así que nunca tapa el final de la página, y en móvil queda justo
+ * encima de la barra de navegación inferior.
+ */
+.reproductor {
+  position: sticky;
+  bottom: calc(var(--alto-barra-inferior) + env(safe-area-inset-bottom, 0px));
+  z-index: 1400;
+}
+
+.reproductor-barra {
+  position: relative;
+  background: var(--color-superficie);
+  border-top: 1px solid var(--color-borde-dorado);
+}
+
+.reproductor-barra__progreso {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--color-primario);
+}
+
+.reproductor-barra__interior {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  max-width: var(--ancho-contenido);
+  min-height: 64px;
+  margin: 0 auto;
+  padding: var(--espacio-2) var(--margen-pagina);
+}
+
+.reproductor-info {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--espacio-3);
+  min-width: 0;
+  min-height: var(--objetivo-tactil);
+  padding: 0 var(--espacio-1);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reproductor-info:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.reproductor-info__textos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reproductor-info__titulo,
+.reproductor-info__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reproductor-info__titulo {
+  color: var(--color-texto);
+  font-size: var(--texto-cuerpo);
+  font-weight: 700;
+}
+
+.reproductor-info__sub {
+  font-size: var(--texto-meta);
+}
+
+.reproductor-aviso {
+  max-width: var(--ancho-contenido);
+  margin: 0 auto;
+  padding: 0 var(--margen-pagina) var(--espacio-2);
+  color: var(--color-error-texto);
+  font-size: var(--texto-meta);
+}
+
+.reproductor-aviso:empty {
+  padding: 0;
+}
+
+.reproductor-controles {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--espacio-1);
+}
+
+.reproductor-boton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--objetivo-tactil);
+  height: var(--objetivo-tactil);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion);
+}
+
+.reproductor-boton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.reproductor-boton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.reproductor-boton--principal {
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
+}
+
+.reproductor-boton--principal:hover:not(:disabled) {
+  background: var(--color-primario-oscuro);
+}
+
+.reproductor-boton--grande {
+  width: 60px;
+  height: 60px;
+}
+
+.reproductor-boton--activo {
+  color: var(--color-primario);
+  background: var(--color-dorado-tenue);
+}
+
+/* En pantallas estrechas el mini reproductor deja "Anterior" para el panel (como en el móvil). */
+.reproductor-boton--solo-ancho {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .reproductor-boton--solo-ancho {
+    display: inline-flex;
+  }
+}
+
+.reproductor-info > .icono {
+  flex: none;
+}
+
+/* En 360 px el título necesita ese espacio: la flecha del panel solo aparece con sitio. */
+@media (max-width: 479.98px) {
+  .reproductor-info > .icono {
+    display: none;
+  }
+}
+
+/* ---------- Portadas ---------- */
+.reproductor-portada {
+  display: block;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radio-s);
+  object-fit: cover;
+  background: var(--color-destacado);
+}
+
+.reproductor-portada--vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-borde);
+  color: var(--color-primario);
+}
+
+.reproductor-portada--grande {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radio-m);
+}
+
+/* ---------- Ecualizador (solo CSS) ---------- */
+.reproductor-eq {
+  display: inline-flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 2px;
+  width: 14px;
+  height: 14px;
+}
+
+.reproductor-eq span {
+  flex: 1;
+  height: 30%;
+  border-radius: 1px;
+  background: var(--color-primario);
+  transform-origin: bottom;
+}
+
+.reproductor-eq--activo span {
+  height: 100%;
+  animation: reproductor-eq 900ms ease-in-out infinite alternate;
+}
+
+.reproductor-eq--activo span:nth-child(2) {
+  animation-delay: -300ms;
+}
+
+.reproductor-eq--activo span:nth-child(3) {
+  animation-delay: -600ms;
+}
+
+@keyframes reproductor-eq {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reproductor-eq--activo span {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
+
+/* ---------- Panel desplegado ---------- */
+.reproductor-panel {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  pointer-events: none;
+}
+
+.reproductor-panel[hidden] {
+  display: none;
+}
+
+.reproductor-panel__interior {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+  max-width: 480px;
+  max-height: min(70vh, 560px);
+  margin: 0 var(--margen-pagina) var(--espacio-2) auto;
+  padding: var(--espacio-4);
+  overflow-y: auto;
+  border: 1px solid var(--color-borde-dorado);
+  border-radius: var(--radio-l);
+  background: var(--color-tarjeta);
+  pointer-events: auto;
+}
+
+@media (min-width: 1168px) {
+  .reproductor-panel__interior {
+    margin-right: calc((100vw - var(--ancho-contenido)) / 2 + var(--margen-pagina));
+  }
+}
+
+@media (max-width: 639.98px) {
+  .reproductor-panel__interior {
+    margin: 0 var(--espacio-2) var(--espacio-2);
+  }
+}
+
+.reproductor-panel__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  min-width: 0;
+}
+
+.reproductor-panel__textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reproductor-panel__titulo {
+  font-size: var(--texto-seccion);
+  font-weight: 700;
+}
+
+.reproductor-panel__concierto {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--objetivo-tactil);
+  color: var(--color-primario);
+  font-size: var(--texto-meta);
+  font-weight: 500;
+}
+
+.reproductor-busqueda {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.reproductor-busqueda__tiempo {
+  flex: none;
+  min-width: 3ch;
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.reproductor-busqueda__rango {
+  flex: 1;
+  min-width: 0;
+  height: var(--objetivo-tactil);
+  margin: 0;
+  background: transparent;
+  accent-color: var(--color-primario);
+  cursor: pointer;
+}
+
+.reproductor-busqueda__rango:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.reproductor-panel__controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-3);
+}
+
+.reproductor-cola {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding-top: var(--espacio-3);
+  border-top: 1px solid var(--color-borde);
+}
+
+.reproductor-cola__cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.reproductor-cola__lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.reproductor-cola__fila {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  width: 100%;
+  min-height: var(--objetivo-tactil);
+  padding: var(--espacio-2);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: transparent;
+  color: var(--color-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reproductor-cola__fila:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.reproductor-cola__fila:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reproductor-cola__fila--actual {
+  background: var(--color-dorado-tenue);
+  color: var(--color-primario);
+}
+
+.reproductor-cola__numero {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: 20px;
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+}
+
+.reproductor-cola__textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reproductor-cola__titulo {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Detalle de concierto ---------- */
+.concierto-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.concierto-cabecera__nombre {
+  color: var(--color-primario);
+  font-size: var(--texto-pagina);
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .concierto-cabecera__nombre {
+    font-size: 1.75rem;
+  }
+}
+
+.concierto-cabecera__artista {
+  font-size: var(--texto-cuerpo-grande);
+  font-weight: 500;
+}
+
+.concierto-cabecera__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1) var(--espacio-4);
+}
+
+.concierto-cabecera__datos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.concierto-cabecera__datos time::first-letter {
+  text-transform: uppercase;
+}
+
+.concierto-cabecera__descripcion {
+  margin-top: var(--espacio-2);
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-cuerpo);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.concierto-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-top: var(--espacio-3);
+}
+
+.concierto-acciones .btn {
+  flex: 1 1 200px;
+}
+
+.concierto-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.concierto-controles__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.concierto-aleatorio--activo {
+  background: var(--color-dorado-tenue);
+  border-color: var(--color-primario);
+}
+
+.concierto-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+}
+
+.concierto-pista {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid transparent;
+  border-radius: var(--radio-m);
+  background: var(--color-tarjeta);
+  color: var(--color-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    border-color var(--transicion);
+}
+
+.concierto-pista:hover:not(:disabled) {
+  border-color: var(--color-borde-dorado);
+}
+
+.concierto-pista:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.concierto-pista--actual {
+  border-color: var(--color-borde-dorado-fuerte);
+  background: var(--color-destacado);
+}
+
+.concierto-pista--actual .concierto-pista__titulo {
+  color: var(--color-primario);
+}
+
+.concierto-pista__numero {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: 20px;
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+  font-weight: 700;
+}
+
+.concierto-pista .reproductor-portada {
+  width: 48px;
+  height: 48px;
+}
+
+.concierto-pista__textos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.concierto-pista__titulo {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.concierto-pista__duracion {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.concierto-pista__icono {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-primario);
+}
+
+.concierto-pista__esqueleto {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio-m);
+  background: var(--color-tarjeta);
+}
+
+.concierto-pista__esqueleto > .pila {
+  flex: 1;
+}
+
+/* ---------- Tarjeta de la cartelera: toda la tarjeta enlaza al detalle ---------- */
+.concierto-tarjeta {
+  position: relative;
+  transition: border-color var(--transicion);
+}
+
+.concierto-tarjeta:hover {
+  border-color: var(--color-borde-dorado-fuerte);
+}
+
+.concierto-tarjeta__enlace {
+  color: inherit;
+}
+
+.concierto-tarjeta__enlace:hover {
+  color: var(--color-primario);
+  text-decoration: none;
+}
+
+.concierto-tarjeta__enlace::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Con :has el foco se dibuja en toda la tarjeta; sin él se queda el aro normal del enlace. */
+@supports selector(:has(a)) {
+  .concierto-tarjeta__enlace:focus-visible {
+    outline: none;
+  }
+
+  .concierto-tarjeta:has(.concierto-tarjeta__enlace:focus-visible) {
+    outline: var(--foco);
+    outline-offset: 2px;
+  }
+}
+
+/* Los botones de ruta y compra quedan por encima del enlace que cubre la tarjeta. */
+.concierto-tarjeta .evento-card__acciones {
+  position: relative;
+  z-index: 1;
+}
+
+.concierto-tarjeta__insignia {
+  margin-top: var(--espacio-1);
+}
+
+.concierto-tarjeta__insignia:empty {
+  display: none;
+}

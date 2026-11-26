@@ -1,87 +1,135 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { useState, type FormEvent } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
+import { leerEstadoLogin } from '../auth/rutas';
+import { mensajeDeError } from '../lib/errores';
+import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Field } from '../components/ui/Field';
+import { IconoMarca } from '../components/ui/Icons';
+import { useTituloPagina } from '../hooks/useTituloPagina';
+
+/** Mismo texto y regla que REGLA_CONTRASENA del backend (register.dto.ts). */
+const REGLA_CONTRASENA = 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un número';
+
+function cumpleRegla(contrasena: string): boolean {
+  return contrasena.length >= 8 && /[A-Z]/.test(contrasena) && /\d/.test(contrasena);
+}
 
 export default function Register() {
+  useTituloPagina('Crear cuenta');
+  const { autenticado, registrarse } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { from } = leerEstadoLogin(location.state);
+  const destino = from ?? '/events';
+
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [enviando, setEnviando] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  if (autenticado && !enviando) return <Navigate to={destino} replace />;
+
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!/^(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)) {
-      setError('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número');
+    if (enviando) return;
+
+    const nombreLimpio = nombre.trim();
+    const correoLimpio = correo.trim();
+    if (!nombreLimpio) {
+      setError('Escribe tu nombre.');
       return;
     }
+    if (!cumpleRegla(password)) {
+      setError(REGLA_CONTRASENA);
+      return;
+    }
+
+    setEnviando(true);
+    setError('');
     try {
-      const res = await api.post('/auth/register', { nombre, correo, contrasena: password, rol: 'USUARIO' });
-      const token = res.data.accessToken ?? res.data.token;
-
-      if (token) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('accessToken', token);
-      }
-
-      navigate('/login', {
-        state: { message: 'Registro completado correctamente. Ya puedes iniciar sesión.' }
-      });
-    } catch (err: any) {
-      const mensaje = err.response?.data?.message;
+      // El backend devuelve accessToken y usuario: se entra directamente con la sesión iniciada.
+      await registrarse({ nombre: nombreLimpio, correo: correoLimpio, contrasena: password });
+      navigate(destino, { replace: true });
+    } catch (err) {
       setError(
-        Array.isArray(mensaje)
-          ? mensaje[0]
-          : err.response?.status === 409
-            ? 'El correo ya está registrado'
-            : mensaje || 'Error al registrarse',
+        mensajeDeError(err, {
+          409: 'Ese correo ya está registrado. Inicia sesión o usa otro correo.',
+          429: 'Demasiados registros desde esta conexión. Espera un minuto y vuelve a intentarlo.',
+        }),
       );
+      setEnviando(false);
     }
   };
 
   return (
-    <div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}>
-      <h2 style={{ marginBottom: '24px' }}>Registro</h2>
-      <div className="glass-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Crea una nueva cuenta para acceder a FestivalTrack.
-        </p>
-        
-        {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
-        
-        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-          <input
+    <div className="pagina pagina--centrada">
+      <Card como="section" aria-labelledby="registro-titulo" className="acceso-tarjeta">
+        <header className="acceso-tarjeta__cabecera">
+          <IconoMarca tamano={40} className="acceso-tarjeta__marca" />
+          <p className="eyebrow">Nueva cuenta</p>
+          <h1 id="registro-titulo" className="titulo-pagina">
+            Crear cuenta
+          </h1>
+          <p className="meta">Crea una cuenta para comprar boletos y llevarlos contigo en FestivalTrack.</p>
+        </header>
+
+        {error && <Alert tono="error">{error}</Alert>}
+
+        <form onSubmit={handleRegister} className="formulario" aria-label="Crear cuenta">
+          <Field
+            etiqueta="Nombre completo"
+            id="registro-nombre"
             type="text"
-            placeholder="Nombre completo"
+            autoComplete="name"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
             required
+            maxLength={100}
+            disabled={enviando}
           />
-          <input
+          <Field
+            etiqueta="Correo electrónico"
+            id="registro-correo"
             type="email"
-            placeholder="Correo electrónico"
+            autoComplete="email"
+            inputMode="email"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
             required
+            disabled={enviando}
           />
-          <input
+          <Field
+            etiqueta="Contraseña"
+            id="registro-contrasena"
             type="password"
-            placeholder="Contraseña"
+            alternarContrasena
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
             required
+            minLength={8}
+            ayuda="Al menos 8 caracteres, una mayúscula y un número."
+            aria-invalid={password !== '' && !cumpleRegla(password)}
+            disabled={enviando}
           />
-          <button type="submit" className="btn-primary" style={{ width: '100%' }}>Registrarme</button>
+          <Button type="submit" tamano="grande" bloque mayusculas cargando={enviando}>
+            {enviando ? 'Creando cuenta…' : 'Registrarse ahora'}
+          </Button>
         </form>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Link to="/login" style={{ color: 'var(--primary-color)' }}>¿Ya tienes cuenta? Inicia sesión</Link>
-          <Link to="/" style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Volver al Inicio</Link>
+
+        <div className="acceso-tarjeta__enlaces">
+          <Link to="/login" state={from ? { from } : undefined}>
+            ¿Ya tienes cuenta? Inicia sesión
+          </Link>
+          <Link to="/" className="meta">
+            Volver al inicio
+          </Link>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

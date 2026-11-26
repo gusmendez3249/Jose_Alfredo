@@ -1,0 +1,245 @@
+/* Estructura de la aplicación: cabecera, navegación, contenido y pie. */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------- Cabecera ---------- */
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+  background: var(--color-fondo);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.cabecera__interior {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  max-width: var(--ancho-contenido);
+  height: var(--alto-cabecera);
+  margin: 0 auto;
+  padding: 0 var(--margen-pagina);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--objetivo-tactil);
+  color: var(--color-primario);
+  font-size: 1.125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.marca:hover {
+  color: var(--color-primario);
+  text-decoration: none;
+}
+
+.nav-principal {
+  display: none;
+  /* Con ocho secciones no siempre caben: en anchos intermedios la barra se desplaza en horizontal. */
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  margin-left: var(--espacio-3);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nav-principal__enlace {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: var(--objetivo-tactil);
+  padding: 0 var(--espacio-3);
+  border-radius: var(--radio-pildora);
+  color: var(--color-texto-secundario);
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion);
+}
+
+.nav-principal__enlace:hover {
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.nav-principal__enlace.active {
+  color: var(--color-primario);
+  background: var(--color-dorado-tenue);
+}
+
+.cuenta {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--espacio-1);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.cuenta__saludo {
+  display: none;
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .nav-principal {
+    display: flex;
+  }
+
+  .cuenta {
+    gap: var(--espacio-2);
+  }
+
+  .cuenta .btn--chico {
+    font-size: var(--texto-cuerpo);
+    padding: 0 var(--espacio-4);
+  }
+}
+
+/* El saludo solo cabe junto a la navegación completa en pantallas anchas. */
+@media (min-width: 1280px) {
+  .cabecera__interior {
+    max-width: 1280px;
+  }
+
+  .cuenta__saludo {
+    display: block;
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cabecera__interior {
+    padding: 0 var(--espacio-3);
+    gap: var(--espacio-2);
+  }
+
+  .marca {
+    font-size: 1rem;
+  }
+
+  .marca .icono {
+    display: none;
+  }
+
+  .cuenta .btn--chico {
+    padding: 0 var(--espacio-3);
+  }
+}
+
+/* ---------- Contenido y pie ---------- */
+.principal {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pie {
+  padding: var(--espacio-5) var(--margen-pagina);
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-secundario);
+  font-size: var(--texto-meta);
+  text-align: center;
+}
+
+/* ---------- Barra de navegación inferior (solo móvil) ---------- */
+.nav-inferior {
+  display: none;
+}
+
+@media (max-width: 639.98px) {
+  .app {
+    padding-bottom: calc(var(--alto-barra-inferior) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-inferior {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1500;
+    display: grid;
+    /* Una columna por enlace, sea cual sea el número de enlaces de la barra. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    height: calc(var(--alto-barra-inferior) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-superficie);
+    border-top: 1px solid var(--color-borde);
+  }
+
+  .nav-inferior__enlace {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: var(--objetivo-tactil);
+    color: var(--color-texto-secundario);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    transition: color var(--transicion);
+  }
+
+  .nav-inferior__enlace:hover {
+    color: var(--color-texto);
+    text-decoration: none;
+  }
+
+  .nav-inferior__enlace.active {
+    color: var(--color-primario);
+  }
+}
+
+/* ---------- Página del mapa: ocupa todo el alto disponible ---------- */
+.app--mapa {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.app--mapa .principal {
+  min-height: 0;
+}
+
+/* ---------- Pestañas del panel de administración ---------- */
+.admin-nav {
+  display: flex;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-5);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.admin-nav__enlace {
+  flex: none;
+  min-height: 44px;
+  padding: var(--espacio-3) var(--espacio-4);
+  border-bottom: 2px solid transparent;
+  color: var(--color-texto-secundario);
+  font-weight: 500;
+}
+
+.admin-nav__enlace:hover {
+  color: var(--color-texto);
+}
+
+.admin-nav__enlace.active {
+  border-bottom-color: var(--color-primario);
+  color: var(--color-primario);
+}

@@ -1,125 +1,67 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
-
-interface Evento {
-  id: string;
-  nombre: string;
-  artistaNombre?: string;
-  fechaHora: string;
-  ubicacion: string;
-  escenario?: string;
-  estado?: string;
-  latitud?: number;
-  longitud?: number;
-}
-
-/** Un evento se muestra mientras no termine: hasta 4 h después de empezar (igual que en la app móvil). */
-const DURACION_MS = 4 * 60 * 60 * 1000;
-const NO_VISIBLES = new Set(['FINALIZADO', 'CANCELADO', 'BORRADOR']);
-
-function proximos(eventos: Evento[], ahora = Date.now()): Evento[] {
-  return eventos
-    .filter((e) => !NO_VISIBLES.has((e.estado ?? '').toUpperCase()))
-    .filter((e) => new Date(e.fechaHora).getTime() + DURACION_MS > ahora)
-    .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime());
-}
+import { EventoCard, EventoCardSkeleton } from '../components/EventoCard';
+import { Button, ButtonLink } from '../components/ui/Button';
+import { IconoAlerta, IconoSinEventos } from '../components/ui/Icons';
+import { StatusMessage } from '../components/ui/StatusMessage';
+import { cargarProximos } from '../lib/proximos';
+import { useRecurso } from '../hooks/useRecurso';
+import { useTituloPagina } from '../hooks/useTituloPagina';
 
 export default function Events() {
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    api.get('/eventos')
-      .then(res => {
-        setEventos(proximos(res.data));
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError('No se pudieron cargar los eventos. Verifica que el backend esté ejecutándose.');
-        setLoading(false);
-      });
-  }, []);
+  useTituloPagina('Eventos');
+  const recurso = useRecurso(cargarProximos, 'eventos');
 
   return (
-    <div className="container" style={{ paddingTop: '100px', paddingBottom: '80px' }}>
-      <header style={{ textAlign: 'center', marginBottom: '40px' }} className="animate-fade-in">
-        <h2 style={{ color: 'var(--primary-color)', fontSize: '2.5rem', marginBottom: '16px' }}>
-          Próximos Eventos
-        </h2>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Selecciona un evento para ver la ruta hacia el escenario.
-        </p>
+    <div className="pagina pagina--lectura">
+      <header className="pagina__cabecera">
+        <h1 className="titulo-pagina">Próximos eventos</h1>
+        <p className="meta">Consulta la cartelera, escucha un fragmento de las canciones de cada concierto, compra tu boleto o mira la ruta hacia el escenario.</p>
       </header>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {loading && <p style={{ textAlign: 'center' }}>Cargando eventos...</p>}
-
-        {error && (
-          <div className="glass-panel" style={{ textAlign: 'center', borderColor: '#ef4444' }}>
-            <p style={{ color: '#ef4444' }}>{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && eventos.length === 0 && (
-          <p style={{ textAlign: 'center' }}>No hay eventos próximos en este momento.</p>
-        )}
-
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {eventos.map((evento, index) => {
-            const time = new Date(evento.fechaHora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            return (
-              <div 
-                key={evento.id} 
-                className="glass-panel animate-fade-in" 
-                onClick={() => navigate('/events/map', { state: { evento } })}
-                style={{ 
-                  animationDelay: `${index * 0.1}s`, 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  cursor: 'pointer'
-                }}>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>
-                    {evento.artistaNombre || evento.nombre}
-                  </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    <span>{(evento.escenario || evento.ubicacion).toUpperCase()}</span>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                  <div style={{ color: 'var(--primary-color)', fontWeight: 'bold', fontSize: '1.5rem' }}>
-                    {time}
-                  </div>
-                  <button 
-                    className="btn-primary" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/checkout/${evento.id}`);
-                    }}
-                    style={{ padding: '6px 12px', fontSize: '12px' }}
-                  >
-                    Comprar Boleto
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+      {recurso.estado === 'cargando' && (
+        <div role="status" aria-label="Cargando eventos" className="lista-tarjetas">
+          <EventoCardSkeleton />
+          <EventoCardSkeleton />
+          <EventoCardSkeleton />
+          <span className="solo-lectores">Cargando eventos…</span>
         </div>
+      )}
 
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
-          <Link to="/" className="btn-primary" style={{ display: 'inline-block', padding: '12px 32px' }}>
-            Volver al Inicio
-          </Link>
-        </div>
+      {recurso.estado === 'error' && (
+        <StatusMessage
+          rol="alert"
+          icono={IconoAlerta}
+          titulo="No se pudieron cargar los eventos"
+          texto={recurso.mensaje}
+          acciones={
+            <Button pildora onClick={recurso.reintentar}>
+              Reintentar
+            </Button>
+          }
+        />
+      )}
+
+      {recurso.estado === 'listo' && recurso.datos.length === 0 && (
+        <StatusMessage
+          icono={IconoSinEventos}
+          titulo="No hay eventos próximos"
+          texto="No hay eventos próximos en este momento. Vuelve pronto: aquí aparecerá la cartelera."
+        />
+      )}
+
+      {recurso.estado === 'listo' && recurso.datos.length > 0 && (
+        <ul className="lista-tarjetas">
+          {recurso.datos.map((evento) => (
+            <li key={evento.id}>
+              <EventoCard evento={evento} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="pagina__pie">
+        <ButtonLink to="/" variante="secundario" mayusculas>
+          Volver al inicio
+        </ButtonLink>
       </div>
     </div>
   );

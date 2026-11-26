@@ -1,30 +1,25 @@
-import { api } from './api';
-
-export interface BoletoDto {
-  id: string;
-  eventoId: string;
-  usuarioId: string;
-  categoria: string;
-  precio: number;
-  codigoQR: string;
-  estado: string;
-  evento?: any;
-}
+import { http } from '../lib/http';
+import { RespuestaInvalidaError, type Boleto, type BoletoConEvento, type CompraBoleto } from './tipos';
+import { esBoleto, esBoletoConEvento, normalizarEvento } from './validacion';
 
 export const boletosService = {
-  // El monto lo calcula el backend según la categoría; no se envía precio desde el cliente.
-  comprarBoleto: async (eventoId: string, categoria: string, cantidad: number) => {
-    const response = await api.post('/boletos/comprar', {
-      eventoId,
-      categoria,
-      cantidad,
-      metodoPago: 'TARJETA_CREDITO'
-    });
-    return response.data;
+  /**
+   * Compra UN registro de boleto. Ojo: con `cantidad > 1` el backend crea un solo boleto
+   * (un solo QR) con precio × cantidad, por eso la web siempre manda `cantidad: 1`.
+   * El monto lo calcula el servidor; no se envía precio ni datos de tarjeta.
+   */
+  async comprar(compra: CompraBoleto): Promise<Boleto> {
+    const { data } = await http.post<unknown>('/boletos/comprar', compra);
+    if (!esBoleto(data)) throw new RespuestaInvalidaError('compra');
+    return data;
   },
 
-  getMisBoletos: async (): Promise<BoletoDto[]> => {
-    const response = await api.get('/boletos/mis-boletos');
-    return response.data;
-  }
+  async misBoletos(signal?: AbortSignal): Promise<BoletoConEvento[]> {
+    const { data } = await http.get<unknown>('/boletos/mis-boletos', { signal });
+    if (!Array.isArray(data)) throw new RespuestaInvalidaError('boletos');
+    return data.filter(esBoletoConEvento).map((b) => ({
+      ...b,
+      evento: b.evento ? normalizarEvento(b.evento) : null,
+    }));
+  },
 };

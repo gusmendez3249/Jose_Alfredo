@@ -43,6 +43,7 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 
 private val Superficie = Color(0xEE1E2720)
@@ -89,10 +90,26 @@ fun MapScreen(
         RutaState.SinDestino -> null
     }
 
-    // Redibuja el mapa cuando cambian los datos o la ruta.
+    // Sigue tu ubicación mientras el mapa está abierto (y deja de hacerlo al salir, para ahorrar batería).
+    val conPermiso = permisos.permissions.any { it.status.isGranted }
+    DisposableEffect(conPermiso) {
+        if (conPermiso) viewModel.seguirUbicacion()
+        onDispose { viewModel.dejarDeSeguir() }
+    }
+
+    // Solo se encuadra la ruta cuando cambia el destino o llega su trazo, no cada vez que te mueves:
+    // así el mapa no salta mientras caminas.
+    var encuadreHecho by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(mapView, exito, ruta) {
         val mv = mapView ?: return@LaunchedEffect
-        dibujar(mv, context, exito, ruta)
+        val clave = when (val r = ruta) {
+            is RutaState.Lista -> "${r.destino.nombre}|${r.ruta.porCalles}"
+            is RutaState.Calculando -> r.destino.nombre
+            RutaState.SinDestino -> null
+        }
+        val encuadrar = clave != null && clave != encuadreHecho
+        if (encuadrar) encuadreHecho = clave
+        dibujar(mv, context, exito, ruta, encuadrar)
     }
 
     Scaffold(
@@ -141,7 +158,7 @@ fun MapScreen(
                     ) {
                         items(exito.destinos, key = { it.nombre }) { destino ->
                             FilterChip(
-                                selected = destino == destinoActual,
+                                selected = destino.nombre == destinoActual?.nombre,
                                 onClick = { viewModel.trazarRuta(destino) },
                                 label = { Text(destino.nombre, fontSize = 12.sp, maxLines = 1) },
                                 colors = FilterChipDefaults.filterChipColors(
@@ -186,7 +203,7 @@ fun MapScreen(
                 }
                 is DestinosState.Success -> TarjetaRuta(
                     ruta = ruta,
-                    onCentrar = { mapView?.let { dibujar(it, context, exito, ruta) } },
+                    onCentrar = { mapView?.let { dibujar(it, context, exito, ruta, encuadrar = true) } },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
@@ -239,8 +256,8 @@ private fun TarjetaRuta(ruta: RutaState, onCentrar: () -> Unit, modifier: Modifi
     }
 }
 
-/** Pinta tu ubicación, los destinos y la ruta, y encuadra la ruta en pantalla. */
-private fun dibujar(mapView: MapView, context: Context, state: DestinosState.Success?, ruta: RutaState) {
+/** Pinta tu ubicación (con su margen de error), los destinos y la ruta; si [encuadrar], encuadra la ruta. */
+private fun dibujar(mapView: MapView, context: Context, state: DestinosState.Success?, ruta: RutaState, encuadrar: Boolean) {
     mapView.overlays.clear()
     if (state == null) {
         mapView.invalidate()
@@ -249,7 +266,7 @@ private fun dibujar(mapView: MapView, context: Context, state: DestinosState.Suc
     val seleccionado = (ruta as? RutaState.Lista)?.destino ?: (ruta as? RutaState.Calculando)?.destino
 
     state.destinos.forEach { destino ->
-        val elegido = destino == seleccionado
+        val elegido = destino.nombre == seleccionado?.nombre
         mapView.overlays.add(Marker(mapView).apply {
             position = GeoPoint(destino.latitud, destino.longitud)
             title = destino.nombre
@@ -267,6 +284,16 @@ private fun dibujar(mapView: MapView, context: Context, state: DestinosState.Suc
             outlinePaint.strokeWidth = 14f
         })
     }
+    // Círculo con el margen de error del GPS: muestra qué tan exacta es tu posición.
+    state.precisionM?.takeIf { it > 0 }?.let { radio ->
+        mapView.overlays.add(Polygon(mapView).apply {
+            points = Polygon.pointsAsCircle(origen, radio.toDouble())
+            fillPaint.color = 0x332196F3
+            outlinePaint.color = 0x882196F3.toInt()
+            outlinePaint.strokeWidth = 2f
+            setOnClickListener { _, _, _ -> false }
+        })
+    }
     mapView.overlays.add(Marker(mapView).apply {
         position = origen
         title = if (state.ubicacionAproximada) "Jardín Principal (punto de partida)" else "Tú estás aquí"
@@ -276,6 +303,10 @@ private fun dibujar(mapView: MapView, context: Context, state: DestinosState.Suc
 
     val puntos = (ruta as? RutaState.Lista)?.ruta?.puntos?.map { (lat, lon) -> GeoPoint(lat, lon) }
         ?: listOfNotNull(origen, seleccionado?.let { GeoPoint(it.latitud, it.longitud) })
+    if (!encuadrar) {
+        mapView.invalidate()
+        return
+    }
     // Encuadrar necesita el tamaño del mapa: si aún no se mide (al volver a la pestaña), espera.
     if (mapView.width == 0 || mapView.height == 0) {
         mapView.addOnFirstLayoutListener { _, _, _, _, _ -> encuadrar(mapView, puntos, origen) }

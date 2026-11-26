@@ -177,7 +177,9 @@ private fun DestinoCard(destino: Destino, onNavegar: () -> Unit) {
 
 /** Explica desde dónde se miden las distancias cuando no es la ubicación real del teléfono. */
 internal fun avisoOrigen(s: DestinosState.Success): String? = when (s.origen) {
-    OrigenUbicacion.GPS -> null
-    OrigenUbicacion.SIN_UBICACION -> "Sin ubicación del teléfono: distancias calculadas desde el Jardín Principal."
+    OrigenUbicacion.GPS ->
+        if (s.soloAproximada) "Ubicación aproximada: tu punto puede estar desviado. En Ajustes › Apps › FestivalTrack › Ubicación activa \"Usar ubicación precisa\"."
+        else null
+    OrigenUbicacion.SIN_UBICACION -> "Sin ubicación del teléfono: activa la ubicación (GPS) y da permiso a la app. Por ahora las distancias se calculan desde el Jardín Principal."
     OrigenUbicacion.LEJOS -> "Estás a ${s.kmAlFestival.toInt()} km del festival: distancias calculadas desde el Jardín Principal de Dolores Hidalgo."
 }
