@@ -52,7 +52,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
     // Image Loading (Coil)
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.8.5")
