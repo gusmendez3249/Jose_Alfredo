@@ -79,14 +79,30 @@ class SalidaCalculatorTest {
     }
 
     @Test
-    fun `texto de salida`() {
-        assertEquals("Sal ya", SalidaCalculator.textoSalida(0))
-        assertEquals("Sal ya", SalidaCalculator.textoSalida(-5))
-        assertEquals("Sal en 25 min", SalidaCalculator.textoSalida(25))
-        assertEquals("Sal en 1 h", SalidaCalculator.textoSalida(60))
-        assertEquals("Sal en 1 h 20 min", SalidaCalculator.textoSalida(80))
-        assertEquals("Sal en 23 h 59 min", SalidaCalculator.textoSalida(1439))
-        assertEquals("Sal en 1 día", SalidaCalculator.textoSalida(1440))
-        assertEquals("Sal en 8 días", SalidaCalculator.textoSalida(209 * 60 + 20))
+    fun `cuenta regresiva hasta tres horas antes`() {
+        val salida = ahora // la hora de salida no se usa en la cuenta regresiva
+        assertEquals("Sal ya", SalidaCalculator.textoSalida(0, salida, ahora))
+        assertEquals("Sal ya", SalidaCalculator.textoSalida(-5, salida, ahora))
+        assertEquals("Sal en 25 min", SalidaCalculator.textoSalida(25, salida, ahora))
+        assertEquals("Sal en 1 h", SalidaCalculator.textoSalida(60, salida, ahora))
+        assertEquals("Sal en 1 h 20 min", SalidaCalculator.textoSalida(80, salida, ahora))
+        assertEquals("Sal en 2 h 59 min", SalidaCalculator.textoSalida(179, salida, ahora))
+    }
+
+    @Test
+    fun `con mas de tres horas se da la hora de salida con su dia`() {
+        // ahora = vie 20 nov, 13:00 en Dolores Hidalgo
+        assertEquals("Sal hoy a las 17:00", SalidaCalculator.textoSalida(240, Instant.parse("2026-11-20T23:00:00Z"), ahora))
+        assertEquals("Sal mañana a las 21:16", SalidaCalculator.textoSalida(2000, Instant.parse("2026-11-22T03:16:00Z"), ahora))
+        assertEquals("Sal el dom 22 nov a las 20:46", SalidaCalculator.textoSalida(3000, Instant.parse("2026-11-23T02:46:00Z"), ahora))
+    }
+
+    @Test
+    fun `la hora de salida es inicio menos traslado y margen`() {
+        val salida = SalidaCalculator.calcular(
+            listOf(evento("e", "2026-11-21T03:30:00Z", lat = centroLat, lon = centroLon)), centroLat, centroLon, ahora
+        ).single()
+        assertEquals(Instant.parse("2026-11-21T03:19:00Z"), salida.horaSalida) // 1 min de traslado + 10 de margen
+        assertEquals("Sal hoy a las 21:19", SalidaCalculator.textoSalida(salida, ahora))
     }
 }

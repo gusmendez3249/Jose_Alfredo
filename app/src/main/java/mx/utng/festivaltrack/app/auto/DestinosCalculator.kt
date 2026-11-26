@@ -3,14 +3,14 @@ package mx.utng.festivaltrack.app.auto
 import mx.utng.festivaltrack.shared.data.remote.EventoDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /**
  * Lugar del festival al que se puede navegar en auto.
  *
- * @property subtitulo Próximo evento en ese lugar ("Homenaje: El Rey • 21:00 hrs") o su dirección.
+ * @property subtitulo Próximo evento en ese lugar ("Homenaje: El Rey • Mañana 21:00 hrs") o su dirección.
  * @property esDestacado true para el lugar del próximo evento: se muestra primero y resaltado.
+ * @property eventoNombre Próximo evento en ese lugar; null para los sitios sin evento.
+ * @property eventoFechaHora Inicio de ese evento en ISO 8601, para calcular la hora de salida.
  */
 data class Destino(
     val nombre: String,
@@ -19,8 +19,13 @@ data class Destino(
     val longitud: Double,
     val distanciaKm: Double,
     val trasladoMin: Int,
-    val esDestacado: Boolean
-)
+    val esDestacado: Boolean,
+    val eventoNombre: String? = null,
+    val eventoFechaHora: String? = null
+) {
+    /** Ruta activa que se guarda al elegir este destino. */
+    fun comoRuta() = RutaActiva(nombre, latitud, longitud, eventoNombre, eventoFechaHora)
+}
 
 /**
  * Arma la lista de la pantalla 7 "Elige tu destino" a partir de los escenarios de los
@@ -28,10 +33,11 @@ data class Destino(
  */
 object DestinosCalculator {
 
-    /** Dos lugares a menos de esta distancia se consideran el mismo destino. */
-    private const val MISMO_LUGAR_KM = 0.05
-
-    private val formatoHora = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("America/Mexico_City"))
+    /**
+     * Dos lugares a menos de esta distancia se consideran el mismo destino (el Monumento y la
+     * Plaza Principal comparten coordenadas). La Parroquia, a ~37 m del escenario, sí se lista.
+     */
+    private const val MISMO_LUGAR_KM = 0.02
 
     fun construir(
         eventos: List<EventoDto>,
@@ -50,13 +56,13 @@ object DestinosCalculator {
             val siguiente = salidas.first()
             destinos += destino(
                 nombre = lugar,
-                subtitulo = "${siguiente.evento.nombre} • ${formatoHora.format(siguiente.inicio)} hrs",
+                subtitulo = "${siguiente.evento.nombre} • ${TextosAuto.cuando(siguiente.inicio, ahora)}",
                 lat = siguiente.evento.latitud!!,
                 lon = siguiente.evento.longitud!!,
                 origenLat = origenLat,
                 origenLon = origenLon,
                 esDestacado = siguiente === proximos.first()
-            )
+            ).copy(eventoNombre = siguiente.evento.nombre, eventoFechaHora = siguiente.evento.fechaHora)
         }
 
         // Sitios del catálogo que no coinciden con un escenario ya listado.
@@ -72,9 +78,8 @@ object DestinosCalculator {
         return destinos.sortedWith(compareByDescending<Destino> { it.esDestacado }.thenBy { it.distanciaKm })
     }
 
-    /** Texto corto de distancia: "850 m" o "3.4 km". */
-    fun textoDistancia(km: Double): String =
-        if (km < 1) "${(km * 1000).toInt()} m" else "%.1f km".format(java.util.Locale.US, km)
+    /** Texto corto de distancia: "Estás aquí", "850 m" o "3.4 km". */
+    fun textoDistancia(km: Double): String = TextosAuto.distancia(km)
 
     private fun destino(
         nombre: String, subtitulo: String, lat: Double, lon: Double,

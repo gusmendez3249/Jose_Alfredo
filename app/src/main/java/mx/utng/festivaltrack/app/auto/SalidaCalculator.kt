@@ -17,13 +17,15 @@ import kotlin.math.sqrt
  * @property distanciaKm Distancia en línea recta al evento; null si el evento no tiene coordenadas.
  * @property trasladoMin Tiempo estimado de traslado en automóvil.
  * @property minutosParaSalir Minutos que faltan para salir; 0 o negativo significa "sal ya".
+ * @property horaSalida Hora a la que conviene salir: inicio − traslado − margen.
  */
 data class SalidaEvento(
     val evento: EventoDto,
     val inicio: Instant,
     val distanciaKm: Double?,
     val trasladoMin: Int,
-    val minutosParaSalir: Long
+    val minutosParaSalir: Long,
+    val horaSalida: Instant = inicio.minus(Duration.ofMinutes(trasladoMin + SalidaCalculator.MARGEN_MIN))
 )
 
 /**
@@ -83,26 +85,35 @@ object SalidaCalculator {
         }
         .sortedBy { it.inicio }
 
-    /** Texto corto para la pantalla del auto: "Sal ya", "Sal en 25 min", "Sal en 1 h 20 min". */
-    fun textoSalida(minutosParaSalir: Long): String = when {
+    /**
+     * Texto corto para la pantalla del auto. Cuando falta poco se da la cuenta regresiva
+     * ("Sal ya", "Sal en 25 min", "Sal en 1 h 20 min"); a partir de 3 horas se da la hora
+     * de salida con su día ("Sal hoy a las 18:40", "Sal mañana a las 21:16",
+     * "Sal el jue 27 nov a las 20:46"), que es lo que el conductor puede planear.
+     */
+    fun textoSalida(minutosParaSalir: Long, horaSalida: Instant, ahora: Instant = Instant.now()): String = when {
         minutosParaSalir <= 0 -> "Sal ya"
         minutosParaSalir < 60 -> "Sal en $minutosParaSalir min"
-        // A más de un día de distancia las horas sueltas no ayudan al conductor: se muestran días.
-        minutosParaSalir >= MINUTOS_POR_DIA -> {
-            val dias = minutosParaSalir / MINUTOS_POR_DIA
-            if (dias == 1L) "Sal en 1 día" else "Sal en $dias días"
-        }
-        else -> {
+        minutosParaSalir < CUENTA_REGRESIVA_MAX_MIN -> {
             val horas = minutosParaSalir / 60
             val minutos = minutosParaSalir % 60
             if (minutos == 0L) "Sal en $horas h" else "Sal en $horas h $minutos min"
         }
+        else -> {
+            val dia = TextosAuto.dia(horaSalida, ahora)
+            val cuando = if (dia == "hoy" || dia == "mañana") dia else "el $dia"
+            "Sal $cuando a las ${TextosAuto.hora(horaSalida)}"
+        }
     }
 
-    private const val MINUTOS_POR_DIA = 24 * 60L
+    fun textoSalida(salida: SalidaEvento, ahora: Instant = Instant.now()): String =
+        textoSalida(salida.minutosParaSalir, salida.horaSalida, ahora)
+
+    /** Hasta 3 horas antes se muestra la cuenta regresiva; después, la hora de salida. */
+    private const val CUENTA_REGRESIVA_MAX_MIN = 180L
 
     /** El backend envía ISO 8601 (`2026-11-20T21:00:00.000Z`); se acepta también con desfase horario. */
-    private fun parsearFecha(fecha: String): Instant? =
+    fun parsearFecha(fecha: String): Instant? =
         runCatching { Instant.parse(fecha) }.getOrNull()
             ?: runCatching { OffsetDateTime.parse(fecha).toInstant() }.getOrNull()
 }

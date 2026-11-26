@@ -74,5 +74,28 @@ class DestinosCalculatorTest {
     fun `texto de distancia en metros y kilometros`() {
         assertEquals("850 m", DestinosCalculator.textoDistancia(0.85))
         assertEquals("3.4 km", DestinosCalculator.textoDistancia(3.42))
+        assertEquals("Estás aquí", DestinosCalculator.textoDistancia(0.01))
+    }
+
+    @Test
+    fun `el subtitulo dice el dia y la ruta guarda el concierto`() {
+        val destino = DestinosCalculator.construir(
+            eventos = listOf(evento("gala", "2026-11-21T03:00:00Z", "Escenario Principal", 21.1566, -100.9341)),
+            sitios = emptyList(), origenLat = origenLat, origenLon = origenLon, ahora = ahora
+        ).single()
+        assertEquals("Evento gala • Hoy 21:00 hrs", destino.subtitulo)
+        val ruta = destino.comoRuta()
+        assertEquals("Evento gala", ruta.eventoNombre)
+        assertEquals("2026-11-21T03:00:00Z", ruta.eventoFechaHora)
+    }
+
+    @Test
+    fun `la parroquia a 37 m del escenario se lista aparte`() {
+        val destinos = DestinosCalculator.construir(
+            eventos = listOf(evento("gala", "2026-11-21T03:00:00Z", "Escenario Principal", 21.1583, -100.9341)),
+            sitios = listOf(sitio("Parroquia de Dolores", 21.158601, -100.933947)),
+            origenLat = origenLat, origenLon = origenLon, ahora = ahora
+        )
+        assertEquals(setOf("Escenario Principal", "Parroquia de Dolores"), destinos.map { it.nombre }.toSet())
     }
 }

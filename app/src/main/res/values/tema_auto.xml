@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Colores de FestivalTrack en la pantalla del auto (Android Auto y Android Automotive).
+      El auto usa carColorPrimary en el botón principal y en los acentos (CarColor.PRIMARY).
+    -->
+    <style name="TemaAuto">
+        <item name="carColorPrimary">#C4A059</item>
+        <item name="carColorPrimaryDark">#8C6A1F</item>
+        <item name="carColorSecondary">#E6C27A</item>
+        <item name="carColorSecondaryDark">#C4A059</item>
+    </style>
+</resources>
