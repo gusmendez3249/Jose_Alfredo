@@ -30,6 +30,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.ui.PlayerView
@@ -230,7 +231,12 @@ private fun ReproductorEnVivo(urls: List<String>) {
     LaunchedEffect(Unit) { if (PlaybackManager.isPlaying.value) PlaybackManager.playPause() }
 
     val player = remember(url, intento) {
-        ExoPlayer.Builder(context).build().apply {
+        // En vivo no hace falta acumular video: empieza con 0.3 s en lugar de los 2.5 s por defecto
+        // y mantiene poco búfer para ir casi al tiempo real.
+        val cargaEnVivo = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(500, 2_000, 300, 500)
+            .build()
+        ExoPlayer.Builder(context).setLoadControl(cargaEnVivo).build().apply {
             setMediaSource(
                 RtspMediaSource.Factory().setForceUseRtpTcp(true).setTimeoutMs(8000)
                     .createMediaSource(MediaItem.fromUri(Uri.parse(url)))
@@ -256,6 +262,11 @@ private fun ReproductorEnVivo(urls: List<String>) {
             player.release()
         }
     }
+    // Si la conexión se queda colgada sin error ni imagen, se reintenta en lugar de esperar para siempre.
+    LaunchedEffect(player) {
+        delay(12_000)
+        if (!reproduciendo) fallo = true
+    }
     LaunchedEffect(fallo) {
         if (fallo) {
             // La siguiente dirección de inmediato; tras recorrerlas todas, espera antes de reintentar.
@@ -278,6 +289,17 @@ private fun ReproductorEnVivo(urls: List<String>) {
                     if (intento == 0) "Conectando con la transmisión…" else "Reconectando con la transmisión…",
                     color = Color.White, fontSize = 13.sp
                 )
+                // Tras probar todas las direcciones sin éxito: casi siempre es la red.
+                if (intento >= urls.size) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "No llega el video de ${urls.first().removePrefix("rtsp://")}. Conéctate al mismo Wi-Fi " +
+                            "que el teléfono que transmite (las redes escolares suelen bloquear la conexión entre teléfonos; " +
+                            "prueben con el hotspot de uno de ellos).",
+                        color = Color.LightGray, fontSize = 12.sp, textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
             }
         }
     }
