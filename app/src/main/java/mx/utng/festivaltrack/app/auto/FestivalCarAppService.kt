@@ -6,6 +6,7 @@ import androidx.car.app.CarAppService
 import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.car.app.validation.HostValidator
+import mx.utng.festivaltrack.app.auto.mapa.SuperficieAuto
 
 /**
  * Punto de entrada de FestivalTrack en Android Auto.
@@ -38,5 +39,9 @@ class FestivalCarAppService : CarAppService() {
  * Su primera pantalla es [InicioAutoScreen].
  */
 class FestivalCarSession : Session() {
-    override fun onCreateScreen(intent: Intent): Screen = InicioAutoScreen(carContext)
+    override fun onCreateScreen(intent: Intent): Screen {
+        // Sesión nueva: la superficie del mapa se registra de nuevo con este auto.
+        SuperficieAuto.reiniciar()
+        return InicioAutoScreen(carContext)
+    }
 }
