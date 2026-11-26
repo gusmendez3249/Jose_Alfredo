@@ -79,7 +79,7 @@ dependencies {
 
     // Retrofit + Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.12.0")
 
     // Live Streaming (RootEncoder & RTSP Server) & Permissions
     implementation("com.github.pedroSG94.RootEncoder:library:2.5.0")
