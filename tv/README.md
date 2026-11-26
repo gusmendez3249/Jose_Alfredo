@@ -42,12 +42,12 @@ Usa el mismo backend que el móvil y la web (NestJS en `/api/v1`) y comparte con
 ### Características Principales
 1. **Inicio:** el próximo concierto (o «EN VIVO AHORA» si hay transmisión), la hora de Dolores Hidalgo y un carrusel de próximos conciertos, cada uno con su imagen (`bannerUrl` del servidor o una foto del festival según el lugar).
 2. **Programación:** los conciertos reales agrupados por día en hora de México, con «EN CURSO» y «EN VIVO».
-3. **Detalle de concierto:** fecha, lugar, repertorio con demos de 30 s y QR para comprar boletos.
+3. **Detalle de concierto:** su imagen, fecha, lugar, repertorio con demos de 30 s y QR para comprar boletos.
 4. **Compra de boletos con QR:** se elige el concierto con el control y el QR abre su compra en la web desde el celular.
 5. **Transmisión en vivo RTSP:** recibe el video del teléfono del administrador (prueba su IP real y luego la del emulador) y muestra el chat del concierto.
 6. **Biografía y música:** vida y obra de José Alfredo, cita célebre, discografía y catálogo de canciones con reproductor de demos.
 7. **Mapa:** las sedes con las coordenadas oficiales de OpenStreetMap y un QR con la ruta a pie para el celular.
-8. **Galería y Comunidad:** fotos reales del servidor y publicaciones de los asistentes (en la TV la comunidad es de solo lectura).
+8. **Galería y Comunidad:** fotos reales del servidor y publicaciones de los asistentes. En la TV la comunidad es **de solo lectura a propósito**: publicar, dar like o comentar se hace desde el celular.
 9. **Mis boletos:** los boletos de la cuenta con su QR real, el mismo que valida el escáner de la entrada.
 10. **Inicio de sesión real:** correo y contraseña contra el backend, o «Continuar sin cuenta». La sesión **se guarda cifrada** y al volver a abrir la app se entra directo mientras el token siga vigente.
 11. **Ajustes:** servidor al que se conecta y si responde, estado de la transmisión, página de compra y cuenta.
@@ -545,6 +545,7 @@ class MainActivity : ComponentActivity() {
                                     proximos = proximos,
                                     ahora = ahora,
                                     sesion = sesion,
+                                    enviarMensaje = viewModel::enviarMensajeChat,
                                     onIniciarSesion = { mostrarLogin = true },
                                     onVerProgramacion = { seccion = SeccionTv.PROGRAMACION }
                                 )
@@ -617,7 +618,8 @@ Concentra los datos de toda la app:
 
 - **Cartelera:** sincroniza con el backend cada 5 s y guarda en Room; `proximos` aplica las mismas reglas que el móvil (sin cancelados ni pasados, en hora de México).
 - **Transmisión:** consulta `stream/status` cada 3 s; también sirve para saber si el servidor responde.
-- **Sesión:** inicia sesión contra el backend y la guarda con `SesionGuardadaTv`. Si el servidor rechaza el token (401) en boletos o comunidad, la sesión se cierra sola.
+- **Sesión:** inicia sesión contra el backend y la guarda con `SesionGuardadaTv`. Si el servidor rechaza el token (401) en boletos, comunidad o al escribir en el chat, la sesión se cierra sola (`cerrarSesionSiSigue` evita cerrar una sesión nueva que se abrió mientras tanto).
+- **Chat:** `enviarMensajeChat` envía los mensajes de la transmisión con la sesión actual y regresa el texto del error para mostrarlo.
 - **Biografía, canciones, galería, comunidad, sitios y boletos:** cada uno como `Cargable` (`Cargando`, `Listo` o `SinConexion`).
 
 **`src/main/java/mx/utng/festivaltrack/tv/presentation/viewmodel/TvViewModel.kt`**
@@ -642,6 +644,7 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
 import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
+import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
@@ -675,7 +678,7 @@ sealed class EstadoGaleria {
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
  * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado. Se guarda
- *   en la TV y, si el servidor rechaza el token (401), se cierra sola.
+ *   en la TV y, si el servidor rechaza el token (401) en boletos, comunidad o chat, se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
 class TvViewModel(application: Application) : AndroidViewModel(application) {
@@ -869,6 +872,28 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Envía un mensaje al chat del concierto con la sesión actual. Regresa null si se envió o el
+     * texto del error. Si el servidor ya no acepta el token (401), cierra la sesión como en
+     * boletos y comunidad, y pide volver a entrar.
+     */
+    suspend fun enviarMensajeChat(eventoId: String, texto: String): String? {
+        val sesion = _sesion.value ?: return "Inicia sesión para escribir."
+        return try {
+            api.sendChatMessage("Bearer ${sesion.token}", ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = texto))
+            null
+        } catch (e: HttpException) {
+            if (esTokenRechazado(e)) {
+                cerrarSesionSiSigue(sesion.token)
+                "Tu sesión venció. Inicia sesión de nuevo para escribir."
+            } else {
+                "No se pudo enviar el mensaje. Intenta de nuevo."
+            }
+        } catch (e: Exception) {
+            "No se pudo enviar el mensaje. Revisa la conexión."
+        }
+    }
+
     /** Repertorio de un concierto para escuchar sus demos. */
     suspend fun repertorio(eventoId: String): List<CancionDto>? =
         runCatching { api.getCancionesEvento(eventoId) }.getOrNull()
@@ -1047,7 +1072,7 @@ Para no escribir el correo y la contraseña con el control cada vez que se abre 
 
 1. Al iniciar sesión se guardan el nombre, el correo y el **JWT cifrado con AES-256-GCM** usando una llave del **Android Keystore** (no se puede sacar del dispositivo), igual que `TokenManager` del móvil.
 2. Al abrir la app, `TokenJwt` lee el vencimiento (`exp`) del token; si ya venció (o vence en menos de un minuto) se borra y se pide el login.
-3. Con un token vigente se entra directo y el ViewModel lo confirma con el servidor: si responde 401, se cierra la sesión.
+3. Con un token vigente se entra directo y el ViewModel lo confirma con el servidor: si responde 401 (al abrir, en Mis boletos, en Comunidad o al escribir en el chat), se cierra la sesión.
 4. «Cerrar sesión» en Ajustes borra todo lo guardado.
 
 **`src/main/java/mx/utng/festivaltrack/tv/data/TokenJwt.kt`**
@@ -1617,7 +1642,7 @@ fun TvLoginScreen(
 
 ## Paso 11: Pantalla principal `TvMainScreen.kt` e imagen de cada concierto `PortadaConcierto.kt`
 
-El Inicio muestra el próximo concierto (o la transmisión en curso) y un carrusel con los próximos conciertos. Cada tarjeta usa `PortadaConcierto`:
+El Inicio muestra el próximo concierto (o la transmisión en curso) y un carrusel con los próximos conciertos. Cada tarjeta (y el encabezado del detalle del concierto) usa `PortadaConcierto`:
 
 1. Si el concierto tiene `bannerUrl` (ruta `/uploads/...` del backend o URL https), se descarga con Coil.
 2. Mientras carga, si falla o si no tiene, se usa una foto del festival elegida por `fondoDe`: primero por el nombre (homenaje a «El Rey», mariachi, bohemia) y luego por el lugar (Mausoleo, Casa Museo, Plaza, Escenario Principal).
@@ -1975,13 +2000,14 @@ fun PortadaConcierto(evento: EventoEntity, modifier: Modifier = Modifier) {
 
 ## Paso 12: Detalle de concierto `TvDetalleConcierto.kt`
 
-Se abre al pulsar OK sobre un concierto: fecha y lugar en hora de México, su repertorio con demos para escuchar y el QR para comprar boletos.
+Se abre al pulsar OK sobre un concierto. El encabezado (nombre, fecha y lugar en hora de México) va sobre la imagen del concierto, la misma de su tarjeta, oscurecida con un degradado para que se lea. Debajo, su repertorio con demos para escuchar (hasta 200 dp de alto, para que todo quepa en una TV de 720p) y a la derecha el QR para comprar boletos.
 
 **`src/main/java/mx/utng/festivaltrack/tv/presentation/components/TvDetalleConcierto.kt`**
 
 ```kotlin
 package mx.utng.festivaltrack.tv.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -1993,8 +2019,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -2012,8 +2040,9 @@ import mx.utng.festivaltrack.tv.ui.utils.DynamicQrCode
 import java.time.Instant
 
 /**
- * Detalle de un concierto, como en el móvil: fecha y lugar en hora de México, su repertorio
- * con demos de 30 s para escuchar y el QR para comprar boletos desde el celular.
+ * Detalle de un concierto, como en el móvil: su imagen ([PortadaConcierto]) de fondo en el
+ * encabezado con la fecha y el lugar en hora de México, su repertorio con demos de 30 s para
+ * escuchar y el QR para comprar boletos desde el celular.
  *
  * @param cargarRepertorio Pide al servidor las canciones del concierto (null = sin conexión).
  */
@@ -2050,21 +2079,33 @@ fun TvDetalleConcierto(
         ) {
             Row(Modifier.padding(24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text(
-                        if (enVivo) "EN VIVO AHORA" else if (HorarioFestival.enCurso(evento, ahora)) "EN CURSO" else "CONCIERTO DEL FESTIVAL",
-                        color = if (enVivo) FestivalBadgeLive else FestivalGold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp
-                    )
-                    Text(evento.nombre, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Event, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(HorarioFestival.cuando(evento, ahora), color = Color.White, fontSize = 14.sp)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(listOfNotNull(evento.escenario, evento.ubicacion).distinct().joinToString(" · "), color = Color.White, fontSize = 14.sp)
+                    // Encabezado sobre la imagen del concierto (la misma de su tarjeta en el Inicio),
+                    // oscurecida a la izquierda para que el texto se lea.
+                    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
+                        PortadaConcierto(evento, Modifier.matchParentSize())
+                        Box(
+                            Modifier.matchParentSize().background(
+                                Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.88f), Color.Black.copy(alpha = 0.55f), Color.Black.copy(alpha = 0.2f)))
+                            )
+                        )
+                        Column(Modifier.padding(14.dp)) {
+                            Text(
+                                if (enVivo) "EN VIVO AHORA" else if (HorarioFestival.enCurso(evento, ahora)) "EN CURSO" else "CONCIERTO DEL FESTIVAL",
+                                color = if (enVivo) FestivalBadgeLive else FestivalGold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp
+                            )
+                            Text(evento.nombre, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Event, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(HorarioFestival.cuando(evento, ahora), color = Color.White, fontSize = 14.sp)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Place, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(listOfNotNull(evento.escenario, evento.ubicacion).distinct().joinToString(" · "), color = Color.White, fontSize = 14.sp)
+                            }
+                        }
                     }
                     Spacer(Modifier.height(14.dp))
 
@@ -2085,7 +2126,7 @@ fun TvDetalleConcierto(
                         repertorio == null -> CircularProgressIndicator(color = FestivalGold, modifier = Modifier.size(28.dp))
                         sinConexion -> Text("No se pudo cargar el repertorio. Revisa la conexión.", color = FestivalTextSecondary, fontSize = 13.sp)
                         repertorio!!.isEmpty() -> Text("Este concierto todavía no tiene canciones para escuchar.", color = FestivalTextSecondary, fontSize = 13.sp)
-                        else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.heightIn(max = 230.dp)) {
+                        else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.heightIn(max = 200.dp)) {
                             itemsIndexed(repertorio!!, key = { _, c -> c.id }) { i, cancion ->
                                 TvFilaCancion(
                                     numero = i + 1,
@@ -2549,7 +2590,7 @@ fun ScheduleCard(evento: EventoEntity, enCurso: Boolean, enVivo: Boolean, onClic
 1. El teléfono del administrador transmite por RTSP (puerto 1935) y avisa al backend (`stream/status`) con su IP real (`streamUrl`) y la del emulador (`emulatorUrl`).
 2. La TV prueba esas direcciones en orden; si una falla o se queda 12 s sin imagen, pasa a la siguiente y vuelve a empezar mientras la transmisión siga activa.
 3. Sin transmisión, explica cuál es el próximo concierto y cuándo empieza.
-4. El chat es el del concierto que se transmite (se actualiza cada 3 s). Para escribir hace falta iniciar sesión.
+4. El chat es el del concierto que se transmite (se actualiza cada 3 s). Para escribir hace falta iniciar sesión; el envío lo hace el ViewModel (`enviarMensajeChat`), que cierra la sesión si el servidor ya no acepta el token y muestra «Tu sesión venció. Inicia sesión de nuevo para escribir.».
 
 **`src/main/java/mx/utng/festivaltrack/tv/presentation/screens/TvLiveStreamScreen.kt`**
 
@@ -2611,6 +2652,9 @@ import java.time.Instant
  * - Sin transmisión, explica cuál es el próximo concierto y cuándo empieza.
  * - El chat es el del concierto que se transmite. Para escribir hace falta iniciar sesión
  *   (el servidor lo exige); sin sesión se ofrece entrar.
+ *
+ * @param enviarMensaje Envía (eventoId, texto) con la sesión actual; regresa null si se envió o
+ *   el texto del error. Lo hace el ViewModel para cerrar la sesión si el token ya no sirve.
  */
 @Composable
 fun TvLiveStreamScreen(
@@ -2618,6 +2662,7 @@ fun TvLiveStreamScreen(
     proximos: List<EventoEntity>,
     ahora: Instant,
     sesion: SesionTv?,
+    enviarMensaje: suspend (String, String) -> String?,
     onIniciarSesion: () -> Unit,
     onVerProgramacion: () -> Unit
 ) {
@@ -2696,6 +2741,7 @@ fun TvLiveStreamScreen(
         ChatTv(
             eventoId = eventoChat,
             sesion = sesion,
+            enviarMensaje = enviarMensaje,
             onIniciarSesion = onIniciarSesion,
             modifier = Modifier.weight(0.32f).fillMaxHeight().background(FestivalSidebarBg).padding(20.dp)
         )
@@ -2801,7 +2847,13 @@ private fun ReproductorTv(urls: List<String>) {
  * Escribir exige sesión; sin ella se ofrece iniciarla.
  */
 @Composable
-private fun ChatTv(eventoId: String?, sesion: SesionTv?, onIniciarSesion: () -> Unit, modifier: Modifier) {
+private fun ChatTv(
+    eventoId: String?,
+    sesion: SesionTv?,
+    enviarMensaje: suspend (String, String) -> String?,
+    onIniciarSesion: () -> Unit,
+    modifier: Modifier
+) {
     val api = remember { FestivalApiService.create() }
     val scope = rememberCoroutineScope()
     var mensajes by remember(eventoId) { mutableStateOf<List<ChatMessageDto>>(emptyList()) }
@@ -2889,12 +2941,9 @@ private fun ChatTv(eventoId: String?, sesion: SesionTv?, onIniciarSesion: () -> 
             onSend = { texto ->
                 val limpio = texto.trim()
                 if (limpio.isNotEmpty()) scope.launch {
-                    try {
-                        api.sendChatMessage("Bearer ${sesion.token}", ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = limpio))
+                    error = enviarMensaje(eventoId, limpio)
+                    if (error == null) {
                         mensajes = mensajes + ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = limpio)
-                        error = null
-                    } catch (e: Exception) {
-                        error = "No se pudo enviar el mensaje. Intenta de nuevo."
                     }
                 }
             }
@@ -3780,7 +3829,7 @@ private fun AvisoGaleria(
 
 ## Paso 19: Comunidad `TvComunidadScreen.kt`
 
-Experiencias, recomendaciones y fotos de los asistentes, las mismas del móvil, filtrables por tipo. En la TV se leen; para publicar, dar like o comentar se usa el celular.
+Experiencias, recomendaciones y fotos de los asistentes, las mismas del móvil, filtrables por tipo. En la TV **solo se leen**, por decisión del equipo: escribir con el control es incómodo, así que publicar, dar like o comentar se hace desde el celular.
 
 **`src/main/java/mx/utng/festivaltrack/tv/presentation/screens/TvComunidadScreen.kt`**
 
@@ -4524,6 +4573,4 @@ Con dispositivos reales en la misma Wi-Fi no hace falta: la TV usa la IP real de
 ## Pendientes conocidos
 
 - **Login con QR desde el celular:** `POST /auth/tv-sync` del backend sigue siendo un stub; hoy se escribe correo y contraseña con el control.
-- **Comunidad interactiva:** en la TV no se puede dar like ni comentar.
-- **Detalle de concierto sin imagen:** solo las tarjetas del Inicio muestran la imagen del concierto.
 - **Pruebas en equipos reales:** falta probar en una Android TV física y la transmisión con dos teléfonos reales en la misma Wi-Fi.

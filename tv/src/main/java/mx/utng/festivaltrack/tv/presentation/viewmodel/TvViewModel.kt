@@ -17,6 +17,7 @@ import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
 import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
+import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
@@ -50,7 +51,7 @@ sealed class EstadoGaleria {
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
  * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado. Se guarda
- *   en la TV y, si el servidor rechaza el token (401), se cierra sola.
+ *   en la TV y, si el servidor rechaza el token (401) en boletos, comunidad o chat, se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
 class TvViewModel(application: Application) : AndroidViewModel(application) {
@@ -241,6 +242,28 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             _boletos.value = resultado.map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+        }
+    }
+
+    /**
+     * Envía un mensaje al chat del concierto con la sesión actual. Regresa null si se envió o el
+     * texto del error. Si el servidor ya no acepta el token (401), cierra la sesión como en
+     * boletos y comunidad, y pide volver a entrar.
+     */
+    suspend fun enviarMensajeChat(eventoId: String, texto: String): String? {
+        val sesion = _sesion.value ?: return "Inicia sesión para escribir."
+        return try {
+            api.sendChatMessage("Bearer ${sesion.token}", ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = texto))
+            null
+        } catch (e: HttpException) {
+            if (esTokenRechazado(e)) {
+                cerrarSesionSiSigue(sesion.token)
+                "Tu sesión venció. Inicia sesión de nuevo para escribir."
+            } else {
+                "No se pudo enviar el mensaje. Intenta de nuevo."
+            }
+        } catch (e: Exception) {
+            "No se pudo enviar el mensaje. Revisa la conexión."
         }
     }
 

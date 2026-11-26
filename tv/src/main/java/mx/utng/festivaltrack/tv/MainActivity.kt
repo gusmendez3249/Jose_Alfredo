@@ -141,6 +141,7 @@ class MainActivity : ComponentActivity() {
                                     proximos = proximos,
                                     ahora = ahora,
                                     sesion = sesion,
+                                    enviarMensaje = viewModel::enviarMensajeChat,
                                     onIniciarSesion = { mostrarLogin = true },
                                     onVerProgramacion = { seccion = SeccionTv.PROGRAMACION }
                                 )

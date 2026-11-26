@@ -55,6 +55,9 @@ import java.time.Instant
  * - Sin transmisión, explica cuál es el próximo concierto y cuándo empieza.
  * - El chat es el del concierto que se transmite. Para escribir hace falta iniciar sesión
  *   (el servidor lo exige); sin sesión se ofrece entrar.
+ *
+ * @param enviarMensaje Envía (eventoId, texto) con la sesión actual; regresa null si se envió o
+ *   el texto del error. Lo hace el ViewModel para cerrar la sesión si el token ya no sirve.
  */
 @Composable
 fun TvLiveStreamScreen(
@@ -62,6 +65,7 @@ fun TvLiveStreamScreen(
     proximos: List<EventoEntity>,
     ahora: Instant,
     sesion: SesionTv?,
+    enviarMensaje: suspend (String, String) -> String?,
     onIniciarSesion: () -> Unit,
     onVerProgramacion: () -> Unit
 ) {
@@ -140,6 +144,7 @@ fun TvLiveStreamScreen(
         ChatTv(
             eventoId = eventoChat,
             sesion = sesion,
+            enviarMensaje = enviarMensaje,
             onIniciarSesion = onIniciarSesion,
             modifier = Modifier.weight(0.32f).fillMaxHeight().background(FestivalSidebarBg).padding(20.dp)
         )
@@ -245,7 +250,13 @@ private fun ReproductorTv(urls: List<String>) {
  * Escribir exige sesión; sin ella se ofrece iniciarla.
  */
 @Composable
-private fun ChatTv(eventoId: String?, sesion: SesionTv?, onIniciarSesion: () -> Unit, modifier: Modifier) {
+private fun ChatTv(
+    eventoId: String?,
+    sesion: SesionTv?,
+    enviarMensaje: suspend (String, String) -> String?,
+    onIniciarSesion: () -> Unit,
+    modifier: Modifier
+) {
     val api = remember { FestivalApiService.create() }
     val scope = rememberCoroutineScope()
     var mensajes by remember(eventoId) { mutableStateOf<List<ChatMessageDto>>(emptyList()) }
@@ -333,12 +344,9 @@ private fun ChatTv(eventoId: String?, sesion: SesionTv?, onIniciarSesion: () -> 
             onSend = { texto ->
                 val limpio = texto.trim()
                 if (limpio.isNotEmpty()) scope.launch {
-                    try {
-                        api.sendChatMessage("Bearer ${sesion.token}", ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = limpio))
+                    error = enviarMensaje(eventoId, limpio)
+                    if (error == null) {
                         mensajes = mensajes + ChatMessageDto(eventoId = eventoId, usuarioNombre = sesion.nombre, mensaje = limpio)
-                        error = null
-                    } catch (e: Exception) {
-                        error = "No se pudo enviar el mensaje. Intenta de nuevo."
                     }
                 }
             }
