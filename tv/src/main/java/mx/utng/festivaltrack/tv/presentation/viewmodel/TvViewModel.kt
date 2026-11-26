@@ -25,9 +25,15 @@ import mx.utng.festivaltrack.shared.data.remote.LoginDto
 import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
 import mx.utng.festivaltrack.shared.util.HorarioFestival
+import mx.utng.festivaltrack.tv.data.DatosSesion
+import mx.utng.festivaltrack.tv.data.SesionGuardadaTv
+import retrofit2.HttpException
 import java.time.Instant
 
-/** Cuenta con la que se inició sesión en la TV. Solo vive en memoria: al cerrar la app se pide de nuevo. */
+/**
+ * Cuenta con la que se inició sesión en la TV. Se guarda cifrada ([SesionGuardadaTv]) y se
+ * restaura al abrir la app mientras el token siga vigente.
+ */
 data class SesionTv(val nombre: String, val correo: String, val token: String)
 
 /** Estado de la galería traída del servidor. */
@@ -43,7 +49,8 @@ sealed class EstadoGaleria {
  * - **Cartelera**: eventos de Room sincronizados con el backend cada 5 s; [proximos] aplica las
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
- * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado.
+ * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado. Se guarda
+ *   en la TV y, si el servidor rechaza el token (401), se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
 class TvViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,7 +80,10 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     private val _galeria = MutableStateFlow<EstadoGaleria>(EstadoGaleria.Cargando)
     val galeria: StateFlow<EstadoGaleria> = _galeria.asStateFlow()
 
-    private val _sesion = MutableStateFlow<SesionTv?>(null)
+    private val sesionGuardada = SesionGuardadaTv(application)
+
+    private val _sesion = MutableStateFlow(sesionGuardada.leer()?.let { SesionTv(it.nombre, it.correo, it.token) })
+    /** Sesión actual; ya viene restaurada al crear el ViewModel si había una guardada y vigente. */
     val sesion: StateFlow<SesionTv?> = _sesion.asStateFlow()
 
     /** Música: demos de 30 s, como en el móvil. */
@@ -130,6 +140,14 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
+        // Sesión restaurada: se confirma con el servidor (si ya no acepta el token, se cierra).
+        _sesion.value?.let { restaurada ->
+            viewModelScope.launch {
+                runCatching { api.getMisBoletos("Bearer ${restaurada.token}") }
+                    .onFailure { if (esTokenRechazado(it)) cerrarSesionSiSigue(restaurada.token) }
+            }
+        }
+
         cargarGaleria()
         cargarBiografiaYMusica()
         cargarComunidad()
@@ -155,8 +173,9 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         return try {
             val respuesta = api.login(LoginDto(correo.trim(), contrasena))
             _sesion.value = SesionTv(respuesta.usuario.nombre, respuesta.usuario.correo, respuesta.accessToken)
+            sesionGuardada.guardar(DatosSesion(respuesta.usuario.nombre, respuesta.usuario.correo, respuesta.accessToken))
             null
-        } catch (e: retrofit2.HttpException) {
+        } catch (e: HttpException) {
             when (e.code()) {
                 400, 401 -> "Correo o contraseña incorrectos"
                 429 -> "Demasiados intentos. Espera un minuto e intenta de nuevo."
@@ -168,8 +187,17 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun cerrarSesion() {
+        sesionGuardada.borrar()
         _sesion.value = null
         _boletos.value = Cargable.Cargando
+    }
+
+    /** El servidor ya no acepta el token (venció, se cambió la llave o se borró la cuenta). */
+    private fun esTokenRechazado(error: Throwable) = (error as? HttpException)?.code() == 401
+
+    /** Cierra la sesión por un token rechazado, salvo que mientras tanto se haya entrado con otra. */
+    private fun cerrarSesionSiSigue(token: String) {
+        if (_sesion.value?.token == token) cerrarSesion()
     }
 
     /** Biografía del artista y catálogo de canciones. */
@@ -190,9 +218,15 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
     fun cargarComunidad() {
         _comunidad.value = Cargable.Cargando
         viewModelScope.launch {
-            val token = _sesion.value?.let { "Bearer ${it.token}" }
-            _comunidad.value = runCatching { api.getForo(token = token, limit = 30) }
-                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+            val actual = _sesion.value?.token
+            val token = actual?.let { "Bearer $it" }
+            var resultado = runCatching { api.getForo(token = token, limit = 30) }
+            // Con un token que el servidor ya no acepta, se cierra la sesión y se lee como invitado.
+            if (actual != null && resultado.exceptionOrNull()?.let(::esTokenRechazado) == true) {
+                cerrarSesionSiSigue(actual)
+                resultado = runCatching { api.getForo(token = null, limit = 30) }
+            }
+            _comunidad.value = resultado.map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
         }
     }
 
@@ -201,8 +235,12 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         val sesion = _sesion.value ?: return
         _boletos.value = Cargable.Cargando
         viewModelScope.launch {
-            _boletos.value = runCatching { api.getMisBoletos("Bearer ${sesion.token}") }
-                .map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
+            val resultado = runCatching { api.getMisBoletos("Bearer ${sesion.token}") }
+            if (resultado.exceptionOrNull()?.let(::esTokenRechazado) == true) {
+                cerrarSesionSiSigue(sesion.token) // la pantalla vuelve a pedir que se inicie sesión
+                return@launch
+            }
+            _boletos.value = resultado.map { Cargable.Listo(it) }.getOrDefault(Cargable.SinConexion)
         }
     }
 

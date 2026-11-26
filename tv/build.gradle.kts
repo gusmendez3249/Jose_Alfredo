@@ -71,4 +71,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
+
+    // Pruebas unitarias (JVM)
+    testImplementation("junit:junit:4.13.2")
 }

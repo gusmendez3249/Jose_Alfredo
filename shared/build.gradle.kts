@@ -31,8 +31,10 @@ android {
 
         // Página web donde se compran boletos (la abre el QR de la TV en el celular).
         // Se define con -PfestivaltrackWebUrl=https://... o en local.properties con
-        // festivaltrack.webUrl=http://192.168.X.X:5173. Vacía = la PC del backend en el puerto 5173
-        // (servidor de Vite con `npm run dev -- --host`).
+        // festivaltrack.webUrl=http://192.168.X.X:5173. Vacía = si la API es la de Render
+        // (https://festivaltrack-backend.onrender.com), la web de Render
+        // (https://festivaltrack-web.onrender.com); si no, la PC del backend en el puerto 5173
+        // (servidor de Vite con `npm run dev -- --host`). Ver EnlacesWeb.baseDesde.
         val webUrl = (project.findProperty("festivaltrackWebUrl") as String?)
             ?: localProperties.getProperty("festivaltrack.webUrl")
             ?: ""

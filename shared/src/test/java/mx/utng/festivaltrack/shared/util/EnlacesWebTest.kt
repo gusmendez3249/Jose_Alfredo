@@ -27,4 +27,32 @@ class EnlacesWebTest {
             EnlacesWeb.baseDesde("", "https://festivaltrack-backend.up.railway.app/api/v1/", "192.168.1.20")
         )
     }
+
+    @Test
+    fun `con la API de Render usa la web publicada en Render`() {
+        assertEquals(
+            "https://festivaltrack-web.onrender.com",
+            EnlacesWeb.baseDesde("", "https://festivaltrack-backend.onrender.com/api/v1/", "10.0.2.2")
+        )
+        assertEquals(
+            "https://festivaltrack-web.onrender.com",
+            EnlacesWeb.baseDesde("", "https://FestivalTrack-Backend.onrender.com", "10.0.2.2")
+        )
+    }
+
+    @Test
+    fun `la web configurada gana sobre la de Render`() {
+        assertEquals(
+            "https://boletos.festival.mx",
+            EnlacesWeb.baseDesde("https://boletos.festival.mx", "https://festivaltrack-backend.onrender.com/api/v1", "10.0.2.2")
+        )
+    }
+
+    @Test
+    fun `otro servicio de Render que no es el backend no se adivina`() {
+        assertEquals(
+            "http://192.168.1.20:5173",
+            EnlacesWeb.baseDesde("", "https://otra-api.onrender.com/api/v1/", "192.168.1.20")
+        )
+    }
 }

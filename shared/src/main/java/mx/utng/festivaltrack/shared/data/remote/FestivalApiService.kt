@@ -418,6 +418,7 @@ interface FestivalApiService {
  * @property artistaId ID del artista principal (puede ser null).
  * @property artista Datos del artista principal (puede ser null).
  * @property transmision Datos de transmisión en vivo si está activa (puede ser null).
+ * @property bannerUrl Imagen promocional del concierto (puede ser null).
  */
 data class EventoDto(
     val id: String,
@@ -430,7 +431,9 @@ data class EventoDto(
     val longitud: Double?,
     val artistaId: String?,
     val artista: ArtistaDto?,
-    val transmision: TransmisionDto? = null
+    val transmision: TransmisionDto? = null,
+    /** Imagen promocional del concierto (`/uploads/...` o URL https); null si no tiene. */
+    val bannerUrl: String? = null
 ) {
     /**
      * Convierte este DTO a una entidad Room para persistencia local.
@@ -443,7 +446,7 @@ data class EventoDto(
             fechaHora = fechaHora,
             ubicacion = ubicacion,
             escenario = escenario,
-            bannerUrl = null,
+            bannerUrl = bannerUrl?.takeIf { it.isNotBlank() },
             estado = estado,
             artistaId = artistaId,
             artistaNombre = artista?.nombre,
