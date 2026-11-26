@@ -41,7 +41,9 @@ Levanta los controladores reales con los guards reales (JWT + roles) y la misma 
 | S1 | Autenticación | `POST /boletos/comprar` sin token | 401 y el servicio no se ejecuta | ✅ |
 | S2 | Autenticación | Token firmado con otra clave | 401 | ✅ |
 | S3 | Autenticación | Token válido de un usuario dado de baja (`activo=false`) | 401 | ✅ |
-| S4 | Autenticación | `POST /auth/tv-sync` sin sesión → 401; con sesión, el `userId` del cuerpo se ignora y se usa el del token | 401 / 201 | ✅ |
+| S4 | Autenticación | `POST /auth/tv-sync` (aprobar el código de la TV) sin sesión → 401; con sesión, el `userId` del cuerpo se ignora y se usa el del token | 401 / 201 | ✅ |
+| S4b | Autenticación | La TV pide su código sin sesión (`POST /auth/tv-sync/codigo`) y pregunta con `POST /auth/tv-sync/estado` solo con un `tvToken` de 64 caracteres hexadecimales | 201 / 400 con token mal formado / 200 | ✅ |
+| S4c | Entradas inválidas | Código de TV con caracteres que no son letras ni números | 400 | ✅ |
 | S5 | Autorización | Un `USUARIO` intenta `POST /eventos` | 403 | ✅ |
 | S6 | Autorización | `POST /biografias/alta`: sin sesión / `USUARIO` / `ADMINISTRADOR` | 401 / 403 / 201 | ✅ |
 | S7 | Entradas inválidas | Biografía sin `titulo` ni `descripcion` | 400 | ✅ |

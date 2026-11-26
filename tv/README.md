@@ -49,7 +49,7 @@ Usa el mismo backend que el móvil y la web (NestJS en `/api/v1`) y comparte con
 7. **Mapa:** las sedes con las coordenadas oficiales de OpenStreetMap y un QR con la ruta a pie para el celular.
 8. **Galería y Comunidad:** fotos reales del servidor y publicaciones de los asistentes. En la TV la comunidad es **de solo lectura a propósito**: publicar, dar like o comentar se hace desde el celular.
 9. **Mis boletos:** los boletos de la cuenta con su QR real, el mismo que valida el escáner de la entrada.
-10. **Inicio de sesión real:** correo y contraseña contra el backend, o «Continuar sin cuenta». La sesión **se guarda cifrada** y al volver a abrir la app se entra directo mientras el token siga vigente.
+10. **Inicio de sesión con el celular:** la TV muestra un código y un QR; se aprueba desde la web (el QR la abre) o desde la app (Perfil → Vincular TV) y la TV entra sola. También se puede entrar con correo y contraseña o «Continuar sin cuenta». La sesión **se guarda cifrada** y al volver a abrir la app se entra directo mientras el token siga vigente.
 11. **Ajustes:** servidor al que se conecta y si responde, estado de la transmisión, página de compra y cuenta.
 
 ### Cómo fluye la información
@@ -118,7 +118,8 @@ tv/
         ├── data/TokenJwtTest.kt
         └── presentation/
             ├── components/PortadaConciertoTest.kt
-            └── screens/TvMapaTest.kt
+            ├── screens/TvMapaTest.kt
+            └── viewmodel/VinculoTvTest.kt
 ```
 
 ---
@@ -492,6 +493,8 @@ class MainActivity : ComponentActivity() {
                         BackHandler(enabled = yaEntro) { mostrarLogin = false }
                         TvLoginScreen(
                             iniciarSesion = viewModel::iniciarSesion,
+                            pedirCodigo = viewModel::pedirCodigoTv,
+                            consultarCodigo = viewModel::consultarVinculoTv,
                             onEntrar = { mostrarLogin = false; yaEntro = true },
                             onContinuarSinCuenta = { mostrarLogin = false; yaEntro = true }
                         )
@@ -618,7 +621,7 @@ Concentra los datos de toda la app:
 
 - **Cartelera:** sincroniza con el backend cada 5 s y guarda en Room; `proximos` aplica las mismas reglas que el móvil (sin cancelados ni pasados, en hora de México).
 - **Transmisión:** consulta `stream/status` cada 3 s; también sirve para saber si el servidor responde.
-- **Sesión:** inicia sesión contra el backend y la guarda con `SesionGuardadaTv`. Si el servidor rechaza el token (401) en boletos, comunidad o al escribir en el chat, la sesión se cierra sola (`cerrarSesionSiSigue` evita cerrar una sesión nueva que se abrió mientras tanto).
+- **Sesión:** inicia sesión contra el backend (con correo y contraseña, o con el celular mediante `pedirCodigoTv` y `consultarVinculoTv`) y la guarda con `SesionGuardadaTv`. Si el servidor rechaza el token (401) en boletos, comunidad o al escribir en el chat, la sesión se cierra sola (`cerrarSesionSiSigue` evita cerrar una sesión nueva que se abrió mientras tanto).
 - **Chat:** `enviarMensajeChat` envía los mensajes de la transmisión con la sesión actual y regresa el texto del error para mostrarlo.
 - **Biografía, canciones, galería, comunidad, sitios y boletos:** cada uno como `Cargable` (`Cargando`, `Listo` o `SinConexion`).
 
@@ -645,6 +648,9 @@ import mx.utng.festivaltrack.shared.data.remote.BiografiaDto
 import mx.utng.festivaltrack.shared.data.remote.BoletoDto
 import mx.utng.festivaltrack.shared.data.remote.CancionDto
 import mx.utng.festivaltrack.shared.data.remote.ChatMessageDto
+import mx.utng.festivaltrack.shared.data.remote.CodigoTvDto
+import mx.utng.festivaltrack.shared.data.remote.EstadoTvRequest
+import mx.utng.festivaltrack.shared.data.remote.EstadoVinculoTvDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
 import mx.utng.festivaltrack.shared.data.remote.PublicacionDto
 import mx.utng.festivaltrack.shared.data.remote.SitioArDto
@@ -677,7 +683,9 @@ sealed class EstadoGaleria {
  * - **Cartelera**: eventos de Room sincronizados con el backend cada 5 s; [proximos] aplica las
  *   mismas reglas que el móvil (sin cancelados ni pasados, ordenados, hora de México).
  * - **Transmisión**: consulta `stream/status` cada 3 s; [stream] es null si el servidor no responde.
- * - **Sesión**: login real contra el backend; [sesion] es null para ver como invitado. Se guarda
+ * - **Sesión**: login real contra el backend, con correo y contraseña o aprobando desde el
+ *   celular el código que muestra la TV ([pedirCodigoTv] y [consultarVinculoTv]);
+ *   [sesion] es null para ver como invitado. Se guarda
  *   en la TV y, si el servidor rechaza el token (401) en boletos, comunidad o chat, se cierra sola.
  * - **Reloj**: [ahora] avanza cada 30 s para que "Hoy", "En curso" y la hora se actualicen solos.
  */
@@ -814,6 +822,30 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Pide al servidor un código para entrar con el celular; null si no hay conexión. */
+    suspend fun pedirCodigoTv(): CodigoTvDto? = runCatching { api.pedirCodigoTv() }.getOrNull()
+
+    /**
+     * Pregunta si ya aprobaron el código desde el celular. Si ya lo aprobaron, inicia y guarda la
+     * sesión de esa cuenta, igual que con correo y contraseña.
+     */
+    suspend fun consultarVinculoTv(tvToken: String): VinculoTv {
+        val respuesta = try {
+            api.estadoVinculoTv(EstadoTvRequest(tvToken))
+        } catch (e: HttpException) {
+            // Demasiadas peticiones o servidor caído: se espera y se vuelve a preguntar.
+            return if (e.code() == 429 || e.code() >= 500) VinculoTv.SinConexion else VinculoTv.Expirado
+        } catch (e: Exception) {
+            return VinculoTv.SinConexion
+        }
+        val resultado = interpretarVinculo(respuesta)
+        if (resultado is VinculoTv.Aprobado) {
+            _sesion.value = resultado.sesion
+            sesionGuardada.guardar(DatosSesion(resultado.sesion.nombre, resultado.sesion.correo, resultado.sesion.token))
+        }
+        return resultado
+    }
+
     fun cerrarSesion() {
         sesionGuardada.borrar()
         _sesion.value = null
@@ -902,6 +934,30 @@ class TvViewModel(application: Application) : AndroidViewModel(application) {
         reproductor.liberar()
         super.onCleared()
     }
+}
+
+/** Cómo va el inicio de sesión de la TV con el celular. */
+sealed class VinculoTv {
+    /** Nadie ha aprobado el código todavía. */
+    object Pendiente : VinculoTv()
+    /** Lo aprobaron: [sesion] es la cuenta con la que entra la TV. */
+    data class Aprobado(val sesion: SesionTv) : VinculoTv()
+    /** El código venció (5 min) o ya se usó: hay que pedir otro. */
+    object Expirado : VinculoTv()
+    /** No respondió el servidor: se vuelve a preguntar. */
+    object SinConexion : VinculoTv()
+}
+
+/** Traduce la respuesta de `auth/tv-sync/estado`. Un "APROBADO" sin token se toma como vencido. */
+fun interpretarVinculo(respuesta: EstadoVinculoTvDto): VinculoTv = when (respuesta.estado) {
+    "PENDIENTE" -> VinculoTv.Pendiente
+    "APROBADO" -> {
+        val token = respuesta.accessToken
+        val usuario = respuesta.usuario
+        if (token.isNullOrBlank() || usuario == null) VinculoTv.Expirado
+        else VinculoTv.Aprobado(SesionTv(usuario.nombre, usuario.correo, token))
+    }
+    else -> VinculoTv.Expirado
 }
 
 /** Datos que se piden al servidor: cargando, listos o sin conexión. */
@@ -1429,7 +1485,17 @@ fun TvSidebar(
 
 ## Paso 10: Pantalla de inicio de sesión `TvLoginScreen.kt`
 
-Entra de verdad contra el backend con los mismos mensajes que el móvil. «Continuar sin cuenta» deja ver toda la TV como invitado (la cuenta solo hace falta para el chat y Mis boletos). Para crear cuenta, un QR abre el registro de la web en el celular.
+Hay tres formas de entrar:
+
+1. **Con el celular (la recomendada, sin escribir con el control):**
+   1. Al abrir la pantalla, la TV pide un código al backend (`POST /auth/tv-sync/codigo`): recibe un código corto como `KX7M-3QPA` (válido 5 minutos) y un `tvToken` secreto.
+   2. Muestra el código en grande y un QR con `EnlacesWeb.vincularTv(codigo)` → `https://<web>/vincular-tv?codigo=KX7M-3QPA`. Cualquier cámara de celular lo abre; si no hay sesión, la web pide entrar o **crear cuenta** y regresa con el código ya escrito.
+   3. También se puede escribir el código en la app móvil: **Perfil → Vincular TV**.
+   4. La TV pregunta cada 3 s (`POST /auth/tv-sync/estado`). En cuanto lo aprueban recibe el login de esa cuenta, lo guarda igual que un inicio de sesión normal y entra sola. Si el código vence, pide otro sin que nadie haga nada.
+2. **Con correo y contraseña** usando el control, con los mismos mensajes que el móvil.
+3. **«Continuar sin cuenta»:** toda la TV como invitado (la cuenta solo hace falta para el chat y Mis boletos).
+
+`interpretarVinculo` (en `TvViewModel.kt`) traduce la respuesta del servidor y tiene sus pruebas en `VinculoTvTest`. Del lado del backend, los códigos viven en memoria (`festivaltrack-backend/src/auth/vinculos-tv.ts`).
 
 **`src/main/java/mx/utng/festivaltrack/tv/presentation/screens/TvLoginScreen.kt`**
 
@@ -1456,25 +1522,38 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mx.utng.festivaltrack.shared.data.remote.CodigoTvDto
 import mx.utng.festivaltrack.shared.util.EnlacesWeb
+import mx.utng.festivaltrack.tv.presentation.viewmodel.VinculoTv
 import mx.utng.festivaltrack.tv.ui.theme.*
 import mx.utng.festivaltrack.tv.ui.utils.DynamicQrCode
+
+/** Cada cuánto pregunta la TV si ya aprobaron su código desde el celular. */
+private const val CONSULTA_MS = 3_000L
 
 /**
  * Inicio de sesión en la TV.
  *
- * - Entra de verdad contra el backend (antes cualquier dato dejaba pasar) y muestra los mismos
- *   mensajes que el móvil: "Correo o contraseña incorrectos", "Sin conexión…".
+ * - **Con el celular (recomendado):** la TV pide un código y lo muestra en grande y en un QR.
+ *   El QR abre la web en el celular (si no hay sesión pide entrar o crear cuenta) y ahí se
+ *   confirma; también se puede escribir el código en la app (Perfil → Vincular TV). La TV
+ *   pregunta cada 3 s y entra sola en cuanto lo aprueban. El código dura 5 minutos y se
+ *   renueva solo.
+ * - **Con correo y contraseña** usando el control, con los mismos mensajes que el móvil.
  * - "Continuar sin cuenta": la TV se puede ver completa como invitado; la cuenta solo hace
- *   falta para escribir en el chat.
- * - Crear cuenta: con el control es incómodo, así que un QR real abre el registro en el celular.
+ *   falta para el chat y Mis boletos.
  *
  * @param iniciarSesion Intenta entrar; regresa null si entró o el mensaje de error.
+ * @param pedirCodigo Pide un código para entrar con el celular (null = sin conexión).
+ * @param consultarCodigo Pregunta por el código con su token; con [VinculoTv.Aprobado] ya hay sesión.
  */
 @Composable
 fun TvLoginScreen(
     iniciarSesion: suspend (correo: String, contrasena: String) -> String?,
+    pedirCodigo: suspend () -> CodigoTvDto?,
+    consultarCodigo: suspend (tvToken: String) -> VinculoTv,
     onEntrar: () -> Unit,
     onContinuarSinCuenta: () -> Unit
 ) {
@@ -1484,6 +1563,30 @@ fun TvLoginScreen(
     var cargando by remember { mutableStateOf(false) }
     var ayudaContrasena by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // Código para entrar con el celular: se pide al abrir, se consulta cada 3 s y se renueva al vencer.
+    var codigoTv by remember { mutableStateOf<CodigoTvDto?>(null) }
+    var sinConexionCodigo by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val codigo = pedirCodigo()
+            codigoTv = codigo
+            sinConexionCodigo = codigo == null
+            if (codigo == null) {
+                delay(5_000)
+                continue
+            }
+            val vence = System.currentTimeMillis() + codigo.expiraEnSegundos * 1_000L
+            while (System.currentTimeMillis() < vence) {
+                delay(CONSULTA_MS)
+                when (consultarCodigo(codigo.tvToken)) {
+                    is VinculoTv.Aprobado -> { onEntrar(); return@LaunchedEffect }
+                    VinculoTv.Expirado -> break
+                    VinculoTv.Pendiente, VinculoTv.SinConexion -> Unit
+                }
+            }
+        }
+    }
 
     val camposColores = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = FestivalGold,
@@ -1508,28 +1611,47 @@ fun TvLoginScreen(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Bienvenida y QR para crear cuenta
+            // Bienvenida y entrada con el celular (QR + código)
             Column(modifier = Modifier.weight(1f).padding(end = 32.dp), verticalArrangement = Arrangement.Center) {
                 Text("FESTIVAL JOSÉ ALFREDO JIMÉNEZ", color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 Spacer(Modifier.height(8.dp))
-                Text("Bienvenido al\nFestival", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 42.sp)
-                Spacer(Modifier.height(12.dp))
+                Text("Bienvenido al Festival", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
                 Text(
                     "Mira la programación, la galería y las transmisiones en vivo desde Dolores Hidalgo.",
                     color = FestivalTextSecondary, fontSize = 13.sp
                 )
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(20.dp))
                 Card(colors = CardDefaults.cardColors(containerColor = FestivalCardBg), shape = RoundedCornerShape(12.dp)) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        DynamicQrCode(content = EnlacesWeb.registro(), modifier = Modifier.size(120.dp))
+                        val codigo = codigoTv
+                        Box(Modifier.size(150.dp), contentAlignment = Alignment.Center) {
+                            when {
+                                codigo != null -> DynamicQrCode(content = EnlacesWeb.vincularTv(codigo.codigo), modifier = Modifier.fillMaxSize())
+                                sinConexionCodigo -> Text("Sin conexión con el servidor", color = FestivalTextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
+                                else -> CircularProgressIndicator(color = FestivalGold, modifier = Modifier.size(32.dp))
+                            }
+                        }
                         Spacer(Modifier.width(16.dp))
                         Column {
-                            Text("¿No tienes cuenta?", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Escanea con tu celular para crearla", color = FestivalGold, fontSize = 12.sp)
-                            Text(EnlacesWeb.registro(), color = FestivalTextSecondary, fontSize = 10.sp)
+                            Text("Entra con tu celular", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Escanea el código con la cámara y confirma.", color = FestivalTextSecondary, fontSize = 12.sp)
+                            Text("O en la app: Perfil → Vincular TV.", color = FestivalTextSecondary, fontSize = 12.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                codigo?.codigo ?: "····-····",
+                                color = FestivalGold, fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp
+                            )
+                            Text("La TV entra sola al confirmar. El código cambia cada 5 min.", color = FestivalTextSecondary, fontSize = 10.sp)
                         }
                     }
                 }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "¿No tienes cuenta? Al escanear el código también puedes crearla.",
+                    color = FestivalTextSecondary, fontSize = 12.sp
+                )
             }
 
             // Formulario
@@ -4320,6 +4442,7 @@ Se corren en la JVM, sin emulador:
 | `TokenJwtTest` | Lectura del vencimiento del JWT y cuándo una sesión guardada se puede restaurar |
 | `PortadaConciertoTest` | Que cada concierto de la cartelera tenga su foto y la URL completa del banner |
 | `TvMapaTest` | Sedes con las coordenadas oficiales, unión de lugares a menos de 50 m, que la selección sobreviva a la sincronización y la URL de la ruta a pie |
+| `VinculoTvTest` | Respuestas del inicio de sesión con el celular: pendiente, aprobado (con la cuenta que aprobó), aprobado incompleto y vencido |
 
 **`src/test/java/mx/utng/festivaltrack/tv/data/TokenJwtTest.kt`**
 
@@ -4507,6 +4630,47 @@ class TvMapaTest {
 }
 ```
 
+**`src/test/java/mx/utng/festivaltrack/tv/presentation/viewmodel/VinculoTvTest.kt`**
+
+```kotlin
+package mx.utng.festivaltrack.tv.presentation.viewmodel
+
+import mx.utng.festivaltrack.shared.data.remote.EstadoVinculoTvDto
+import mx.utng.festivaltrack.shared.data.remote.UsuarioDto
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class VinculoTvTest {
+
+    private val usuario = UsuarioDto(id = "u1", nombre = "Usuario QA", correo = "qa@festivaltrack.test", rol = "USUARIO")
+
+    @Test
+    fun `mientras nadie aprueba el codigo sigue pendiente`() {
+        assertEquals(VinculoTv.Pendiente, interpretarVinculo(EstadoVinculoTvDto("PENDIENTE")))
+    }
+
+    @Test
+    fun `al aprobarlo la TV entra con la cuenta que lo aprobo`() {
+        assertEquals(
+            VinculoTv.Aprobado(SesionTv("Usuario QA", "qa@festivaltrack.test", "jwt.de.prueba")),
+            interpretarVinculo(EstadoVinculoTvDto("APROBADO", accessToken = "jwt.de.prueba", usuario = usuario))
+        )
+    }
+
+    @Test
+    fun `un aprobado sin token o sin usuario no deja entrar`() {
+        assertEquals(VinculoTv.Expirado, interpretarVinculo(EstadoVinculoTvDto("APROBADO", accessToken = null, usuario = usuario)))
+        assertEquals(VinculoTv.Expirado, interpretarVinculo(EstadoVinculoTvDto("APROBADO", accessToken = "jwt", usuario = null)))
+    }
+
+    @Test
+    fun `vencido o un estado desconocido pide un codigo nuevo`() {
+        assertEquals(VinculoTv.Expirado, interpretarVinculo(EstadoVinculoTvDto("EXPIRADO")))
+        assertEquals(VinculoTv.Expirado, interpretarVinculo(EstadoVinculoTvDto("OTRA_COSA")))
+    }
+}
+```
+
 ---
 
 ## Paso 23: Compilar, instalar y probar
@@ -4547,13 +4711,14 @@ Con dispositivos reales en la misma Wi-Fi no hace falta: la TV usa la IP real de
 
 ### Recorrido de prueba
 
-1. Abrir la app: pide login; «Continuar sin cuenta» entra como invitado.
-2. Iniciar sesión, cerrar la app a la fuerza y volver a abrirla: entra directo con la cuenta.
-3. Inicio: cada concierto con su imagen; OK abre el detalle con su repertorio.
-4. «Comprar boletos»: escanear el QR con el celular abre la compra del concierto elegido.
-5. Mapa: recorrer las sedes con el control; la elegida se mantiene y su QR abre la ruta a pie.
-6. Mis boletos: el QR de cada boleto se puede escanear.
-7. Ajustes → «Cerrar sesión»: al reabrir vuelve a pedir el login.
+1. Abrir la app: pide login y muestra el código con su QR; «Continuar sin cuenta» entra como invitado.
+2. Escanear el QR con el celular (o escribir el código en la app: Perfil → Vincular TV) y confirmar: la TV entra sola en unos segundos con esa cuenta.
+3. Cerrar la app a la fuerza y volver a abrirla: entra directo con la cuenta.
+4. Inicio: cada concierto con su imagen; OK abre el detalle con su repertorio.
+5. «Comprar boletos»: escanear el QR con el celular abre la compra del concierto elegido.
+6. Mapa: recorrer las sedes con el control; la elegida se mantiene y su QR abre la ruta a pie.
+7. Mis boletos: el QR de cada boleto se puede escanear.
+8. Ajustes → «Cerrar sesión»: al reabrir vuelve a pedir el login.
 
 ---
 
@@ -4563,6 +4728,8 @@ Con dispositivos reales en la misma Wi-Fi no hace falta: la TV usa la IP real de
 - **«Sin conexión con el servidor»:** revisa que el backend esté corriendo y, en una TV física, que `festivaltrack.deviceHost` tenga la IP de la PC. En Ajustes se ve a qué servidor intenta conectarse.
 - **El QR de compra abre `http://...:5173` y no carga:** compilaste sin `festivaltrackApiUrl` de Render y sin `festivaltrackWebUrl`; levanta la web con `npm run dev -- --host` o configura la URL de la web.
 - **La interfaz no responde a las flechas del teclado:** haz clic dentro de la ventana del emulador para que capture el teclado como si fuera el control remoto.
+- **El código de la TV dice que no existe o ya venció:** dura 5 minutos y la TV lo cambia sola; usa el que se ve en pantalla en ese momento. Si el backend se reinició, la TV pide uno nuevo en cuanto el anterior deja de servir.
+- **Escaneé el QR de la TV y la página no abre:** el QR apunta a la web configurada (ver Paso 3). Con el backend local hay que levantar la web con `npm run dev -- --host`; con Render ya funciona.
 - **El teclado en pantalla tapa el botón «Iniciar sesión»:** pulsa Atrás una vez para cerrarlo (no sale de la app) y luego OK sobre el botón.
 - **No aparece el teclado del chat:** pulsa OK sobre el campo de mensaje para abrir el cuadro de texto.
 - **La app ya no recuerda la sesión:** el token venció (7 días) o el servidor cambió su llave JWT; es normal que vuelva a pedir el login.
@@ -4572,5 +4739,4 @@ Con dispositivos reales en la misma Wi-Fi no hace falta: la TV usa la IP real de
 
 ## Pendientes conocidos
 
-- **Login con QR desde el celular:** `POST /auth/tv-sync` del backend sigue siendo un stub; hoy se escribe correo y contraseña con el control.
 - **Pruebas en equipos reales:** falta probar en una Android TV física y la transmisión con dos teléfonos reales en la misma Wi-Fi.

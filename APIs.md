@@ -55,13 +55,18 @@ flowchart LR
 
 - **Base:** `https://<servicio>.up.railway.app/api/v1/` en producción y `http://10.0.2.2:3001/api/v1/` desde el emulador.
 - **Autenticación:** `POST /auth/login` devuelve un JWT firmado con `JWT_SECRET`. Las apps lo mandan en `Authorization: Bearer <token>`. En Android el token se guarda cifrado con una llave del Android Keystore.
+- **Inicio de sesión de la TV con el celular:**
+  1. `POST /auth/tv-sync/codigo` (sin sesión): la TV recibe un `codigo` corto (p. ej. `KX7M-3QPA`, válido 5 minutos) y un `tvToken` secreto.
+  2. `POST /auth/tv-sync` con sesión y `{ codigo }`: el usuario lo aprueba desde la web (`/vincular-tv?codigo=...`, la abre el QR de la TV) o desde la app (Perfil → Vincular TV). El usuario sale del JWT.
+  3. `POST /auth/tv-sync/estado` con `{ tvToken }`: la TV pregunta cada 3 s; responde `PENDIENTE`, `EXPIRADO` o `APROBADO` con el mismo `accessToken` y `usuario` que un login (una sola vez).
+  Los códigos se guardan en memoria del backend (no en la base): si el servidor se reinicia, la TV pide otro.
 - **Autorización:**
   - Endpoints de consulta (eventos, galería, catálogo AR): públicos.
   - Compra de boletos, chat, foro, AR y vinculación de TV: requieren sesión.
   - Crear, editar o borrar eventos, canciones, imágenes, biografías y usuarios: requieren el rol `ADMINISTRADOR` (`RolesGuard`).
 - **Validación en el servidor:** `ValidationPipe({ whitelist: true })` con DTOs de `class-validator`. El servidor descarta campos que no espera (por ejemplo, el precio de un boleto lo calcula él mismo).
 - **Protecciones adicionales:**
-  - Límite de peticiones (`@nestjs/throttler`): 5 intentos de login por minuto por IP y correo.
+  - Límite de peticiones (`@nestjs/throttler`): 5 intentos de login por minuto por IP y correo; 10 códigos de TV y 10 aprobaciones de código por minuto por IP.
   - Cabeceras de seguridad (`helmet`).
   - CORS restringido a `FRONTEND_URL`.
   - Errores internos responden 500 con un mensaje genérico.

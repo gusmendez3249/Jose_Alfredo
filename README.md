@@ -149,7 +149,7 @@ La solución permite conectar a organizadores, visitantes presenciales, espectad
 - **`TvMainScreen`**: Inicio con el próximo concierto (o la transmisión en curso) y carrusel de conciertos, cada uno con su imagen.
 - **`TvLiveStreamScreen`**: Pantalla dividida (68% reproductor ExoPlayer RTSP + 32% chat del concierto con refresco cada 3 segundos).
 - **`TvScheduleScreen`, `TvBiografiaScreen`, `TvMapaScreen`, `TvGalleryScreen`, `TvComunidadScreen`, `TvBoletosScreen`**: Programación, biografía y música, mapa de sedes con QR de la ruta, galería, comunidad y boletos con QR.
-- **`TvLoginScreen` & `TvSettingsScreen`**: Inicio de sesión real (la sesión se guarda cifrada) o como invitado, y ajustes con el servidor, la transmisión y la cuenta.
+- **`TvLoginScreen` & `TvSettingsScreen`**: Inicio de sesión **con el celular** (la TV muestra un código y un QR; se confirma en la web `/vincular-tv` o en la app, Perfil → Vincular TV), con correo y contraseña o como invitado; la sesión se guarda cifrada. Ajustes con el servidor, la transmisión y la cuenta.
 - Compra de boletos y registro con **QR** que abre la web en el celular. Detalle de cada pantalla y su código en [tv/README.md](./tv/README.md).
 
 ### 3. Portal Web (`festivaltrack-web/`)
