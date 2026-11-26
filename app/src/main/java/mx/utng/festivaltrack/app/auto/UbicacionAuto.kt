@@ -18,7 +18,7 @@ import kotlin.coroutines.resume
 object UbicacionAuto {
 
     /** Jardín Principal de Dolores Hidalgo, usado cuando no hay ubicación del teléfono. */
-    val CENTRO_DOLORES = 21.1561 to -100.9318
+    val CENTRO_DOLORES = 21.157511 to -100.934529
 
     fun tienePermiso(carContext: CarContext): Boolean =
         ContextCompat.checkSelfPermission(carContext, Manifest.permission.ACCESS_FINE_LOCATION) ==

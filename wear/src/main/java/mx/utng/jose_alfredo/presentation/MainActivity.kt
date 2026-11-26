@@ -1,8 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package mx.utng.jose_alfredo.presentation
 
 import android.os.Bundle
@@ -16,10 +11,16 @@ import androidx.wear.compose.material3.MaterialTheme
 import mx.utng.festivaltrack.wear.presentation.navigation.WearNavGraph
 import mx.utng.jose_alfredo.presentation.theme.Jose_AlfredoTheme
 
+/**
+ * Actividad única del reloj. El logo del festival se muestra con el splash del sistema
+ * (sin pantallas de espera extra) y se entra directo a la agenda.
+ * Si se abre desde un aviso de concierto, va directo a ese concierto.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        val conciertoInicial = intent?.getStringExtra(EXTRA_EVENTO_ID)
         setContent {
             Jose_AlfredoTheme {
                 Box(
@@ -27,10 +28,14 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    WearNavGraph()
+                    WearNavGraph(conciertoInicial = conciertoInicial)
                 }
             }
         }
     }
-}
 
+    companion object {
+        /** Extra con el id del concierto a abrir (lo pone el aviso de 15 minutos). */
+        const val EXTRA_EVENTO_ID = "eventoId"
+    }
+}

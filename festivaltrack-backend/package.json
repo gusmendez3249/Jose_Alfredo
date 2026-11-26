@@ -17,12 +17,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "seed:cartelera": "ts-node prisma/seed-cartelera.ts",
+    "seed:ubicaciones": "ts-node prisma/corregir-ubicaciones.ts",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.132.1",
-    "@nestjs/common": "^11.0.1",
+    "@anthropic-ai/sdk": "^0.137.0",
+    "@nestjs/common": "^11.2.11",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
@@ -44,7 +45,7 @@
     "@eslint/js": "^9.39.5",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@nestjs/testing": "^11.2.11",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
@@ -57,7 +58,7 @@
     "eslint-plugin-prettier": "^5.5.7",
     "globals": "^16.0.0",
     "jest": "^30.0.0",
-    "prettier": "^3.4.2",
+    "prettier": "^3.10.1",
     "prisma": "^5.22.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
@@ -66,7 +67,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.73.0"
   },
   "jest": {
     "moduleFileExtensions": [

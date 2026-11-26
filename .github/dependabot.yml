@@ -38,6 +38,13 @@ updates:
         versions: [">= 1.7.0"]
       - dependency-name: "com.google.android.gms:play-services-location"
         versions: [">= 21.4.0"]
+      # Exigen compileSdk 36/37, AGP 9 o Kotlin 2.2+ (el proyecto usa compileSdk 35, AGP 8.7, Kotlin 2.0)
+      - dependency-name: "androidx.navigation:*"
+        versions: [">= 2.9.0"]
+      - dependency-name: "org.osmdroid:osmdroid-android"
+        versions: [">= 6.1.20"]
+      - dependency-name: "org.jetbrains.kotlin*"
+        versions: [">= 2.1.0"]
 
   - package-ecosystem: github-actions
     directory: /

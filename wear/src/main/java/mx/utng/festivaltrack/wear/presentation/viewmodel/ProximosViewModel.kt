@@ -11,70 +11,41 @@ import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.shared.data.local.FestivalDatabase
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.shared.data.repository.FestivalRepository
-import java.time.Instant
+import mx.utng.festivaltrack.wear.domain.usecase.ScheduleAlertasUseCase
+import mx.utng.festivaltrack.wear.presentation.util.AgendaWear
 
 /**
- * ViewModel que gestiona el estado de los eventos en el módulo Wear OS.
- * Implementa una estrategia Offline-First observando la base de datos Room.
- * 
- * @property eventos Flujo de los próximos 15 eventos filtrados mediante la hora actual.
- * @property todosLosEventos Flujo con el listado completo de eventos.
- * @constructor Crea un [ProximosViewModel] e inicializa el repositorio local.
+ * Agenda del reloj con estrategia Offline-First: muestra lo que hay en Room al instante y
+ * sincroniza con el backend en segundo plano.
+ *
+ * @property agenda Conciertos vigentes agrupados por día ("Hoy", "Mañana", "Vie 27 nov").
+ * @property sincronizando true mientras se descarga la agenda por primera vez.
  */
 class ProximosViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: FestivalRepository
+    private val database = FestivalDatabase.getInstance(application)
+    private val repository = FestivalRepository(database.eventoDao())
 
-    private val _eventos = MutableStateFlow<List<EventoEntity>>(emptyList())
-    val eventos: StateFlow<List<EventoEntity>> = _eventos.asStateFlow()
+    private val _agenda = MutableStateFlow<List<Pair<String, List<EventoEntity>>>>(emptyList())
+    val agenda: StateFlow<List<Pair<String, List<EventoEntity>>>> = _agenda.asStateFlow()
 
-    private val _todosLosEventos = MutableStateFlow<List<EventoEntity>>(emptyList())
-    val todosLosEventos: StateFlow<List<EventoEntity>> = _todosLosEventos.asStateFlow()
+    private val _sincronizando = MutableStateFlow(true)
+    val sincronizando: StateFlow<Boolean> = _sincronizando.asStateFlow()
 
     init {
-        val database = FestivalDatabase.getInstance(application)
-        repository = FestivalRepository(database.eventoDao())
-        
-        // 1. Observar la base de datos Room y filtrar inteligentemente
         viewModelScope.launch {
-            // Pasamos un string vacío para que traiga todos y nosotros los filtramos con exactitud de zona horaria
-            repository.getProximosEventosLocales("").collectLatest { lista ->
-                val currentInstant = Instant.now()
-                val filtrados = lista.filter { evento ->
-                    val eventoInstant = try {
-                        Instant.parse(evento.fechaHora)
-                    } catch (e: Exception) {
-                        try {
-                            java.time.LocalDateTime.parse(evento.fechaHora.replace("Z", "")).atZone(java.time.ZoneId.systemDefault()).toInstant()
-                        } catch (e2: Exception) {
-                            currentInstant
-                        }
-                    }
-                    // Mostrar si es en el futuro o si empezó hace menos de 1 hora
-                    java.time.Duration.between(eventoInstant, currentInstant).toHours() < 1
-                }.sortedBy { it.fechaHora }
-                
-                _eventos.value = filtrados.take(15)
-            }
+            repository.getEventosLocales().collectLatest { lista -> _agenda.value = AgendaWear.porDia(lista) }
         }
-        
-        viewModelScope.launch {
-            repository.getEventosLocales().collectLatest { lista ->
-                _todosLosEventos.value = lista.sortedBy { it.fechaHora }
-            }
-        }
-
-        // 2. Intentar sincronizar con el backend
-        syncData()
+        sincronizar()
     }
 
-    /**
-     * Sincroniza los eventos con el backend remoto.
-     * Actualiza la base de datos local lo cual automáticamente refresca los [StateFlow].
-     */
-    private fun syncData() {
+    fun sincronizar() {
         viewModelScope.launch {
-            repository.syncEventos()
+            _sincronizando.value = true
+            runCatching { repository.syncEventos() }
+            _sincronizando.value = false
+            // Con la agenda al día se programan los avisos de 15 minutos antes.
+            ScheduleAlertasUseCase(getApplication(), database).execute()
         }
     }
 }

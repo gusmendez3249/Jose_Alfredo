@@ -72,6 +72,13 @@ npx jest --ci
 # 3. App Android: abre la carpeta raíz en Android Studio y ejecuta el módulo "app".
 #    En el emulador se conecta sola a 10.0.2.2:3001. Para el backend de Railway:
 ./gradlew :app:assembleDebug -PfestivaltrackApiUrl=https://<tu-servicio>.up.railway.app/api/v1/
+
+# 4. Compra de boletos desde la TV: el QR de la TV abre la web en el celular.
+#    Levanta la web visible en la red y dile a la app dónde está:
+cd festivaltrack-web && npm run dev -- --host          # http://<IP de tu PC>:5173
+#    En local.properties:  festivaltrack.webUrl=http://<IP de tu PC>:5173
+#    (o -PfestivaltrackWebUrl=https://<web publicada>). Sin configurar usa festivaltrack.deviceHost:5173.
+#    El backend debe aceptar ese origen: FRONTEND_URL=http://<IP de tu PC>:5173 en su .env.
 ```
 
 **Variables de entorno:** la lista completa (cuáles son públicas y cuáles secretas) está en [SECURITY.md § 2](./SECURITY.md#2-inventario-de-secretos). El repositorio solo incluye `.env.example` con valores ficticios.

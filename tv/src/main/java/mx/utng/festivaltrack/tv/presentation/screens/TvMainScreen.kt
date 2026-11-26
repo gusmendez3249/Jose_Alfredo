@@ -3,11 +3,12 @@ package mx.utng.festivaltrack.tv.presentation.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,305 +27,202 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
+import mx.utng.festivaltrack.shared.data.remote.StreamStatusDto
+import mx.utng.festivaltrack.shared.util.HorarioFestival
 import mx.utng.festivaltrack.tv.R
-import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
 import mx.utng.festivaltrack.tv.ui.theme.*
+import java.time.Instant
 
 /**
- * Pantalla principal (Home) de la aplicación para Android TV.
+ * Inicio de la TV.
  *
- * Muestra el panel lateral (sidebar) izquierdo para navegación principal y
- * un área central (main content) con un hero banner y un carrusel (`LazyRow`) de próximos eventos.
- * Todo el layout está optimizado para navegación con D-Pad, usando [onFocusChanged] en las tarjetas
- * para resaltar visualmente el elemento actual.
+ * - Banner: si de verdad hay transmisión, "EN VIVO AHORA: <concierto>" con su botón; si no,
+ *   el próximo concierto con su fecha y hora de México y el botón para comprar boletos.
+ * - Carrusel con los próximos conciertos reales (sin cancelados ni pasados).
+ * - Arriba, la hora actual en Dolores Hidalgo.
  *
- * @param eventos Lista de eventos actual proveniente del ViewModel (Room).
- * @param currentNavIndex Índice actual de la opción seleccionada en el Sidebar.
- * @param onNavSelect Callback al seleccionar un elemento en el Sidebar.
- * @param onVerEnVivo Callback disparado al hacer clic en el botón "Ver en Vivo" del banner principal.
- * @param onComprarBoletos Callback disparado al pulsar el botón "Comprar Boletos".
+ * @param onComprar Abre la compra con QR; recibe el concierto a preseleccionar (o null).
  */
 @Composable
 fun TvMainScreen(
-    eventos: List<EventoEntity>,
-    currentNavIndex: Int,
-    onNavSelect: (Int) -> Unit,
+    proximos: List<EventoEntity>,
+    stream: StreamStatusDto?,
+    ahora: Instant,
+    usuario: String?,
     onVerEnVivo: () -> Unit,
-    onComprarBoletos: () -> Unit
+    onVerProgramacion: () -> Unit,
+    onComprar: (String?) -> Unit,
+    onAbrirConcierto: (String) -> Unit,
+    onEscucharMusica: () -> Unit
 ) {
-    var activeDialogText by remember { mutableStateOf<String?>(null) }
+    val enVivo = stream?.isLive == true
+    val siguiente = proximos.firstOrNull()
 
-    Row(
+    // Se desplaza (con el foco del control) cuando la barra de música le quita espacio.
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FestivalDarkBg)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 32.dp, vertical = 24.dp)
     ) {
-        // ------------------ LEFT SIDEBAR ------------------
-        Column(
-            modifier = Modifier
-                .width(260.dp)
-                .fillMaxHeight()
-                .background(FestivalSidebarBg)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        // Barra superior: saludo y hora real
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "Festival 2024",
-                    color = FestivalGold,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Dolores Hidalgo, Cuna de la Independencia",
-                    color = FestivalTextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 2
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                val navItems = listOf(
-                    "Inicio" to Icons.Default.Home,
-                    "Galería Histórica" to Icons.Default.Collections,
-                    "Transmisión En Vivo" to Icons.Default.LiveTv,
-                    "Programación" to Icons.Default.Event,
-                    "Ajustes" to Icons.Default.Settings
-                )
-
-                navItems.forEachIndexed { index, (label, icon) ->
-                    val isSelected = currentNavIndex == index
-                    SidebarMenuItem(
-                        label = label,
-                        icon = icon,
-                        isSelected = isSelected,
-                        onClick = { onNavSelect(index) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-            // Bottom CTA Button in Sidebar
-            Button(
-                onClick = onComprarBoletos,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FestivalGold,
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.ConfirmationNumber, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("COMPRAR BOLETOS", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
+            Text(
+                if (usuario != null) "Hola, $usuario" else "Bienvenido al festival",
+                color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Dolores Hidalgo · ${HorarioFestival.fechaActual(ahora)} · ${HorarioFestival.horaActual(ahora)}",
+                color = FestivalTextSecondary, fontSize = 13.sp
+            )
         }
 
-        // ------------------ MAIN CONTENT AREA ------------------
-        Column(
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Banner principal
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(32.dp)
+                .fillMaxWidth()
+                .height(250.dp)
+                .clip(RoundedCornerShape(16.dp))
         ) {
-            // Top Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = FestivalTextSecondary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("BUSCAR ARTISTA", color = FestivalTextSecondary, fontSize = 14.sp)
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("DOLORES HIDALGO 19:42", color = FestivalTextSecondary, fontSize = 12.sp)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(FestivalCardBg),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = FestivalGold)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // HERO SECTION CARD with Local Image
+            Image(
+                painter = painterResource(id = R.drawable.hero_dolores_hidalgo),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .fillMaxSize()
+                    .background(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.45f))))
+                    .padding(24.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.hero_dolores_hidalgo),
-                    contentDescription = "Hero Festival",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(Color.Black.copy(alpha = 0.95f), Color.Black.copy(alpha = 0.5f))
-                            )
-                        )
-                        .padding(24.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
+                Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        if (enVivo) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(10.dp).clip(CircleShape).background(FestivalBadgeLive))
+                                Spacer(Modifier.width(8.dp))
+                                Text("EN VIVO AHORA", color = FestivalBadgeLive, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            }
+                            Spacer(Modifier.height(6.dp))
                             Text(
-                                text = "FESTIVAL REGIONAL MEXICANO",
-                                color = FestivalGold,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp
+                                stream?.eventoNombre ?: "Transmisión del festival",
+                                color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("Míralo en esta pantalla y platica en el chat.", color = FestivalTextSecondary, fontSize = 13.sp)
+                        } else if (siguiente != null) {
                             Text(
-                                text = "La Voz del Pueblo:\nHomenaje a José Alfredo Jiménez",
-                                color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 28.sp
+                                if (HorarioFestival.enCurso(siguiente, ahora)) "EN CURSO" else "PRÓXIMO CONCIERTO",
+                                color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
+                            Text(siguiente.nombre, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                             Text(
-                                text = "Sintoniza en vivo desde Dolores Hidalgo, la Cuna de la Independencia. Vive una noche de gala con los mejores intérpretes.",
-                                color = FestivalTextSecondary,
-                                fontSize = 12.sp,
-                                maxLines = 2
+                                "${HorarioFestival.cuando(siguiente, ahora)} • ${siguiente.escenario ?: siguiente.ubicacion}",
+                                color = FestivalTextSecondary, fontSize = 14.sp
                             )
+                        } else {
+                            Text("FESTIVAL JOSÉ ALFREDO JIMÉNEZ", color = FestivalGold, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            Spacer(Modifier.height(6.dp))
+                            Text("El Rey vive en su tierra", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                            Text("Todavía no hay conciertos programados.", color = FestivalTextSecondary, fontSize = 14.sp)
                         }
+                    }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (enVivo) {
                             Button(
                                 onClick = onVerEnVivo,
-                                colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black),
+                                colors = ButtonDefaults.buttonColors(containerColor = FestivalBadgeLive, contentColor = Color.White),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Ver en Vivo", fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Ver en vivo", fontWeight = FontWeight.Bold)
                             }
-
-                            OutlinedButton(
-                                onClick = { activeDialogText = "Sintonizando la transmisión en vivo del Festival José Alfredo Jiménez." },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                                border = ButtonDefaults.outlinedButtonBorder.copy(brush = Brush.horizontalGradient(listOf(Color.White, Color.White))),
+                        }
+                        if (siguiente != null) {
+                            Button(
+                                onClick = { onComprar(siguiente.id) },
+                                colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Icon(Icons.Default.Info, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Detalles")
+                                Icon(Icons.Default.ConfirmationNumber, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Comprar boletos", fontWeight = FontWeight.Bold)
                             }
+                        }
+                        OutlinedButton(onClick = onVerProgramacion, shape = RoundedCornerShape(8.dp)) {
+                            Icon(Icons.Default.Event, contentDescription = null, tint = Color.White)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Ver programación", color = Color.White)
+                        }
+                        // Como la tarjeta "Audio" del inicio del móvil: suena el catálogo del artista.
+                        OutlinedButton(onClick = onEscucharMusica, shape = RoundedCornerShape(8.dp)) {
+                            Icon(Icons.Default.MusicNote, contentDescription = null, tint = Color.White)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Escuchar música", color = Color.White)
                         }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-            // CAROUSEL SECTION: PRÓXIMOS EN EL ESCENARIO
+        Text("PRÓXIMOS EN EL ESCENARIO", color = FestivalGold, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (proximos.isEmpty()) {
             Text(
-                text = "PRÓXIMOS EN EL ESCENARIO",
-                color = FestivalGold,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.5.sp
+                "Cuando haya conciertos programados aparecerán aquí.",
+                color = FestivalTextSecondary, fontSize = 14.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val displayList = if (eventos.isNotEmpty()) eventos else listOf(
-                EventoEntity("1", "Voz del Mariachi", "2020-11-20T20:00:00Z", "Escenario Principal", "Escenario Principal", null, "ACTIVO", null, "Mariachi Sol"),
-                EventoEntity("2", "Cuerdas de Dolores", "2020-11-20T21:30:00Z", "Plaza Principal", "Plaza Principal", null, "ACTIVO", null, "Orquesta"),
-                EventoEntity("3", "Cena de Gala", "2020-11-20T23:00:00Z", "Jardín Histórico", "Jardín Histórico", null, "ACTIVO", null, "Tributo")
-            )
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(displayList) { evento ->
-                    TvEventCard(evento = evento, onClick = { activeDialogText = "Evento: ${evento.nombre}\nLugar: ${evento.ubicacion}\nHora: ${evento.fechaHora.takeLast(8).take(5)}" })
+        } else {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
+                items(proximos, key = { it.id }) { evento ->
+                    TvEventCard(evento = evento, ahora = ahora, enVivo = enVivo && stream?.eventoId == evento.id, onClick = {
+                        if (enVivo && stream?.eventoId == evento.id) onVerEnVivo() else onAbrirConcierto(evento.id)
+                    })
                 }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Navigation Hint at bottom
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "→ USA EL CONTROL PARA NAVEGAR",
-                    color = FestivalTextSecondary,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.sp
-                )
             }
         }
-    }
 
-    if (activeDialogText != null) {
-        AlertDialog(
-            onDismissRequest = { activeDialogText = null },
-            title = { Text("Smart TV Festival", color = FestivalGold, fontWeight = FontWeight.Bold) },
-            text = { Text(activeDialogText!!, color = Color.White) },
-            confirmButton = {
-                Button(
-                    onClick = { activeDialogText = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black)
-                ) {
-                    Text("CERRAR", fontWeight = FontWeight.Bold)
-                }
-            },
-            containerColor = FestivalCardBg
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "Elige un concierto y pulsa OK para escuchar su repertorio y comprar boletos",
+            color = FestivalTextSecondary, fontSize = 11.sp, modifier = Modifier.align(Alignment.End)
         )
     }
 }
 
 /**
- * Componente que representa una tarjeta de evento en el carrusel horizontal.
- * Gestiona su propio estado de foco ([onFocusChanged]) para dibujar un borde dorado
- * y cambiar el color de fondo al ser seleccionado con el D-Pad del control remoto.
- *
- * @param evento El [EventoEntity] con la información a mostrar en la tarjeta.
- * @param onClick La acción a ejecutar al pulsar el botón de OK en el control.
+ * Tarjeta de concierto del carrusel; se resalta con borde dorado al enfocarla con el control.
  */
 @Composable
-fun TvEventCard(evento: EventoEntity, onClick: () -> Unit) {
+fun TvEventCard(evento: EventoEntity, ahora: Instant, enVivo: Boolean, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) Color(0xFF2E3D30) else FestivalCardBg
-        ),
+    Surface(
+        onClick = onClick,
+        color = if (isFocused) Color(0xFF2E3D30) else FestivalCardBg,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .width(220.dp)
-            .height(130.dp)
+            .width(240.dp)
+            .height(140.dp)
+            .onFocusChanged { isFocused = it.isFocused }
             .border(
                 width = if (isFocused) 3.dp else 0.dp,
                 color = if (isFocused) FestivalGold else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable { onClick() }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
@@ -334,55 +231,29 @@ fun TvEventCard(evento: EventoEntity, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
-                        )
-                    )
-            )
-
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)))))
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
+                modifier = Modifier.fillMaxSize().padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Surface(
+                    color = when {
+                        enVivo -> FestivalBadgeLive
+                        else -> FestivalGold
+                    },
+                    shape = RoundedCornerShape(4.dp)
                 ) {
-                    Surface(
-                        color = FestivalGold,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = evento.fechaHora.takeLast(8).take(5).ifEmpty { "20:00 HRS" },
-                            color = Color.Black,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
-                Column {
                     Text(
-                        text = evento.nombre,
-                        color = Color.White,
-                        fontSize = 14.sp,
+                        text = if (enVivo) "EN VIVO" else "${HorarioFestival.fechaCorta(evento)} · ${HorarioFestival.hora(evento)}",
+                        color = if (enVivo) Color.White else Color.Black,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
-                    Text(
-                        text = evento.ubicacion,
-                        color = FestivalTextSecondary,
-                        fontSize = 11.sp,
-                        maxLines = 1
-                    )
+                }
+                Column {
+                    Text(evento.nombre, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(evento.escenario ?: evento.ubicacion, color = FestivalTextSecondary, fontSize = 11.sp, maxLines = 1)
                 }
             }
         }

@@ -1,349 +1,203 @@
 package mx.utng.festivaltrack.tv.presentation.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mx.utng.festivaltrack.tv.R
-import mx.utng.festivaltrack.tv.presentation.components.SidebarMenuItem
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.tv.presentation.viewmodel.EstadoGaleria
 import mx.utng.festivaltrack.tv.ui.theme.*
 
-/**
- * Elemento de datos que representa una imagen en la galería histórica.
- *
- * @property id Identificador único.
- * @property title Título de la obra o fotografía.
- * @property category Categoría (ej. "Primeros Años", "Época de Oro").
- * @property drawableId Recurso estático de la imagen local.
- * @property isHighlighted Indica si el elemento debe ocupar más espacio/destacar.
- */
-data class GalleryItem(
-    val id: String,
-    val title: String,
-    val category: String,
-    val drawableId: Int,
-    val isHighlighted: Boolean = false
-)
+/** Foto de la galería lista para mostrarse. */
+private data class FotoTv(val id: String, val url: String, val titulo: String, val galeria: String)
+
+/** Convierte una ruta del servidor (`/uploads/x.jpg`) en URL completa; deja intactas las URL completas. */
+private fun urlMedia(ruta: String): String = if (ruta.startsWith("/")) FestivalApiService.SERVER_URL + ruta else ruta
 
 /**
- * Pantalla que muestra una galería de fotos e historia en un formato de grilla.
- * Permite filtrar por categorías (pestañas) usando los botones superiores.
- * Cada elemento de la grilla es navegable usando las flechas direccionales del control remoto.
- *
- * @param currentNavIndex Índice actual de la navegación en el menú lateral.
- * @param onNavSelect Callback para manejar la navegación del sidebar.
+ * Galería con las fotos reales del servidor (las que administra el panel), filtrables por
+ * galería. Pulsar OK sobre una la abre en grande.
  */
 @Composable
-fun TvGalleryScreen(
-    currentNavIndex: Int,
-    onNavSelect: (Int) -> Unit
-) {
-    var selectedTab by remember { mutableStateOf(0) }
-    var activeDialogText by remember { mutableStateOf<String?>(null) }
-    val tabs = listOf("Todo", "Primeros Años", "Época de Oro", "Legado")
+fun TvGalleryScreen(estado: EstadoGaleria, onReintentar: () -> Unit) {
+    var filtro by remember { mutableStateOf<String?>(null) }
+    var abierta by remember { mutableStateOf<FotoTv?>(null) }
 
-    val allGalleryItems = remember {
-        listOf(
-            GalleryItem(
-                "1",
-                "Concierto en la Cuna de la Independencia",
-                "Legado",
-                R.drawable.hero_dolores_hidalgo,
-                isHighlighted = true
-            ),
-            GalleryItem(
-                "2",
-                "El Atuendo Charro",
-                "Época de Oro",
-                R.drawable.jose_alfredo_portrait
-            ),
-            GalleryItem(
-                "3",
-                "La Voz del Pueblo",
-                "Primeros Años",
-                R.drawable.mariachi_gala_stage
-            ),
-            GalleryItem(
-                "4",
-                "Composición & Guitarra",
-                "Época de Oro",
-                R.drawable.ranchera_guitar
-            ),
-            GalleryItem(
-                "5",
-                "Dolores Hidalgo, 1954",
-                "Primeros Años",
-                R.drawable.hero_dolores_hidalgo
-            ),
-            GalleryItem(
-                "6",
-                "La Guitarra del Rey",
-                "Legado",
-                R.drawable.ranchera_guitar
-            )
-        )
-    }
-
-    val filteredItems = remember(selectedTab) {
-        if (selectedTab == 0) allGalleryItems
-        else allGalleryItems.filter { it.category == tabs[selectedTab] }
-    }
-
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FestivalDarkBg)
+            .padding(32.dp)
     ) {
-        // SIDEBAR
-        Column(
-            modifier = Modifier
-                .width(260.dp)
-                .fillMaxHeight()
-                .background(FestivalSidebarBg)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Festival 2024", color = FestivalGold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("DOLORES HIDALGO", color = FestivalTextSecondary, fontSize = 11.sp)
-                Spacer(modifier = Modifier.height(32.dp))
-
-                val navItems = listOf(
-                    "Inicio" to Icons.Default.Home,
-                    "Galería Histórica" to Icons.Default.Collections,
-                    "Transmisión En Vivo" to Icons.Default.LiveTv,
-                    "Programación" to Icons.Default.Event,
-                    "Ajustes" to Icons.Default.Settings
-                )
-
-                navItems.forEachIndexed { index, (label, icon) ->
-                    SidebarMenuItem(
-                        label = label,
-                        icon = icon,
-                        isSelected = currentNavIndex == index,
-                        onClick = { onNavSelect(index) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+        when (estado) {
+            EstadoGaleria.Cargando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = FestivalGold)
             }
-        }
-
-        // MAIN CONTENT
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(32.dp)
-        ) {
-            // Header & Tabs
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Galería Histórica",
-                    color = FestivalGold,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    tabs.forEachIndexed { idx, tabTitle ->
-                        val isSelected = selectedTab == idx
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedTab = idx },
-                            label = { Text(tabTitle) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = FestivalGold,
-                                selectedLabelColor = Color.Black,
-                                containerColor = FestivalCardBg,
-                                labelColor = Color.White
-                            )
-                        )
-                    }
+            EstadoGaleria.SinConexion -> AvisoGaleria(
+                icono = Icons.Default.CloudOff,
+                titulo = "Sin conexión con el servidor",
+                texto = "No se pudieron cargar las fotos.",
+                boton = "Intentar de nuevo",
+                onBoton = onReintentar
+            )
+            is EstadoGaleria.Lista -> {
+                val fotos = estado.galerias.flatMap { g ->
+                    g.imagenes.sortedBy { it.orden }.map { FotoTv(it.id, urlMedia(it.url), it.titulo ?: g.nombre, g.nombre) }
                 }
-            }
+                val galerias = estado.galerias.filter { it.imagenes.isNotEmpty() }.map { it.nombre }.distinct()
+                val visibles = if (filtro == null) fotos else fotos.filter { it.galeria == filtro }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Grid of Gallery Items with Local Drawables
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                items(filteredItems) { item ->
-                    GalleryCard(item = item, onClick = { activeDialogText = "Visualizando pieza histórica: '${item.title}' (${item.category})" })
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Bottom Action Card (Explora el Legado)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = FestivalCardBg),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Explora el Legado", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("Usa el control para navegar por las fotografías históricas", color = FestivalTextSecondary, fontSize = 11.sp)
+                        Text("Galería del festival", color = FestivalGold, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Text("${fotos.size} fotos", color = FestivalTextSecondary, fontSize = 12.sp)
                     }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedButton(
-                            onClick = { activeDialogText = "Reproduciendo Documental Histórico de José Alfredo Jiménez en Smart TV." },
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Ver Documental", color = Color.White)
+                    if (galerias.size > 1) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            (listOf<String?>(null) + galerias).forEach { nombre ->
+                                FilterChip(
+                                    selected = filtro == nombre,
+                                    onClick = { filtro = nombre },
+                                    label = { Text(nombre ?: "Todo") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = FestivalGold,
+                                        selectedLabelColor = Color.Black,
+                                        containerColor = FestivalCardBg,
+                                        labelColor = Color.White
+                                    )
+                                )
+                            }
                         }
+                    }
+                }
+                Spacer(Modifier.height(20.dp))
 
-                        Button(
-                            onClick = { activeDialogText = "Pase VIP Activado para la gala en Dolores Hidalgo." },
-                            colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Obtener Pase VIP", fontWeight = FontWeight.Bold)
-                        }
+                if (fotos.isEmpty()) {
+                    AvisoGaleria(
+                        icono = Icons.Default.PhotoLibrary,
+                        titulo = "Todavía no hay fotos",
+                        texto = "Cuando el equipo del festival suba fotos aparecerán aquí."
+                    )
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(visibles, key = { it.id }) { foto -> FotoCard(foto) { abierta = foto } }
                     }
                 }
             }
         }
     }
 
-    if (activeDialogText != null) {
-        AlertDialog(
-            onDismissRequest = { activeDialogText = null },
-            title = { Text("Galería Histórica Smart TV", color = FestivalGold, fontWeight = FontWeight.Bold) },
-            text = { Text(activeDialogText!!, color = Color.White) },
-            confirmButton = {
-                Button(
-                    onClick = { activeDialogText = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black)
-                ) {
-                    Text("OK", fontWeight = FontWeight.Bold)
+    abierta?.let { foto ->
+        Dialog(onDismissRequest = { abierta = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(
+                onClick = { abierta = null },
+                color = Color.Black,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).fillMaxHeight(0.85f)
+            ) {
+                Box {
+                    AsyncImage(
+                        model = foto.url,
+                        contentDescription = foto.titulo,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f))))
+                            .padding(20.dp)
+                    ) {
+                        Text(foto.titulo, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("${foto.galeria} · Pulsa OK o Atrás para cerrar", color = FestivalGold, fontSize = 12.sp)
+                    }
                 }
-            },
-            containerColor = FestivalCardBg
-        )
+            }
+        }
     }
 }
 
-/**
- * Componente interactivo (focusable) para mostrar una imagen de la galería.
- *
- * Cuando obtiene el foco ([Modifier.onFocusChanged]), se añade un borde dorado
- * para que el usuario sepa dónde está ubicado.
- *
- * @param item El [GalleryItem] que provee datos y la imagen a mostrar.
- * @param onClick Acción que se ejecuta al pulsar el botón principal sobre la tarjeta.
- */
 @Composable
-fun GalleryCard(item: GalleryItem, onClick: () -> Unit) {
-    var isFocused by remember { mutableStateOf(false) }
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) Color(0xFF2E3D30) else FestivalCardBg
-        ),
+private fun FotoCard(foto: FotoTv, onClick: () -> Unit) {
+    var enfocada by remember { mutableStateOf(false) }
+    Surface(
+        onClick = onClick,
+        color = FestivalCardBg,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (item.isHighlighted) 160.dp else 130.dp)
-            .border(
-                width = if (isFocused) 3.dp else 0.dp,
-                color = if (isFocused) FestivalGold else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable { onClick() }
+            .height(150.dp)
+            .onFocusChanged { enfocada = it.isFocused }
+            .border(if (enfocada) 3.dp else 0.dp, if (enfocada) FestivalGold else Color.Transparent, RoundedCornerShape(12.dp))
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Local Drawable Background Image
-            Image(
-                painter = painterResource(id = item.drawableId),
-                contentDescription = item.title,
+        Box(Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = foto.url,
+                contentDescription = foto.titulo,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)))))
+            Column(Modifier.align(Alignment.BottomStart).padding(12.dp)) {
+                Text(foto.titulo, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(foto.galeria, color = FestivalGold, fontSize = 11.sp)
+            }
+        }
+    }
+}
 
-            // Dark Gradient Overlay for text readability
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f))
-                        )
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                contentAlignment = Alignment.BottomStart
-            ) {
-                Column {
-                    if (item.isHighlighted) {
-                        Surface(
-                            color = FestivalGold,
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                "DESTACADO",
-                                color = Color.Black,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    Text(
-                        text = item.title,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = item.category,
-                        color = FestivalGold,
-                        fontSize = 11.sp
-                    )
-                }
+@Composable
+private fun AvisoGaleria(
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    titulo: String,
+    texto: String,
+    boton: String? = null,
+    onBoton: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(icono, contentDescription = null, tint = FestivalGold, modifier = Modifier.size(56.dp))
+        Spacer(Modifier.height(12.dp))
+        Text(titulo, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(texto, color = FestivalTextSecondary, fontSize = 14.sp, textAlign = TextAlign.Center)
+        if (boton != null) {
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBoton, colors = ButtonDefaults.buttonColors(containerColor = FestivalGold, contentColor = Color.Black)) {
+                Text(boton, fontWeight = FontWeight.Bold)
             }
         }
     }

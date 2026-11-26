@@ -52,7 +52,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
     // Image Loading (Coil)
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.8.5")
@@ -63,6 +63,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     
+    // Mapa de sedes (misma librería que el móvil)
+    implementation(libs.osmdroid.android)
+
     // Media3 (ExoPlayer)
     val media3Version = "1.2.1"
     implementation("androidx.media3:media3-exoplayer:$media3Version")
