@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mx.utng.festivaltrack.app.data.TokenManager
 import mx.utng.festivaltrack.app.ui.utils.ProximosEventos
+import mx.utng.festivaltrack.app.ui.utils.RotacionCamara
 import mx.utng.festivaltrack.shared.data.local.entity.EventoEntity
 import mx.utng.festivaltrack.app.ui.theme.PrimaryGold
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
@@ -227,7 +228,9 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                                 override fun onClientNewBitrate(bitrate: Long, client: ServerClient) {}
                                             })
                                             rtspServer = server
-                                            server.startPreview()
+                                            // Vista previa con la orientación real del sensor (ver RotacionCamara):
+                                            // sin esto, en teléfonos con el sensor a 270° o 0° se veía de lado.
+                                            server.startPreview(CameraHelper.Facing.BACK, RotacionCamara.traseraActual(ctx))
                                         } catch (e: Exception) {
                                             statusText = "Error al iniciar cámara: ${e.localizedMessage}"
                                         }
@@ -303,9 +306,9 @@ fun AdminLiveStreamScreen(onNavigateBack: () -> Unit) {
                                         val listo = kotlinx.coroutines.withContext(Dispatchers.Default) {
                                             runCatching {
                                                 // Códecs de audio y video con resolución compatible 640x480.
-                                                // La rotación sigue la orientación de la cámara y de la pantalla:
-                                                // con 0 fijo, el video llegaba girado a quien lo veía.
-                                                val rotacion = CameraHelper.getCameraOrientation(context)
+                                                // La rotación sigue la orientación real del sensor y de la pantalla:
+                                                // con 0 fijo (o suponiendo el sensor a 90°) el video llegaba girado.
+                                                val rotacion = RotacionCamara.traseraActual(context)
                                                 val audio = servidor?.prepareAudio() ?: false
                                                 // Cuadro clave cada 1 s (antes ~5 s): quien se conecta ve imagen casi de inmediato.
                                                 val video = runCatching { servidor?.prepareVideo(640, 480, 30, 1200 * 1024, INTERVALO_CUADRO_CLAVE_S, rotacion) ?: false }
