@@ -22,6 +22,7 @@ Este documento explica dónde vive cada secreto del proyecto, cómo configurarlo
 | `JWT_EXPIRES_IN`, `PORT`, `NODE_ENV`, `FRONTEND_URL` | Backend | Configuración de ejecución y CORS | ❌ No | `.env` local / Railway |
 | `VITE_API_URL` | Web | URL pública del backend | ❌ No | `festivaltrack-web/.env` |
 | `festivaltrackApiUrl` | Android (`shared`) | URL del backend que se compila en `BuildConfig.API_BASE_URL` | ❌ No | `-PfestivaltrackApiUrl=...` al compilar, o `~/.gradle/gradle.properties`; vacía = detección automática |
+| `festivaltrackWebUrl` | Android (`shared`) | URL de la web que abren los QR de la TV (compra y registro), en `BuildConfig.WEB_BASE_URL` | ❌ No | `-PfestivaltrackWebUrl=...` o `festivaltrack.webUrl` en `local.properties`; vacía = `http://<deviceHost>:5173` |
 
 > Las apps Android **no contienen claves**: solo conocen la URL del backend y guardan el JWT que el servidor entrega al iniciar sesión.
 
