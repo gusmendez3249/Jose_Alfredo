@@ -7,6 +7,10 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.os.Looper
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -24,7 +28,9 @@ import mx.utng.festivaltrack.app.auto.RutaActivaStore
 import mx.utng.festivaltrack.app.auto.SalidaCalculator
 import mx.utng.festivaltrack.app.ui.utils.Ruta
 import mx.utng.festivaltrack.app.ui.utils.RutaPeatonal
+import mx.utng.festivaltrack.shared.data.remote.EventoDto
 import mx.utng.festivaltrack.shared.data.remote.FestivalApiService
+import mx.utng.festivaltrack.shared.data.remote.SitioArDto
 import kotlin.coroutines.resume
 
 /** De dónde se calculan las distancias. */
@@ -45,7 +51,11 @@ sealed class DestinosState {
         val origenLon: Double,
         val origen: OrigenUbicacion,
         /** Kilómetros del teléfono al festival cuando [origen] es [OrigenUbicacion.LEJOS]. */
-        val kmAlFestival: Double = 0.0
+        val kmAlFestival: Double = 0.0,
+        /** Radio de error de la ubicación en metros (null si no se conoce). */
+        val precisionM: Float? = null,
+        /** true si el usuario solo dio permiso de ubicación aproximada (puede fallar cientos de metros). */
+        val soloAproximada: Boolean = false
     ) : DestinosState() {
         val ubicacionAproximada: Boolean get() = origen != OrigenUbicacion.GPS
     }
@@ -77,6 +87,21 @@ class DestinosViewModel(application: Application) : AndroidViewModel(application
 
     private var rutaJob: Job? = null
 
+    // Datos para recalcular distancias cada vez que el teléfono se mueve, sin volver a pedirlos.
+    private var eventosCache: List<EventoDto> = emptyList()
+    private var sitiosCache: List<SitioArDto> = emptyList()
+
+    /** Origen desde el que se trazó la ruta actual; si te alejas de él, se recalcula. */
+    private var origenDeLaRuta: Pair<Double, Double>? = null
+
+    private val cliente = LocationServices.getFusedLocationProviderClient(application)
+    private var siguiendo = false
+    private val alMoverse = object : LocationCallback() {
+        override fun onLocationResult(resultado: LocationResult) {
+            resultado.lastLocation?.let { actualizarUbicacion(it.latitude, it.longitude, if (it.hasAccuracy()) it.accuracy else null) }
+        }
+    }
+
     fun cargar() {
         if (_state.value !is DestinosState.Success) _state.value = DestinosState.Loading
         viewModelScope.launch {
@@ -84,16 +109,9 @@ class DestinosViewModel(application: Application) : AndroidViewModel(application
                 val eventos = async { api.getEventos() }
                 val sitios = async { runCatching { api.getSitiosAr() }.getOrDefault(emptyList()) }
                 val ubicacion = obtenerUbicacion()
-                val (cLat, cLon) = CENTRO_DOLORES
-                val km = ubicacion?.let { SalidaCalculator.distanciaKm(it.first, it.second, cLat, cLon) } ?: 0.0
-                val origen = when {
-                    ubicacion == null -> OrigenUbicacion.SIN_UBICACION
-                    km > RADIO_FESTIVAL_KM -> OrigenUbicacion.LEJOS
-                    else -> OrigenUbicacion.GPS
-                }
-                val (lat, lon) = if (origen == OrigenUbicacion.GPS) ubicacion!! else CENTRO_DOLORES
-                val destinos = DestinosCalculator.construir(eventos.await(), sitios.await(), lat, lon)
-                _state.value = DestinosState.Success(destinos, lat, lon, origen, km)
+                eventosCache = eventos.await()
+                sitiosCache = sitios.await()
+                _state.value = construirEstado(ubicacion?.first, ubicacion?.second, ubicacion?.third)
                 seleccionarInicial()
             } catch (e: Exception) {
                 _state.value = DestinosState.Error("No se pudieron cargar los destinos. Revisa tu conexión.")
@@ -101,17 +119,83 @@ class DestinosViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /** Estado con distancias desde la ubicación dada (o desde el Jardín si no sirve). */
+    private fun construirEstado(lat: Double?, lon: Double?, precision: Float?): DestinosState.Success {
+        val (cLat, cLon) = CENTRO_DOLORES
+        val km = if (lat != null && lon != null) SalidaCalculator.distanciaKm(lat, lon, cLat, cLon) else 0.0
+        val origen = when {
+            lat == null || lon == null -> OrigenUbicacion.SIN_UBICACION
+            km > RADIO_FESTIVAL_KM -> OrigenUbicacion.LEJOS
+            else -> OrigenUbicacion.GPS
+        }
+        val (oLat, oLon) = if (origen == OrigenUbicacion.GPS) lat!! to lon!! else CENTRO_DOLORES
+        val destinos = DestinosCalculator.construir(eventosCache, sitiosCache, oLat, oLon)
+        return DestinosState.Success(
+            destinos, oLat, oLon, origen, km,
+            precisionM = precision.takeIf { origen == OrigenUbicacion.GPS },
+            soloAproximada = !tienePermiso(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                tienePermiso(Manifest.permission.ACCESS_COARSE_LOCATION)
+        )
+    }
+
+    /**
+     * Sigue la ubicación del teléfono mientras el mapa está abierto (cada ~2 s o 3 m).
+     * Llamar a [dejarDeSeguir] al salir para no gastar batería.
+     */
+    @SuppressLint("MissingPermission")
+    fun seguirUbicacion() {
+        if (siguiendo || !tienePermiso(Manifest.permission.ACCESS_COARSE_LOCATION) &&
+            !tienePermiso(Manifest.permission.ACCESS_FINE_LOCATION)
+        ) return
+        val solicitud = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2_000)
+            .setMinUpdateDistanceMeters(3f)
+            .build()
+        runCatching { cliente.requestLocationUpdates(solicitud, alMoverse, Looper.getMainLooper()) }
+            .onSuccess { siguiendo = true }
+    }
+
+    fun dejarDeSeguir() {
+        if (!siguiendo) return
+        cliente.removeLocationUpdates(alMoverse)
+        siguiendo = false
+    }
+
+    /** Nueva posición del teléfono: mueve el punto, recalcula distancias y, si te alejaste, la ruta. */
+    fun actualizarUbicacion(lat: Double, lon: Double, precision: Float?) {
+        if (_state.value !is DestinosState.Success) return
+        val nuevo = construirEstado(lat, lon, precision)
+        _state.value = nuevo
+        val destino = (_ruta.value as? RutaState.Lista)?.destino ?: return
+        val desde = origenDeLaRuta
+        if (desde == null || debeRecalcularRuta(desde.first, desde.second, nuevo.origenLat, nuevo.origenLon)) {
+            // El destino conserva su nombre; se toma el de la lista nueva por si cambió la distancia.
+            trazarRuta(nuevo.destinos.firstOrNull { it.nombre == destino.nombre } ?: destino, silencioso = true)
+        }
+    }
+
+    override fun onCleared() {
+        dejarDeSeguir()
+        super.onCleared()
+    }
+
+    private fun tienePermiso(permiso: String) =
+        ContextCompat.checkSelfPermission(getApplication(), permiso) == PackageManager.PERMISSION_GRANTED
+
     /** Guarda el destino como ruta activa (el mapa lo muestra y Android Auto lo retoma). */
     fun elegir(destino: Destino) {
         rutaStore.guardar(RutaActiva(destino.nombre, destino.latitud, destino.longitud))
     }
 
-    /** Selecciona el destino en el mapa y calcula la ruta a pie desde el origen. */
-    fun trazarRuta(destino: Destino) {
+    /**
+     * Selecciona el destino en el mapa y calcula la ruta a pie desde el origen.
+     * Con [silencioso] (al caminar) se sigue mostrando la ruta anterior mientras llega la nueva.
+     */
+    fun trazarRuta(destino: Destino, silencioso: Boolean = false) {
         val s = _state.value as? DestinosState.Success ?: return
         elegir(destino)
         rutaJob?.cancel()
-        _ruta.value = RutaState.Calculando(destino)
+        if (!silencioso) _ruta.value = RutaState.Calculando(destino)
+        origenDeLaRuta = s.origenLat to s.origenLon
         rutaJob = viewModelScope.launch {
             val ruta = RutaPeatonal.calcular(s.origenLat, s.origenLon, destino.latitud, destino.longitud)
             _ruta.value = RutaState.Lista(destino, ruta)
@@ -134,35 +218,39 @@ class DestinosViewModel(application: Application) : AndroidViewModel(application
         if (actual != destino) trazarRuta(destino)
     }
 
-    /** Ubicación actual precisa; si tarda, la última conocida. */
+    /** Ubicación actual precisa (lat, lon, precisión en m); si tarda, la última conocida. */
     @SuppressLint("MissingPermission")
-    private suspend fun obtenerUbicacion(): Pair<Double, Double>? {
-        val context = getApplication<Application>()
-        val conPermiso = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-            .any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
-        if (!conPermiso) return null
-        val cliente = LocationServices.getFusedLocationProviderClient(context)
+    private suspend fun obtenerUbicacion(): Triple<Double, Double, Float?>? {
+        if (!tienePermiso(Manifest.permission.ACCESS_FINE_LOCATION) && !tienePermiso(Manifest.permission.ACCESS_COARSE_LOCATION)) return null
+        fun aTriple(l: android.location.Location?) = l?.let { Triple(it.latitude, it.longitude, if (it.hasAccuracy()) it.accuracy else null) }
         val actual = withTimeoutOrNull(8000) {
-            suspendCancellableCoroutine<Pair<Double, Double>?> { cont ->
+            suspendCancellableCoroutine<Triple<Double, Double, Float?>?> { cont ->
                 val token = CancellationTokenSource()
                 cont.invokeOnCancellation { token.cancel() }
                 cliente.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, token.token)
-                    .addOnSuccessListener { cont.resume(it?.let { l -> l.latitude to l.longitude }) }
+                    .addOnSuccessListener { cont.resume(aTriple(it)) }
                     .addOnFailureListener { cont.resume(null) }
             }
         }
         return actual ?: suspendCancellableCoroutine { cont ->
             cliente.lastLocation
-                .addOnSuccessListener { cont.resume(it?.let { l -> l.latitude to l.longitude }) }
+                .addOnSuccessListener { cont.resume(aTriple(it)) }
                 .addOnFailureListener { cont.resume(null) }
         }
     }
 
     companion object {
         /** Jardín Principal de Dolores Hidalgo, usado cuando no hay ubicación útil del teléfono. */
-        val CENTRO_DOLORES = 21.1563 to -100.9338
+        val CENTRO_DOLORES = 21.157511 to -100.934529
 
         /** Más allá de esta distancia el teléfono no está en el festival. */
         const val RADIO_FESTIVAL_KM = 15.0
+
+        /** Metros que hay que alejarse del punto de partida para volver a pedir la ruta por calles. */
+        const val RECALCULAR_RUTA_M = 25.0
+
+        /** true si el teléfono se movió lo suficiente como para trazar la ruta de nuevo. */
+        fun debeRecalcularRuta(desdeLat: Double, desdeLon: Double, lat: Double, lon: Double): Boolean =
+            SalidaCalculator.distanciaKm(desdeLat, desdeLon, lat, lon) * 1000 >= RECALCULAR_RUTA_M
     }
 }
