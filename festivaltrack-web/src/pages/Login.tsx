@@ -1,69 +1,103 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { useState, type FormEvent } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
+import { leerEstadoLogin } from '../auth/rutas';
+import { mensajeDeError } from '../lib/errores';
+import { Card } from '../components/ui/Card';
+import { IconoMarca } from '../components/ui/Icons';
+import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
+import { Field } from '../components/ui/Field';
+import { useTituloPagina } from '../hooks/useTituloPagina';
 
 export default function Login() {
+  useTituloPagina('Iniciar sesión');
+  const { autenticado, iniciarSesion } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { from, sesionExpirada } = leerEstadoLogin(location.state);
+  const destino = from ?? '/mis-boletos';
+
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const location = useLocation();
-  const successMessage = (location.state as { message?: string } | null)?.message;
+  const [enviando, setEnviando] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Con sesión ya iniciada (p. ej. vuelta atrás en el historial) no tiene sentido el formulario.
+  if (autenticado && !enviando) return <Navigate to={destino} replace />;
+
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (enviando) return;
+    setEnviando(true);
+    setError('');
     try {
-      const res = await api.post('/auth/login', { correo, contrasena: password });
-      const token = res.data.accessToken ?? res.data.token;
-
-      if (token) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('accessToken', token);
-        navigate('/mis-boletos');
-      } else {
-        setError('No se recibió un token válido del servidor.');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+      await iniciarSesion(correo.trim(), password);
+      navigate(destino, { replace: true });
+    } catch (err) {
+      setError(
+        mensajeDeError(err, {
+          400: 'Revisa tu correo y contraseña.',
+          401: 'Correo o contraseña incorrectos.',
+          429: 'Demasiados intentos de inicio de sesión. Espera un minuto y vuelve a intentarlo.',
+        }),
+      );
+      setEnviando(false);
     }
   };
 
   return (
-    <div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}>
-      <h2 style={{ marginBottom: '24px' }}>Iniciar Sesión</h2>
-      <div className="glass-panel" style={{ maxWidth: '400px', margin: '0 auto' }}>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          Ingresa con tus credenciales para continuar.
-        </p>
-        
-        {successMessage && <p style={{ color: '#4caf50', marginBottom: '16px' }}>{successMessage}</p>}
-        {error && <p style={{ color: 'red', marginBottom: '16px' }}>{error}</p>}
-        
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-          <input
+    <div className="pagina pagina--centrada">
+      <Card como="section" aria-labelledby="login-titulo" className="acceso-tarjeta">
+        <header className="acceso-tarjeta__cabecera">
+          <IconoMarca tamano={40} className="acceso-tarjeta__marca" />
+          <p className="eyebrow">Acceso exclusivo</p>
+          <h1 id="login-titulo" className="titulo-pagina">
+            José Alfredo Jiménez
+          </h1>
+          <p className="meta">Ingresa con tus credenciales para continuar.</p>
+        </header>
+
+        {sesionExpirada && !error && <Alert tono="info">Tu sesión expiró. Inicia sesión de nuevo.</Alert>}
+        {error && <Alert tono="error">{error}</Alert>}
+
+        <form onSubmit={handleLogin} className="formulario" aria-label="Iniciar sesión">
+          <Field
+            etiqueta="Correo electrónico"
+            id="login-correo"
             type="email"
-            placeholder="Correo electrónico"
+            autoComplete="email"
+            inputMode="email"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
             required
+            disabled={enviando}
           />
-          <input
+          <Field
+            etiqueta="Contraseña"
+            id="login-contrasena"
             type="password"
-            placeholder="Contraseña"
+            alternarContrasena
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ padding: '12px', borderRadius: '4px', border: '1px solid #333', background: '#1e1e1e', color: 'white' }}
             required
+            disabled={enviando}
           />
-          <button type="submit" className="btn-primary" style={{ width: '100%' }}>Entrar</button>
+          <Button type="submit" tamano="grande" bloque mayusculas cargando={enviando}>
+            {enviando ? 'Entrando…' : 'Iniciar sesión'}
+          </Button>
         </form>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Link to="/register" style={{ color: 'var(--primary-color)' }}>¿No tienes cuenta? Regístrate</Link>
-          <Link to="/" style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Volver al Inicio</Link>
+
+        <div className="acceso-tarjeta__enlaces">
+          <Link to="/register" state={from ? { from } : undefined}>
+            ¿No tienes cuenta? Regístrate
+          </Link>
+          <Link to="/" className="meta">
+            Volver al inicio
+          </Link>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
